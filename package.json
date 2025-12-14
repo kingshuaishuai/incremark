@@ -1,0 +1,36 @@
+{
+  "name": "incremark",
+  "version": "0.0.1",
+  "private": true,
+  "description": "增量式 Markdown 解析器，适用于 AI 流式输出场景",
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm -r --parallel dev",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "lint": "eslint packages --ext .ts,.vue",
+    "clean": "pnpm -r exec rm -rf dist node_modules",
+    "example:vue": "pnpm --filter @incremark/example-vue dev",
+    "example:react": "pnpm --filter @incremark/example-react dev",
+    "docs:dev": "pnpm --filter @incremark/docs dev",
+    "docs:build": "pnpm --filter @incremark/docs build",
+    "docs:preview": "pnpm --filter @incremark/docs preview",
+    "bump": "bumpp package.json packages/*/package.json --commit --push --tag",
+    "bump:dry": "bumpp package.json packages/*/package.json --dry",
+    "release": "pnpm build && pnpm -r publish --access public",
+    "release:dry": "pnpm build && pnpm -r publish --access public --dry-run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "bumpp": "^9.4.0",
+    "typescript": "^5.3.0",
+    "vitest": "^2.0.0",
+    "tsup": "^8.0.0"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

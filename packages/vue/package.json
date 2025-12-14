@@ -1,0 +1,57 @@
+{
+  "name": "@incremark/vue",
+  "version": "0.0.1",
+  "description": "Incremark Vue 3 集成",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./components/*": {
+      "import": "./src/components/*.vue"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch"
+  },
+  "dependencies": {
+    "@incremark/core": "workspace:*",
+    "@incremark/devtools": "workspace:*",
+    "shiki": "^3.20.0"
+  },
+  "peerDependencies": {
+    "vue": "^3.3.0",
+    "mermaid": "^10.0.0 || ^11.0.0",
+    "katex": "^0.16.0"
+  },
+  "peerDependenciesMeta": {
+    "mermaid": {
+      "optional": true
+    },
+    "katex": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vue": "^3.4.0"
+  },
+  "keywords": [
+    "markdown",
+    "vue",
+    "vue3",
+    "streaming",
+    "ai"
+  ],
+  "license": "MIT"
+}

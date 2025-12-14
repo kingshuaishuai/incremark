@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="barGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#22d3ee"/>
+      <stop offset="100%" style="stop-color:#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <path d="M8 92 V36 Q8 24 20 24" stroke="#1e293b" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M28 24 H108 Q120 24 120 36 V92 Q120 104 108 104" stroke="#1e293b" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M100 104 H20 Q8 104 8 92" stroke="#1e293b" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M32 82V46L52 64L72 46V68" stroke="#1e293b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <rect x="86" y="46" width="14" height="4" rx="2" fill="#34d399"/>
+  <rect x="86" y="60" width="10" height="4" rx="2" fill="#94a3b8"/>
+  <rect x="98" y="59" width="2" height="6" rx="1" fill="#64748b">
+    <animate attributeName="opacity" values="1;0.3;1" dur="1s" repeatCount="indefinite"/>
+  </rect>
+  <path d="M92 72V84M88 80L92 84L96 80" stroke="url(#barGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
