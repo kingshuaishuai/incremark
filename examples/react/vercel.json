@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd ../.. && pnpm build && cd examples/react && pnpm build",
+  "outputDirectory": "dist",
+  "installCommand": "cd ../.. && pnpm install"
+}
+

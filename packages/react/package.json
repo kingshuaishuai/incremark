@@ -1,6 +1,7 @@
 {
   "name": "@incremark/react",
   "version": "0.0.1",
+  "license": "MIT",
   "description": "Incremark React integration - Incremental Markdown parser for AI streaming",
   "type": "module",
   "main": "./dist/index.js",
