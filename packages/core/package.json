@@ -31,9 +31,11 @@
     "test:run": "vitest run"
   },
   "dependencies": {
+    "@types/mdast": "^4.0.0",
     "mdast-util-from-markdown": "^2.0.0",
     "mdast-util-gfm": "^3.0.0",
-    "micromark-extension-gfm": "^3.0.0"
+    "micromark-extension-gfm": "^3.0.0",
+    "micromark-util-types": "^2.0.0"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
