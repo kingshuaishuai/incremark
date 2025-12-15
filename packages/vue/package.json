@@ -1,6 +1,6 @@
 {
   "name": "@incremark/vue",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Incremark Vue 3 集成",
   "type": "module",
   "main": "./dist/index.js",
