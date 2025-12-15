@@ -5,6 +5,8 @@
 [![npm version](https://img.shields.io/npm/v/@incremark/core)](https://www.npmjs.com/package/@incremark/core)
 [![license](https://img.shields.io/npm/l/@incremark/core)](./LICENSE)
 
+🇨🇳 中文 | **[🇺🇸 English](./README.en.md)**
+
 📖 [文档](https://incremark-docs.vercel.app/) | 🎮 [Vue Demo](https://incremark-vue.vercel.app/) | ⚛️ [React Demo](https://incremark-react.vercel.app/)
 
 ## 为什么选择 Incremark？

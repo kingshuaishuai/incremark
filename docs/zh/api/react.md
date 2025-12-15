@@ -50,6 +50,8 @@ interface UseIncremarkReturn {
   abort: () => IncrementalUpdate
   /** 重置解析器 */
   reset: () => void
+  /** 一次性渲染完整 Markdown */
+  render: (content: string) => IncrementalUpdate
   /** 解析器实例 */
   parser: IncremarkParser
 }

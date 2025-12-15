@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, h, defineComponent } from 'vue'
+import { ref, h, defineComponent, computed } from 'vue'
 import { useIncremark, useDevTools } from '../../../packages/vue/src/composables'
 import { Incremark } from '../../../packages/vue/src/components'
+import { createIncremarkParser } from '../../../packages/core/src'
 // @ts-ignore - 类型声明
 import { math } from 'micromark-extension-math'
 // @ts-ignore - 类型声明
@@ -15,15 +16,42 @@ const incremark = useIncremark({
   extensions: [math()],
   mdastExtensions: [mathFromMarkdown()]
 })
-const { markdown, blocks, completedBlocks, pendingBlocks, append, finalize, reset, isLoading } = incremark
+const { markdown, blocks, completedBlocks, pendingBlocks, append, finalize, reset, render, isLoading } = incremark
 
 // 使用独立的 DevTools
 useDevTools(incremark)
 
 const isStreaming = ref(false)
 
-// 示例 Markdown 内容
-const sampleMarkdown = `# 🚀 Incremark Vue 示例
+// 国际化
+const locale = ref<'zh' | 'en'>((localStorage.getItem('locale') as 'zh' | 'en') || 'zh')
+
+const i18n = {
+  zh: {
+    title: '🚀 Incremark Vue 示例',
+    simulateAI: '模拟 AI 输出',
+    streaming: '正在输出...',
+    renderOnce: '一次性渲染',
+    reset: '重置',
+    customComponents: '使用自定义组件',
+    chars: '字符',
+    blocks: '块',
+    pending: '待定',
+    benchmark: '性能对比',
+    benchmarkMode: '对比模式',
+    runBenchmark: '运行对比测试',
+    running: '测试中...',
+    traditional: '传统方式',
+    incremark: 'Incremark',
+    totalTime: '总耗时',
+    parseCount: '解析次数',
+    totalChars: '总解析量',
+    speedup: '加速比',
+    benchmarkNote: '传统方式每次收到新内容都重新解析全部文本，Incremark 只解析新增部分。',
+    customInput: '自定义输入',
+    inputPlaceholder: '在这里输入你的 Markdown 内容...',
+    useExample: '使用示例',
+    sampleMarkdown: `# 🚀 Incremark Vue 示例
 
 欢迎使用 **Incremark**！这是一个专为 AI 流式输出设计的增量 Markdown 解析器。
 
@@ -108,8 +136,205 @@ const { append, finalize } = useIncremark({
 
 > 💡 **提示**：Incremark 的核心优势是**解析层增量化**，而非仅仅是渲染层优化。
 
-**感谢使用 Incremark！** 🙏
-`
+**感谢使用 Incremark！** 🙏`
+  },
+  en: {
+    title: '🚀 Incremark Vue Example',
+    simulateAI: 'Simulate AI Output',
+    streaming: 'Streaming...',
+    renderOnce: 'Render Once',
+    reset: 'Reset',
+    customComponents: 'Use Custom Components',
+    chars: 'chars',
+    blocks: 'blocks',
+    pending: 'pending',
+    benchmark: 'Benchmark',
+    benchmarkMode: 'Comparison Mode',
+    runBenchmark: 'Run Benchmark',
+    running: 'Running...',
+    traditional: 'Traditional',
+    incremark: 'Incremark',
+    totalTime: 'Total Time',
+    parseCount: 'Parse Count',
+    totalChars: 'Total Parsed',
+    speedup: 'Speedup',
+    benchmarkNote: 'Traditional parsers re-parse all content on each new chunk. Incremark only parses new content.',
+    customInput: 'Custom Input',
+    inputPlaceholder: 'Enter your Markdown content here...',
+    useExample: 'Use Example',
+    sampleMarkdown: `# 🚀 Incremark Vue Example
+
+Welcome to **Incremark**! An incremental Markdown parser designed for AI streaming output.
+
+## 📋 Features
+
+- **Incremental Parsing**: Only parse new content, saving 90%+ CPU overhead
+- **Mermaid Charts**: Support for flowcharts, sequence diagrams, etc.
+- **LaTeX Formulas**: Math formula rendering support
+- **GFM Support**: Tables, task lists, strikethrough, etc.
+
+## 📐 Math Formulas
+
+Inline formula: The mass-energy equation $E = mc^2$ is one of the most famous formulas in physics.
+
+Block formula - Euler's formula:
+
+$$
+e^{i\\pi} + 1 = 0
+$$
+
+Quadratic formula:
+
+$$
+x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}
+$$
+
+## 📊 Mermaid Charts
+
+### Flowchart
+
+\`\`\`mermaid
+flowchart TD
+    A[Start] --> B{Condition}
+    B -->|Yes| C[Execute]
+    B -->|No| D[Skip]
+    C --> E[End]
+    D --> E
+\`\`\`
+
+### Sequence Diagram
+
+\`\`\`mermaid
+sequenceDiagram
+    participant U as User
+    participant C as Client
+    participant S as Server
+    U->>C: Input message
+    C->>S: Send request
+    S-->>C: Streaming response
+    C-->>U: Real-time render
+\`\`\`
+
+## 💻 Code Example
+
+\`\`\`typescript
+import { useIncremark, Incremark } from '@incremark/vue'
+import { math } from 'micromark-extension-math'
+import { mathFromMarkdown } from 'mdast-util-math'
+
+const { append, finalize } = useIncremark({
+  gfm: true,
+  extensions: [math()],
+  mdastExtensions: [mathFromMarkdown()]
+})
+\`\`\`
+
+## 📊 Performance Comparison
+
+| Metric | Traditional | Incremark | Improvement |
+|--------|-------------|-----------|-------------|
+| Parse Volume | ~500K chars | ~50K chars | 90% ↓ |
+| CPU Usage | High | Low | 80% ↓ |
+| Frame Rate | Laggy | Smooth | ✅ |
+
+## 📝 Task List
+
+- [x] Core parser
+- [x] Vue 3 integration
+- [x] Mermaid charts
+- [x] LaTeX formulas
+- [ ] React integration
+
+> 💡 **Tip**: Incremark's core advantage is **parsing-level incrementalization**, not just render-level optimization.
+
+**Thanks for using Incremark!** 🙏`
+  }
+}
+
+const t = computed(() => i18n[locale.value])
+
+function toggleLocale() {
+  locale.value = locale.value === 'zh' ? 'en' : 'zh'
+  localStorage.setItem('locale', locale.value)
+  reset()
+}
+
+// 自定义输入模式
+const customInputMode = ref(false)
+const customMarkdown = ref('')
+
+// 示例 Markdown 内容
+const sampleMarkdown = computed(() => 
+  customInputMode.value && customMarkdown.value.trim() 
+    ? customMarkdown.value 
+    : t.value.sampleMarkdown
+)
+
+// Benchmark 模式
+const benchmarkMode = ref(false)
+const benchmarkStats = ref({
+  traditional: { time: 0, parseCount: 0, totalChars: 0 },
+  incremark: { time: 0, parseCount: 0, totalChars: 0 }
+})
+const benchmarkRunning = ref(false)
+const benchmarkProgress = ref(0)
+
+// 传统解析方式 - 每次都重新解析全部内容
+async function runBenchmarkComparison() {
+  reset()
+  benchmarkRunning.value = true
+  benchmarkProgress.value = 0
+  
+  const content = sampleMarkdown.value
+  const chunks = content.match(/[\s\S]{1,20}/g) || []
+  
+  // 1. 测试传统方式：每次追加都重新从头解析全部内容
+  let traditionalTime = 0
+  let traditionalParseCount = 0
+  let traditionalTotalChars = 0
+  let accumulated = ''
+  
+  for (let i = 0; i < chunks.length; i++) {
+    accumulated += chunks[i]
+    const start = performance.now()
+    // 传统方式：每次都创建新 parser 并解析全部累积内容
+    const traditionalParser = createIncremarkParser({ gfm: true })
+    traditionalParser.append(accumulated)
+    traditionalParser.finalize()
+    traditionalParser.getCompletedBlocks() // 获取结果
+    traditionalTime += performance.now() - start
+    traditionalParseCount++
+    traditionalTotalChars += accumulated.length
+    benchmarkProgress.value = ((i + 1) / chunks.length) * 50
+    await new Promise(r => setTimeout(r, 5))
+  }
+  
+  // 2. 测试 Incremark 增量方式
+  reset()
+  let incremarkTime = 0
+  let incremarkParseCount = 0
+  let incremarkTotalChars = 0
+  
+  for (let i = 0; i < chunks.length; i++) {
+    const start = performance.now()
+    append(chunks[i])
+    incremarkTime += performance.now() - start
+    incremarkParseCount++
+    incremarkTotalChars += chunks[i].length
+    benchmarkProgress.value = 50 + ((i + 1) / chunks.length) * 50
+    await new Promise(r => setTimeout(r, 5))
+  }
+  finalize()
+  
+  benchmarkStats.value = {
+    traditional: { time: traditionalTime, parseCount: traditionalParseCount, totalChars: traditionalTotalChars },
+    incremark: { time: incremarkTime, parseCount: incremarkParseCount, totalChars: incremarkTotalChars }
+  }
+  
+  benchmarkRunning.value = false
+  benchmarkProgress.value = 100
+}
+
 
 // 自定义标题组件示例
 const CustomHeading = defineComponent({
@@ -137,8 +362,7 @@ async function simulateStream() {
   reset()
   isStreaming.value = true
 
-  // const chunks = sampleMarkdown.match(/[\s\S]{1,20}/g) || []
-  const chunks = sampleMarkdown.split('');
+  const chunks = sampleMarkdown.value.match(/[\s\S]{1,20}/g) || []
 
   for (const chunk of chunks) {
     append(chunk)
@@ -151,33 +375,113 @@ async function simulateStream() {
 
 // 一次性渲染
 function renderOnce() {
-  reset()
-  append(sampleMarkdown)
-  finalize()
+  render(sampleMarkdown.value)
 }
 </script>
 
 <template>
   <div class="app">
     <header>
-      <h1>🚀 Incremark Vue Example</h1>
-      <div class="controls">
-        <button @click="simulateStream" :disabled="isStreaming">
-          {{ isStreaming ? '正在输出...' : '模拟 AI 输出' }}
+      <div class="header-top">
+        <h1>{{ t.title }}</h1>
+        <button class="lang-toggle" @click="toggleLocale">
+          {{ locale === 'zh' ? '🇺🇸 English' : '🇨🇳 中文' }}
         </button>
-        <button @click="renderOnce" :disabled="isStreaming">一次性渲染</button>
-        <button @click="reset" :disabled="isStreaming">重置</button>
+      </div>
+      <div class="controls">
+        <button @click="simulateStream" :disabled="isStreaming || benchmarkRunning">
+          {{ isStreaming ? t.streaming : t.simulateAI }}
+        </button>
+        <button @click="renderOnce" :disabled="isStreaming || benchmarkRunning">{{ t.renderOnce }}</button>
+        <button @click="reset" :disabled="isStreaming || benchmarkRunning">{{ t.reset }}</button>
         <label class="checkbox">
           <input type="checkbox" v-model="useCustomComponents" />
-          使用自定义组件
+          {{ t.customComponents }}
+        </label>
+        <label class="checkbox benchmark-toggle">
+          <input type="checkbox" v-model="benchmarkMode" />
+          {{ t.benchmarkMode }}
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" v-model="customInputMode" />
+          {{ t.customInput }}
         </label>
         <span class="stats">
-          📝 {{ markdown.length }} 字符 |
-          ✅ {{ completedBlocks.length }} 块 |
-          ⏳ {{ pendingBlocks.length }} 待定
+          📝 {{ markdown.length }} {{ t.chars }} |
+          ✅ {{ completedBlocks.length }} {{ t.blocks }} |
+          ⏳ {{ pendingBlocks.length }} {{ t.pending }}
         </span>
       </div>
     </header>
+
+    <!-- Benchmark Panel -->
+    <div v-if="benchmarkMode" class="benchmark-panel">
+      <div class="benchmark-header">
+        <h2>⚡ {{ t.benchmark }}</h2>
+        <button 
+          class="benchmark-btn"
+          @click="runBenchmarkComparison" 
+          :disabled="benchmarkRunning"
+        >
+          {{ benchmarkRunning ? t.running : t.runBenchmark }}
+        </button>
+      </div>
+      
+      <div v-if="benchmarkRunning" class="benchmark-progress">
+        <div class="progress-bar" :style="{ width: benchmarkProgress + '%' }"></div>
+      </div>
+      
+      <div v-if="benchmarkStats.traditional.time > 0" class="benchmark-results">
+        <div class="benchmark-card traditional">
+          <h3>🐢 {{ t.traditional }}</h3>
+          <div class="stat">
+            <span class="label">{{ t.totalTime }}</span>
+            <span class="value">{{ benchmarkStats.traditional.time.toFixed(2) }} ms</span>
+          </div>
+          <div class="stat">
+            <span class="label">{{ t.totalChars }}</span>
+            <span class="value">{{ (benchmarkStats.traditional.totalChars / 1000).toFixed(1) }}K</span>
+          </div>
+        </div>
+        
+        <div class="benchmark-card incremark">
+          <h3>🚀 {{ t.incremark }}</h3>
+          <div class="stat">
+            <span class="label">{{ t.totalTime }}</span>
+            <span class="value">{{ benchmarkStats.incremark.time.toFixed(2) }} ms</span>
+          </div>
+          <div class="stat">
+            <span class="label">{{ t.totalChars }}</span>
+            <span class="value">{{ (benchmarkStats.incremark.totalChars / 1000).toFixed(1) }}K</span>
+          </div>
+        </div>
+        
+        <div class="benchmark-card speedup">
+          <h3>📈 {{ t.speedup }}</h3>
+          <div class="speedup-value">
+            {{ (benchmarkStats.traditional.time / benchmarkStats.incremark.time).toFixed(1) }}x
+          </div>
+        </div>
+      </div>
+      
+      <p class="benchmark-note">💡 {{ t.benchmarkNote }}</p>
+    </div>
+
+    <!-- Custom Input Panel -->
+    <div v-if="customInputMode" class="input-panel">
+      <div class="input-header">
+        <span>✏️ {{ t.customInput }}</span>
+        <button class="use-example-btn" @click="customMarkdown = t.sampleMarkdown">
+          {{ t.useExample }}
+        </button>
+      </div>
+      <textarea 
+        v-model="customMarkdown"
+        :placeholder="t.inputPlaceholder"
+        class="markdown-input"
+        rows="8"
+      ></textarea>
+    </div>
 
     <main class="content">
       <!-- 直接传入 blocks，不需要 ref -->
@@ -215,10 +519,28 @@ header {
   margin-bottom: 1.5rem;
 }
 
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
 header h1 {
   font-size: 1.75rem;
-  margin-bottom: 1rem;
   color: #1a1a1a;
+}
+
+.lang-toggle {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+}
+
+.lang-toggle:hover:not(:disabled) {
+  background: #e5e7eb;
 }
 
 .controls {
@@ -327,10 +649,16 @@ button:disabled {
   background: transparent;
   padding: 0;
 }
+/* 表格容器（支持横向滚动） */
+.content .table-wrapper {
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
 .content table {
   width: 100%;
   border-collapse: collapse;
-  margin: 1rem 0;
+  min-width: 400px;
 }
 .content th,
 .content td {
@@ -359,5 +687,215 @@ button:disabled {
 }
 .content a:hover {
   text-decoration: underline;
+}
+
+/* 图片和媒体样式 */
+.content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.content video,
+.content iframe {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+/* 任务列表样式 */
+.content input[type="checkbox"] {
+  margin-right: 0.5rem;
+  accent-color: #3b82f6;
+}
+
+/* 删除线样式 */
+.content del {
+  color: #9ca3af;
+}
+
+/* 强调样式 */
+.content strong {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.content em {
+  font-style: italic;
+}
+
+/* 内联代码区分 pre code */
+.content :not(pre) > code {
+  background: #f3f4f6;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  font-size: 0.875em;
+  color: #e11d48;
+}
+
+/* 长内容自动换行 */
+.content p,
+.content li {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Custom Input Panel */
+.input-panel {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.input-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.use-example-btn {
+  background: #e5e7eb;
+  color: #374151;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+}
+
+.use-example-btn:hover {
+  background: #d1d5db;
+}
+
+.markdown-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-family: 'Fira Code', 'Monaco', monospace;
+  font-size: 0.875rem;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.markdown-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Benchmark Panel */
+.benchmark-toggle input {
+  accent-color: #10b981;
+}
+
+.benchmark-panel {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: #f1f5f9;
+}
+
+.benchmark-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.benchmark-header h2 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.benchmark-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  padding: 0.5rem 1.5rem;
+}
+
+.benchmark-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.benchmark-progress {
+  height: 4px;
+  background: #334155;
+  border-radius: 2px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #3b82f6);
+  transition: width 0.3s ease;
+}
+
+.benchmark-results {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.benchmark-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.benchmark-card h3 {
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.9;
+}
+
+.benchmark-card.traditional {
+  border-left: 3px solid #ef4444;
+}
+
+.benchmark-card.incremark {
+  border-left: 3px solid #10b981;
+}
+
+.benchmark-card.speedup {
+  border-left: 3px solid #3b82f6;
+}
+
+.benchmark-card .stat {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  margin: 0.25rem 0;
+}
+
+.benchmark-card .label {
+  opacity: 0.7;
+}
+
+.benchmark-card .value {
+  font-weight: 600;
+}
+
+.speedup-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #3b82f6;
+}
+
+.benchmark-note {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .benchmark-results {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

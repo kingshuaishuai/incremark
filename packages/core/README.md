@@ -2,6 +2,8 @@
 
 增量式 Markdown 解析器核心库。
 
+🇨🇳 中文 | **[🇺🇸 English](./README.en.md)**
+
 ## 特性
 
 - 🚀 **增量解析** - 只解析新增内容，已完成的块不再重复处理
@@ -58,6 +60,15 @@ interface ParserOptions {
 ### parser.reset()
 
 重置状态。
+
+### parser.render(content)
+
+一次性渲染完整 Markdown（reset + append + finalize）。
+
+```ts
+const update = parser.render('# Hello World')
+console.log(update.completed) // 已完成的块
+```
 
 ### parser.getBuffer()
 

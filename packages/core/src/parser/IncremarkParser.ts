@@ -466,6 +466,17 @@ export class IncremarkParser {
     // 触发状态变化回调
     this.emitChange([])
   }
+
+  /**
+   * 一次性渲染完整 Markdown（reset + append + finalize）
+   * @param content 完整的 Markdown 内容
+   * @returns 解析结果
+   */
+  render(content: string): IncrementalUpdate {
+    this.reset()
+    this.append(content)
+    return this.finalize()
+  }
 }
 
 /**

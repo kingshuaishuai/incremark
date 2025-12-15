@@ -1,23 +1,23 @@
 # @incremark/vue
 
-Incremark 的 Vue 3 集成库。
+Vue 3 integration for Incremark.
 
-🇨🇳 中文 | **[🇺🇸 English](./README.en.md)**
+**[🇨🇳 中文](./README.md)** | 🇺🇸 English
 
-## 特性
+## Features
 
-- 📦 **开箱即用** - 提供 `useIncremark` composable 和 `<Incremark>` 组件
-- 🎨 **可定制** - 支持自定义渲染组件
-- ⚡ **高性能** - 使用 `shallowRef` 和 `markRaw` 优化性能
-- 🔧 **DevTools** - 内置开发者工具
+- 📦 **Out of the Box** - Provides `useIncremark` composable and `<Incremark>` component
+- 🎨 **Customizable** - Support for custom render components
+- ⚡ **High Performance** - Optimized with `shallowRef` and `markRaw`
+- 🔧 **DevTools** - Built-in developer tools
 
-## 安装
+## Installation
 
 ```bash
 pnpm add @incremark/core @incremark/vue
 ```
 
-## 快速开始
+## Quick Start
 
 ```vue
 <script setup>
@@ -35,7 +35,7 @@ async function handleStream(stream) {
 </script>
 
 <template>
-  <button @click="handleStream">开始</button>
+  <button @click="handleStream">Start</button>
   <Incremark :blocks="blocks" />
 </template>
 ```
@@ -44,24 +44,24 @@ async function handleStream(stream) {
 
 ### useIncremark(options)
 
-核心 composable。
+Core composable.
 
-**返回值：**
+**Returns:**
 
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `markdown` | `Ref<string>` | 完整 Markdown |
-| `blocks` | `ComputedRef<Block[]>` | 所有块 |
-| `completedBlocks` | `ShallowRef<Block[]>` | 已完成块 |
-| `pendingBlocks` | `ShallowRef<Block[]>` | 待处理块 |
-| `append` | `Function` | 追加内容 |
-| `finalize` | `Function` | 完成解析 |
-| `reset` | `Function` | 重置状态 |
-| `render` | `Function` | 一次性渲染（reset + append + finalize） |
+| Property | Type | Description |
+|----------|------|-------------|
+| `markdown` | `Ref<string>` | Complete Markdown |
+| `blocks` | `ComputedRef<Block[]>` | All blocks |
+| `completedBlocks` | `ShallowRef<Block[]>` | Completed blocks |
+| `pendingBlocks` | `ShallowRef<Block[]>` | Pending blocks |
+| `append` | `Function` | Append content |
+| `finalize` | `Function` | Complete parsing |
+| `reset` | `Function` | Reset state |
+| `render` | `Function` | Render once (reset + append + finalize) |
 
 ### useDevTools(incremark)
 
-启用 DevTools。
+Enable DevTools.
 
 ```ts
 const incremark = useIncremark()
@@ -70,7 +70,7 @@ useDevTools(incremark)
 
 ### \<Incremark\>
 
-渲染组件。
+Render component.
 
 ```vue
 <Incremark 
@@ -79,7 +79,7 @@ useDevTools(incremark)
 />
 ```
 
-## 自定义组件
+## Custom Components
 
 ```vue
 <script setup>
@@ -97,7 +97,7 @@ const { blocks } = useIncremark()
 </template>
 ```
 
-## 数学公式支持
+## Math Formula Support
 
 ```bash
 pnpm add micromark-extension-math mdast-util-math katex

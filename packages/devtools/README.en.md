@@ -1,25 +1,25 @@
 # @incremark/devtools
 
-Incremark 的开发者工具，框架无关。
+Developer tools for Incremark, framework agnostic.
 
-🇨🇳 中文 | **[🇺🇸 English](./README.en.md)**
+**[🇨🇳 中文](./README.md)** | 🇺🇸 English
 
-## 特性
+## Features
 
-- 🔍 **实时状态** - 查看解析状态、块列表、AST
-- 📊 **时间线** - 记录每次 append 操作
-- 🎨 **主题** - 支持 dark/light 主题
-- 📦 **框架无关** - 可在 Vue、React 或原生 JS 中使用
+- 🔍 **Real-time State** - View parsing state, block list, AST
+- 📊 **Timeline** - Record each append operation
+- 🎨 **Themes** - Supports dark/light themes
+- 📦 **Framework Agnostic** - Works with Vue, React, or vanilla JS
 
-## 安装
+## Installation
 
 ```bash
 pnpm add @incremark/devtools
 ```
 
-## 使用
+## Usage
 
-### 与 Vue 配合
+### With Vue
 
 ```ts
 import { useIncremark, useDevTools } from '@incremark/vue'
@@ -28,7 +28,7 @@ const incremark = useIncremark()
 useDevTools(incremark)
 ```
 
-### 与 React 配合
+### With React
 
 ```tsx
 import { useIncremark, useDevTools } from '@incremark/react'
@@ -39,7 +39,7 @@ function App() {
 }
 ```
 
-### 独立使用
+### Standalone Usage
 
 ```ts
 import { createIncremarkParser } from '@incremark/core'
@@ -53,7 +53,7 @@ parser.setOnChange(mountDevTools())
 
 ### mountDevTools(options?, target?)
 
-创建并挂载 DevTools，返回 onChange 回调。
+Create and mount DevTools, returns onChange callback.
 
 ```ts
 const callback = mountDevTools({
@@ -67,7 +67,7 @@ parser.setOnChange(callback)
 
 ### IncremarkDevTools
 
-DevTools 类，提供更细粒度控制。
+DevTools class for fine-grained control.
 
 ```ts
 const devtools = new IncremarkDevTools(options)
@@ -76,26 +76,26 @@ devtools.update(parserState)
 devtools.unmount()
 ```
 
-## 配置选项
+## Configuration Options
 
 ```ts
 interface DevToolsOptions {
-  open?: boolean           // 初始是否打开
-  position?: Position      // 位置
-  theme?: 'dark' | 'light' // 主题
+  open?: boolean           // Initially open
+  position?: Position      // Position
+  theme?: 'dark' | 'light' // Theme
 }
 
 type Position = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
 ```
 
-## 功能面板
+## Feature Panels
 
-| 面板 | 功能 |
-|------|------|
-| Overview | 显示字符数、块数量等统计 |
-| Blocks | 查看所有解析出的块 |
-| AST | JSON 格式的完整 AST |
-| Timeline | append 操作历史 |
+| Panel | Function |
+|-------|----------|
+| Overview | Shows character count, block count, etc. |
+| Blocks | View all parsed blocks |
+| AST | Complete AST in JSON format |
+| Timeline | History of append operations |
 
 ## License
 

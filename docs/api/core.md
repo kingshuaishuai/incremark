@@ -50,6 +50,20 @@ Reset parser state.
 reset(): void
 ```
 
+#### render(content)
+
+Render complete Markdown at once (reset + append + finalize).
+
+```ts
+render(content: string): IncrementalUpdate
+```
+
+**Parameters:**
+- `content` - Complete Markdown content
+
+**Returns:**
+- `IncrementalUpdate` - Parse result
+
 #### getBuffer()
 
 Get current buffer content.

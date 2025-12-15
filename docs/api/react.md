@@ -50,6 +50,8 @@ interface UseIncremarkReturn {
   abort: () => IncrementalUpdate
   /** Reset parser */
   reset: () => void
+  /** Render complete Markdown at once */
+  render: (content: string) => IncrementalUpdate
   /** Parser instance */
   parser: IncremarkParser
 }

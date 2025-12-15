@@ -18,14 +18,16 @@
     "docs:build": "pnpm --filter @incremark/docs build",
     "docs:preview": "pnpm --filter @incremark/docs preview",
     "benchmark": "pnpm --filter @incremark/core benchmark",
+    "changelog": "changelogen --output CHANGELOG.md",
     "bump": "bumpp package.json packages/*/package.json --commit --push --tag",
     "bump:dry": "bumpp package.json packages/*/package.json --dry",
-    "release": "pnpm --filter './packages/*' build && pnpm --filter './packages/*' publish --access public --registry https://registry.npmjs.org",
+    "release": "pnpm changelog && pnpm bump && pnpm --filter './packages/*' build && pnpm --filter './packages/*' publish --access public --registry https://registry.npmjs.org",
     "release:dry": "pnpm --filter './packages/*' build && pnpm --filter './packages/*' publish --access public --dry-run --registry https://registry.npmjs.org"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
     "bumpp": "^9.4.0",
+    "changelogen": "^0.5.5",
     "typescript": "^5.3.0",
     "vitest": "^2.0.0",
     "tsup": "^8.0.0"

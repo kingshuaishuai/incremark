@@ -1,23 +1,23 @@
 # @incremark/react
 
-Incremark 的 React 18+ 集成库。
+React 18+ integration for Incremark.
 
-🇨🇳 中文 | **[🇺🇸 English](./README.en.md)**
+**[🇨🇳 中文](./README.md)** | 🇺🇸 English
 
-## 特性
+## Features
 
-- 📦 **开箱即用** - 提供 `useIncremark` hook 和 `<Incremark>` 组件
-- 🎨 **可定制** - 支持自定义渲染组件
-- ⚡ **高性能** - 利用 React 的 reconciliation 机制
-- 🔧 **DevTools** - 内置开发者工具
+- 📦 **Out of the Box** - Provides `useIncremark` hook and `<Incremark>` component
+- 🎨 **Customizable** - Support for custom render components
+- ⚡ **High Performance** - Leverages React's reconciliation mechanism
+- 🔧 **DevTools** - Built-in developer tools
 
-## 安装
+## Installation
 
 ```bash
 pnpm add @incremark/core @incremark/react
 ```
 
-## 快速开始
+## Quick Start
 
 ```tsx
 import { useIncremark, Incremark } from '@incremark/react'
@@ -41,7 +41,7 @@ function App() {
 
   return (
     <>
-      <button onClick={() => handleStream(stream)}>开始</button>
+      <button onClick={() => handleStream(stream)}>Start</button>
       <Incremark blocks={blocks} />
     </>
   )
@@ -52,24 +52,24 @@ function App() {
 
 ### useIncremark(options)
 
-核心 hook。
+Core hook.
 
-**返回值：**
+**Returns:**
 
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `markdown` | `string` | 完整 Markdown |
-| `blocks` | `Block[]` | 所有块 |
-| `completedBlocks` | `Block[]` | 已完成块 |
-| `pendingBlocks` | `Block[]` | 待处理块 |
-| `append` | `Function` | 追加内容 |
-| `finalize` | `Function` | 完成解析 |
-| `reset` | `Function` | 重置状态 |
-| `render` | `Function` | 一次性渲染（reset + append + finalize） |
+| Property | Type | Description |
+|----------|------|-------------|
+| `markdown` | `string` | Complete Markdown |
+| `blocks` | `Block[]` | All blocks |
+| `completedBlocks` | `Block[]` | Completed blocks |
+| `pendingBlocks` | `Block[]` | Pending blocks |
+| `append` | `Function` | Append content |
+| `finalize` | `Function` | Complete parsing |
+| `reset` | `Function` | Reset state |
+| `render` | `Function` | Render once (reset + append + finalize) |
 
 ### useDevTools(incremark)
 
-启用 DevTools。
+Enable DevTools.
 
 ```tsx
 const incremark = useIncremark()
@@ -78,7 +78,7 @@ useDevTools(incremark)
 
 ### \<Incremark\>
 
-渲染组件。
+Render component.
 
 ```tsx
 <Incremark 
@@ -87,7 +87,7 @@ useDevTools(incremark)
 />
 ```
 
-## 自定义组件
+## Custom Components
 
 ```tsx
 import { useIncremark, Incremark } from '@incremark/react'
@@ -105,7 +105,7 @@ function App() {
 }
 ```
 
-## 与 React Query 集成
+## Integration with React Query
 
 ```tsx
 import { useQuery } from '@tanstack/react-query'
@@ -118,7 +118,7 @@ function StreamingContent() {
     queryKey: ['chat'],
     queryFn: async () => {
       reset()
-      // ... 流式处理
+      // ... streaming handling
       finalize()
       return null
     },
@@ -127,7 +127,7 @@ function StreamingContent() {
 
   return (
     <>
-      <button onClick={() => refetch()}>开始</button>
+      <button onClick={() => refetch()}>Start</button>
       <Incremark blocks={blocks} />
     </>
   )

@@ -50,6 +50,20 @@ finalize(): IncrementalUpdate
 reset(): void
 ```
 
+#### render(content)
+
+一次性渲染完整 Markdown（reset + append + finalize）。
+
+```ts
+render(content: string): IncrementalUpdate
+```
+
+**参数：**
+- `content` - 完整的 Markdown 内容
+
+**返回值：**
+- `IncrementalUpdate` - 解析结果
+
 #### getBuffer()
 
 获取当前缓冲区内容。

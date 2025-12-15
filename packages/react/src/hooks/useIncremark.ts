@@ -120,6 +120,25 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
     setIsLoading(false)
   }, [parser])
 
+  /**
+   * 一次性渲染完整 Markdown（reset + append + finalize）
+   */
+  const render = useCallback(
+    (content: string): IncrementalUpdate => {
+      // 调用 parser 的 render 方法
+      const update = parser.render(content)
+
+      // 同步状态
+      setMarkdown(parser.getBuffer())
+      setCompletedBlocks(parser.getCompletedBlocks())
+      setPendingBlocks([])
+      setIsLoading(false)
+
+      return update
+    },
+    [parser]
+  )
+
   return {
     /** 已收集的完整 Markdown 字符串 */
     markdown,
@@ -141,6 +160,8 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
     abort,
     /** 重置解析器 */
     reset,
+    /** 一次性渲染（reset + append + finalize） */
+    render,
     /** 解析器实例 */
     parser
   }

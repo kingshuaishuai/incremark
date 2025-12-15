@@ -1,0 +1,109 @@
+# Incremark 项目开发规范
+
+## 代码修改同步规则
+
+当修改 **@incremark/core、@incremark/vue、@incremark/react、@incremark/devtools** 的代码时，必须同步更新以下内容：
+
+### 1. README 文档
+- `packages/*/README.md` - 中文 README
+- `packages/*/README.en.md` - 英文 README
+- `README.md` - 项目主 README（中文）
+- `README.en.md` - 项目主 README（英文）
+
+### 2. API 文档（VitePress）
+- `docs/api/*.md` - 英文 API 文档
+- `docs/zh/api/*.md` - 中文 API 文档
+
+### 3. Demo 示例
+- `examples/vue/src/App.vue` - Vue Demo
+- `examples/react/src/App.tsx` - React Demo
+- Demo 需要支持中英文切换
+
+### 4. 需要同步的内容类型
+- 新增 API / 方法
+- 修改 API 签名或返回值
+- 新增功能特性
+- 性能优化数据更新
+- 类型定义变更
+
+## 项目结构
+
+```
+packages/
+  core/          # 核心解析器（框架无关）
+  vue/           # Vue 3 集成
+  react/         # React 18+ 集成
+  devtools/      # 开发者工具
+
+examples/
+  vue/           # Vue Demo
+  react/         # React Demo
+
+docs/            # VitePress 文档站点
+  api/           # 英文 API 文档
+  guide/         # 英文使用指南
+  zh/            # 中文文档
+    api/         # 中文 API 文档
+    guide/       # 中文使用指南
+```
+
+## 国际化要求
+
+- 所有用户可见的文档必须提供中英双语
+- Demo 中的 UI 文字需要支持中英文切换
+- 语言偏好保存到 localStorage
+
+## 代码风格
+
+- 使用 TypeScript
+- 使用 pnpm 作为包管理器
+- 遵循现有代码风格和命名规范
+
+## Git 提交规范（Conventional Commits）
+
+使用规范化提交信息，用于自动生成 CHANGELOG。
+
+### 提交格式
+```
+<type>(<scope>): <description>
+```
+
+### 类型说明
+
+| 类型 | 说明 | 进 Changelog |
+|------|------|-------------|
+| `feat` | 新功能 | ✅ |
+| `fix` | Bug 修复 | ✅ |
+| `perf` | 性能优化 | ✅ |
+| `docs` | 文档修改 | ✅ |
+| `refactor` | 重构 | ✅ |
+| `chore` | 构建/工具/demo | ❌ |
+| `style` | 代码风格 | ❌ |
+| `test` | 测试 | ❌ |
+| `ci` | CI/CD | ❌ |
+
+### 示例
+
+```bash
+# 核心功能变更（会进 changelog）
+feat(core): 添加 render 方法
+fix(vue): 修复图片样式溢出
+
+# Demo/工具变更（不进 changelog）
+chore(demo): 添加中英文切换
+chore: 更新构建配置
+
+# 文档变更
+docs: 更新 API 文档
+docs(readme): 添加 benchmark 数据
+```
+
+### Scope 建议
+
+- `core` - @incremark/core
+- `vue` - @incremark/vue
+- `react` - @incremark/react
+- `devtools` - @incremark/devtools
+- `demo` - examples 目录
+- `docs` - 文档站点
+
