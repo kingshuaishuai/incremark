@@ -2,6 +2,38 @@
 
 
 
+## v0.0.4...main
+
+[compare changes](https://github.com/kingshuaishuai/incremark/compare/v0.0.4...main)
+
+### 🚀 Enhancements
+
+- Add typewriter effect and auto-scroll features with documentation updates ([860522f](https://github.com/kingshuaishuai/incremark/commit/860522f))
+
+### 🏡 Chore
+
+- Update changelog ([a036765](https://github.com/kingshuaishuai/incremark/commit/a036765))
+
+### ❤️ Contributors
+
+- Wangyishuai <13122317939@163.com>
+
+## v0.0.4...main
+
+[compare changes](https://github.com/kingshuaishuai/incremark/compare/v0.0.4...main)
+
+### 🚀 Enhancements
+
+- Add typewriter effect and auto-scroll features with documentation updates ([860522f](https://github.com/kingshuaishuai/incremark/commit/860522f))
+
+### 🏡 Chore
+
+- Update changelog ([a036765](https://github.com/kingshuaishuai/incremark/commit/a036765))
+
+### ❤️ Contributors
+
+- Wangyishuai <13122317939@163.com>
+
 ## v0.0.3...v0.0.4
 
 [compare changes](https://github.com/kingshuaishuai/incremark/compare/v0.0.3...v0.0.4)
