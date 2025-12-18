@@ -37,6 +37,7 @@ const i18n = {
     intervalMs: 'ms/tick',
     randomStep: '随机步长',
     effectNone: '无动画',
+    effectFadeIn: '渐入',
     effectTyping: '光标',
     autoScroll: '📜 自动滚动',
     scrollPaused: '已暂停',
@@ -144,6 +145,7 @@ function App() {
     intervalMs: 'ms/tick',
     randomStep: 'Random Step',
     effectNone: 'None',
+    effectFadeIn: 'Fade In',
     effectTyping: 'Cursor',
     autoScroll: '📜 Auto Scroll',
     scrollPaused: 'Paused',
@@ -245,7 +247,7 @@ function App() {
   const [typewriterSpeed, setTypewriterSpeed] = useState(2)
   const [typewriterInterval, setTypewriterInterval] = useState(30)
   const [typewriterRandomStep, setTypewriterRandomStep] = useState(true)
-  const [typewriterEffect, setTypewriterEffect] = useState<'none' | 'typing'>('typing')
+  const [typewriterEffect, setTypewriterEffect] = useState<'none' | 'fade-in' | 'typing'>('typing')
   const [typewriterCursor, setTypewriterCursor] = useState('|')
 
   // 转换为 SourceBlock 格式
@@ -545,10 +547,11 @@ function App() {
               </label>
               <select 
                 value={typewriterEffect} 
-                onChange={(e) => setTypewriterEffect(e.target.value as 'none' | 'typing')}
+                onChange={(e) => setTypewriterEffect(e.target.value as 'none' | 'fade-in' | 'typing')}
                 className="effect-select"
               >
                 <option value="none">{t.effectNone}</option>
+                <option value="fade-in">{t.effectFadeIn}</option>
                 <option value="typing">{t.effectTyping}</option>
               </select>
               {isProcessing && !isTypewriterPaused && (

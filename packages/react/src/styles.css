@@ -189,3 +189,18 @@
   font-size: 11px;
 }
 
+/* ============ 渐入动画效果 ============ */
+
+.incremark-fade-in {
+  animation: incremark-fade-in 0.4s ease-out;
+}
+
+@keyframes incremark-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+

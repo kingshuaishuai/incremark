@@ -76,7 +76,9 @@ export type {
   TransformerPlugin,
   TransformerOptions,
   TransformerState,
-  AnimationEffect
+  AnimationEffect,
+  TextChunk,
+  TextNodeWithChunks
 } from './transformer'
 
 /**

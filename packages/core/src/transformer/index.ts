@@ -20,6 +20,7 @@ export type {
 
 // 工具函数
 export { countChars, sliceAst, cloneNode } from './utils'
+export type { TextChunk, TextNodeWithChunks, AccumulatedChunks } from './utils'
 
 // 内置插件
 export {

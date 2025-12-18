@@ -1,9 +1,27 @@
 import React from 'react'
-import type { RootContent } from '@incremark/core'
+import type { RootContent, TextChunk } from '@incremark/core'
 
 export interface IncremarkRendererProps {
   node: RootContent
   components?: Partial<Record<string, React.ComponentType<{ node: any }>>>
+}
+
+// 扩展的文本节点类型（支持 chunks）
+interface TextNodeWithChunks {
+  type: 'text'
+  value: string
+  stableLength?: number
+  chunks?: TextChunk[]
+}
+
+/**
+ * 获取文本节点的稳定部分（不需要动画）
+ */
+function getStableText(node: TextNodeWithChunks): string {
+  if (!node.chunks || node.chunks.length === 0) {
+    return node.value
+  }
+  return node.value.slice(0, node.stableLength ?? 0)
 }
 
 // 渲染 inline 子节点
@@ -12,8 +30,25 @@ function renderInlineChildren(children: any[]): React.ReactNode {
 
   return children.map((child, i) => {
     switch (child.type) {
-      case 'text':
+      case 'text': {
+        const textNode = child as TextNodeWithChunks
+        // 如果有 chunks，分别渲染稳定部分和 chunk 部分
+        if (textNode.chunks && textNode.chunks.length > 0) {
+          return (
+            <React.Fragment key={i}>
+              {/* 稳定文本（无动画） */}
+              {getStableText(textNode)}
+              {/* 新增的 chunk 部分（带渐入动画） */}
+              {textNode.chunks.map((chunk, chunkIdx) => (
+                <span key={chunkIdx} className="incremark-fade-in">
+                  {chunk.text}
+                </span>
+              ))}
+            </React.Fragment>
+          )
+        }
         return <React.Fragment key={i}>{child.value}</React.Fragment>
+      }
       case 'strong':
         return <strong key={i}>{renderInlineChildren(child.children)}</strong>
       case 'emphasis':
@@ -39,6 +74,9 @@ function renderInlineChildren(children: any[]): React.ReactNode {
       case 'paragraph':
         // 段落内的内容直接展开
         return <React.Fragment key={i}>{renderInlineChildren(child.children)}</React.Fragment>
+      case 'html':
+        // 原始 HTML
+        return <span key={i} dangerouslySetInnerHTML={{ __html: child.value }} />
       default:
         return <span key={i}>{child.value || ''}</span>
     }

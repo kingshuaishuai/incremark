@@ -29,9 +29,10 @@ export interface DisplayBlock<T = unknown> extends SourceBlock<T> {
 /**
  * 动画效果类型
  * - 'none': 无动画效果
- * - 'typing': 打字机光标效果（需配合 CSS）
+ * - 'fade-in': 新增字符渐入效果
+ * - 'typing': 打字机光标效果
  */
-export type AnimationEffect = 'none' | 'typing'
+export type AnimationEffect = 'none' | 'fade-in' | 'typing'
 
 /**
  * Transformer 插件

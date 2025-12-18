@@ -549,6 +549,16 @@ body {
 
 /* ============ 打字机动画效果 ============ */
 
+/* 渐入效果 - 使用 animation-delay 控制每个字符的动画时机 */
+.incremark-fade-in {
+  animation: incremark-fade-in 0.4s ease-out both;
+}
+
+@keyframes incremark-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* 打字机光标效果 - 光标字符已直接添加到内容中 */
 .content.effect-typing .incremark-block.incremark-pending {
   /* 光标字符已内嵌在内容中 */

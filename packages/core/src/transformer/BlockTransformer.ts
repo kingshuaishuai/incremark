@@ -7,7 +7,7 @@ import type {
   TransformerPlugin,
   AnimationEffect
 } from './types'
-import { countChars as defaultCountChars, sliceAst as defaultSliceAst } from './utils'
+import { countChars as defaultCountChars, sliceAst as defaultSliceAst, type TextChunk, type AccumulatedChunks } from './utils'
 
 /**
  * Block Transformer
@@ -54,6 +54,9 @@ export class BlockTransformer<T = unknown> {
   private lastTickTime = 0
   private isRunning = false
   private isPaused = false
+  // 累积的 chunks（用于 fade-in 动画）
+  private stableChars = 0  // 已经稳定显示的字符数
+  private chunks: TextChunk[] = []  // 累积的 chunks
   private visibilityHandler: (() => void) | null = null
 
   constructor(options: TransformerOptions = {}) {
@@ -98,12 +101,20 @@ export class BlockTransformer<T = unknown> {
     if (this.state.currentBlock) {
       const updated = blocks.find((b) => b.id === this.state.currentBlock!.id)
       if (updated && updated.node !== this.state.currentBlock.node) {
-        // 内容增加了，更新引用
+        const oldTotal = this.countChars(this.state.currentBlock.node)
+        const newTotal = this.countChars(updated.node)
+        
+        // 如果字符数减少了（AST 结构变化，如 **xxx 变成 **xxx**）
+        // 重新计算进度，保持相对位置
+        if (newTotal < oldTotal || newTotal < this.state.currentProgress) {
+          this.state.currentProgress = Math.min(this.state.currentProgress, newTotal)
+        }
+        
+        // 内容更新，更新引用
         this.state.currentBlock = updated
         // 如果之前暂停了（因为到达末尾），重新开始
         if (!this.rafId && !this.isPaused) {
-          const total = this.countChars(updated.node)
-          if (this.state.currentProgress < total) {
+          if (this.state.currentProgress < newTotal) {
             this.startIfNeeded()
           }
         }
@@ -146,6 +157,8 @@ export class BlockTransformer<T = unknown> {
       currentProgress: 0,
       pendingBlocks: []
     }
+    this.stableChars = 0
+    this.chunks = []
 
     this.emit()
   }
@@ -161,6 +174,8 @@ export class BlockTransformer<T = unknown> {
       currentProgress: 0,
       pendingBlocks: []
     }
+    this.stableChars = 0
+    this.chunks = []
     this.emit()
   }
 
@@ -201,7 +216,16 @@ export class BlockTransformer<T = unknown> {
     // 当前正在显示的 block
     if (this.state.currentBlock) {
       const total = this.countChars(this.state.currentBlock.node)
-      const displayNode = this.sliceNode(this.state.currentBlock.node, this.state.currentProgress)
+      const accumulatedChunks: AccumulatedChunks | undefined = 
+        this.options.effect === 'fade-in' && this.chunks.length > 0
+          ? { stableChars: this.stableChars, chunks: this.chunks }
+          : undefined
+      
+      const displayNode = this.sliceNode(
+        this.state.currentBlock.node, 
+        this.state.currentProgress,
+        accumulatedChunks
+      )
 
       result.push({
         ...this.state.currentBlock,
@@ -368,19 +392,73 @@ export class BlockTransformer<T = unknown> {
 
     const total = this.countChars(block.node)
     const step = this.getStep()
+    const prevProgress = this.state.currentProgress
     
-    this.state.currentProgress = Math.min(this.state.currentProgress + step, total)
+    this.state.currentProgress = Math.min(prevProgress + step, total)
+
+    // 如果是 fade-in 效果，添加新的 chunk
+    if (this.options.effect === 'fade-in' && this.state.currentProgress > prevProgress) {
+      const newChars = this.state.currentProgress - prevProgress
+      // 从 block.node 中提取新增的字符
+      const newText = this.extractText(block.node, prevProgress, this.state.currentProgress)
+      if (newText.length > 0) {
+        this.chunks.push({
+          text: newText,
+          createdAt: Date.now()
+        })
+      }
+    }
 
     this.emit()
 
     if (this.state.currentProgress >= total) {
-      // 当前 block 完成
+      // 当前 block 完成，清空 chunks
       this.notifyComplete(block.node)
       this.state.completedBlocks.push(block)
       this.state.currentBlock = null
       this.state.currentProgress = 0
+      this.stableChars = 0
+      this.chunks = []
       this.processNext()
     }
+  }
+
+  /**
+   * 从 AST 节点中提取指定范围的文本
+   */
+  private extractText(node: RootContent, start: number, end: number): string {
+    let result = ''
+    let charIndex = 0
+
+    function traverse(n: any): boolean {
+      if (charIndex >= end) return false
+
+      if (n.value && typeof n.value === 'string') {
+        const nodeStart = charIndex
+        const nodeEnd = charIndex + n.value.length
+        charIndex = nodeEnd
+
+        // 计算交集
+        const overlapStart = Math.max(start, nodeStart)
+        const overlapEnd = Math.min(end, nodeEnd)
+
+        if (overlapStart < overlapEnd) {
+          result += n.value.slice(overlapStart - nodeStart, overlapEnd - nodeStart)
+        }
+        return charIndex < end
+      }
+
+      if (n.children && Array.isArray(n.children)) {
+        for (const child of n.children) {
+          if (!traverse(child)) return false
+        }
+      }
+
+      return true
+    }
+
+    traverse(node)
+    return result
   }
 
   private getStep(): number {
@@ -397,6 +475,8 @@ export class BlockTransformer<T = unknown> {
     if (this.state.pendingBlocks.length > 0) {
       this.state.currentBlock = this.state.pendingBlocks.shift()!
       this.state.currentProgress = 0
+      this.stableChars = 0
+      this.chunks = []
       this.emit()
       // 继续运行（rAF 已经在调度中）
     } else {
@@ -437,7 +517,7 @@ export class BlockTransformer<T = unknown> {
     return defaultCountChars(node)
   }
 
-  private sliceNode(node: RootContent, chars: number): RootContent | null {
+  private sliceNode(node: RootContent, chars: number, accumulatedChunks?: AccumulatedChunks): RootContent | null {
     // 先找匹配的插件
     for (const plugin of this.options.plugins) {
       if (plugin.match?.(node) && plugin.sliceNode) {
@@ -446,8 +526,8 @@ export class BlockTransformer<T = unknown> {
         if (result !== null) return result
       }
     }
-    // 默认截断
-    return defaultSliceAst(node, chars)
+    // 默认截断，传入累积的 chunks
+    return defaultSliceAst(node, chars, accumulatedChunks)
   }
 
   private notifyComplete(node: RootContent): void {

@@ -26,7 +26,7 @@ const typewriterMode = ref(false)
 const typewriterSpeed = ref(2) // 每 tick 字符数
 const typewriterInterval = ref(30) // tick 间隔（毫秒）
 const typewriterRandomStep = ref(true) // 是否使用随机步长
-const typewriterEffect = ref<'none' | 'typing'>('typing') // 动画效果
+const typewriterEffect = ref<'none' | 'fade-in' | 'typing'>('typing') // 动画效果
 const typewriterCursor = ref('|') // 光标字符
 
 // 只使用 completedBlocks 作为 transformer 的输入
@@ -189,6 +189,7 @@ const i18n = {
     intervalMs: 'ms/tick',
     randomStep: '随机步长',
     effectNone: '无动画',
+    effectFadeIn: '渐入',
     effectTyping: '光标',
     autoScroll: '📜 自动滚动',
     scrollPaused: '已暂停',
@@ -314,6 +315,7 @@ const { append, finalize } = useIncremark({
     intervalMs: 'ms/tick',
     randomStep: 'Random Step',
     effectNone: 'None',
+    effectFadeIn: 'Fade In',
     effectTyping: 'Cursor',
     autoScroll: '📜 Auto Scroll',
     scrollPaused: 'Paused',
@@ -603,6 +605,7 @@ function renderOnce() {
           </label>
           <select v-model="typewriterEffect" class="effect-select">
             <option value="none">{{ t.effectNone }}</option>
+            <option value="fade-in">{{ t.effectFadeIn }}</option>
             <option value="typing">{{ t.effectTyping }}</option>
           </select>
           <button 
@@ -1213,6 +1216,16 @@ button:disabled {
 }
 
 /* ============ 打字机动画效果 ============ */
+
+/* 渐入效果 - 使用 animation-delay 控制每个字符的动画时机 */
+.incremark-fade-in {
+  animation: incremark-fade-in 0.4s ease-out both;
+}
+
+@keyframes incremark-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
 /* 打字机光标效果 - 光标字符已直接添加到内容中 */
 .content.effect-typing .incremark-block.incremark-pending {
