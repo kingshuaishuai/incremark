@@ -5,7 +5,7 @@
 ## Installation
 
 ```bash
-pnpm add @incremark/core @incremark/react
+pnpm add @incremark/react
 ```
 
 ## Basic Usage
@@ -29,7 +29,7 @@ function App() {
 
 ## useIncremark
 
-Core hook that manages parsing state.
+Core hook that manages parsing state and optional typewriter effect.
 
 ### Return Values
 
@@ -37,7 +37,7 @@ Core hook that manages parsing state.
 const {
   // State
   markdown,        // string - Complete Markdown
-  blocks,          // Block[] - All blocks
+  blocks,          // Block[] - Blocks for rendering (includes typewriter effect if enabled)
   completedBlocks, // Block[] - Completed blocks
   pendingBlocks,   // Block[] - Pending blocks
   ast,             // Root - Complete AST
@@ -47,7 +47,11 @@ const {
   append,          // (chunk: string) => Update
   finalize,        // () => Update
   abort,           // () => Update - Force abort
-  reset,           // () => void
+  reset,           // () => void - Reset parser and typewriter
+  render,          // (content: string) => Update - One-shot render
+  
+  // Typewriter controls
+  typewriter,      // TypewriterControls - Typewriter control object
   
   // Instance
   parser           // IncremarkParser - Underlying parser
@@ -58,10 +62,78 @@ const {
 
 ```ts
 interface UseIncremarkOptions {
+  // Parser options
   gfm?: boolean              // Enable GFM
   containers?: boolean       // Enable ::: containers
   extensions?: Extension[]   // micromark extensions
   mdastExtensions?: Extension[]  // mdast extensions
+  
+  // Typewriter options (pass to enable)
+  typewriter?: {
+    enabled?: boolean              // Enable/disable (default: true)
+    charsPerTick?: number | [number, number]  // Chars per tick (default: [1, 3])
+    tickInterval?: number          // Interval in ms (default: 30)
+    effect?: 'none' | 'fade-in' | 'typing'  // Animation effect
+    cursor?: string                // Cursor character (default: '|')
+    pauseOnHidden?: boolean        // Pause when hidden (default: true)
+  }
+}
+```
+
+## With Typewriter Effect
+
+The typewriter effect is now integrated into `useIncremark`:
+
+```tsx
+import { useIncremark, Incremark, AutoScrollContainer } from '@incremark/react'
+
+function ChatApp() {
+  const { blocks, append, finalize, reset, typewriter } = useIncremark({
+    gfm: true,
+    typewriter: {
+      enabled: true,
+      charsPerTick: [1, 3],
+      tickInterval: 30,
+      effect: 'typing',  // or 'fade-in'
+      cursor: '|'
+    }
+  })
+
+  return (
+    <div className={`content effect-${typewriter.effect}`}>
+      <AutoScrollContainer>
+        {/* blocks already includes typewriter effect! */}
+        <Incremark blocks={blocks} />
+      </AutoScrollContainer>
+      
+      {/* Typewriter controls */}
+      {typewriter.isProcessing && !typewriter.isPaused && (
+        <button onClick={typewriter.pause}>Pause</button>
+      )}
+      {typewriter.isPaused && (
+        <button onClick={typewriter.resume}>Resume</button>
+      )}
+      {typewriter.isProcessing && (
+        <button onClick={typewriter.skip}>Skip</button>
+      )}
+    </div>
+  )
+}
+```
+
+### Typewriter Controls
+
+```ts
+interface TypewriterControls {
+  enabled: boolean                    // Whether enabled
+  setEnabled: (enabled: boolean) => void  // Toggle enabled
+  isProcessing: boolean               // Animation ongoing
+  isPaused: boolean                   // Paused state
+  effect: 'none' | 'fade-in' | 'typing'  // Current effect
+  skip: () => void                    // Skip all animations
+  pause: () => void                   // Pause animation
+  resume: () => void                  // Resume animation
+  setOptions: (options) => void       // Update options
 }
 ```
 
@@ -125,11 +197,17 @@ function App() {
 
 ```tsx
 import { useState, useCallback } from 'react'
-import { useIncremark, useDevTools, Incremark } from '@incremark/react'
+import { useIncremark, useDevTools, Incremark, AutoScrollContainer } from '@incremark/react'
 
 function ChatApp() {
-  const incremark = useIncremark({ gfm: true })
-  const { blocks, append, finalize, reset, markdown } = incremark
+  const incremark = useIncremark({ 
+    gfm: true,
+    typewriter: {
+      effect: 'fade-in',
+      charsPerTick: [1, 3]
+    }
+  })
+  const { blocks, append, finalize, reset, markdown, typewriter } = incremark
   
   useDevTools(incremark)
   
@@ -154,14 +232,38 @@ function ChatApp() {
   }, [append, finalize, reset])
 
   return (
-    <div>
-      <button onClick={handleChat} disabled={isStreaming}>
-        {isStreaming ? 'Generating...' : 'Start Chat'}
-      </button>
-      <div>{markdown.length} characters</div>
-      <Incremark blocks={blocks} />
+    <div className={`app effect-${typewriter.effect}`}>
+      <header>
+        <button onClick={handleChat} disabled={isStreaming}>
+          {isStreaming ? 'Generating...' : 'Start Chat'}
+        </button>
+        <span>{markdown.length} characters</span>
+        
+        {typewriter.isProcessing && (
+          <button onClick={typewriter.skip}>Skip</button>
+        )}
+      </header>
+      
+      <AutoScrollContainer className="content">
+        <Incremark blocks={blocks} />
+      </AutoScrollContainer>
     </div>
   )
+}
+```
+
+## Fade-in Animation CSS
+
+If using `effect: 'fade-in'`, add this CSS:
+
+```css
+.effect-fade-in .incremark-fade-in {
+  animation: incremark-fade-in 0.3s ease-out forwards;
+}
+
+@keyframes incremark-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 ```
 
@@ -172,7 +274,9 @@ import { useQuery } from '@tanstack/react-query'
 import { useIncremark, Incremark } from '@incremark/react'
 
 function StreamingContent() {
-  const { blocks, append, finalize, reset } = useIncremark()
+  const { blocks, append, finalize, reset } = useIncremark({
+    typewriter: { effect: 'typing' }
+  })
   
   const { refetch } = useQuery({
     queryKey: ['chat'],
@@ -201,3 +305,10 @@ function StreamingContent() {
   )
 }
 ```
+
+## Next Steps
+
+- [Typewriter Effect](./typewriter) - Detailed typewriter configuration
+- [Auto Scroll](./auto-scroll) - Auto-scroll container
+- [Custom Components](./custom-components) - Custom rendering
+- [API Reference](/api/react) - Complete API documentation

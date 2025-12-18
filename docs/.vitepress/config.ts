@@ -26,7 +26,8 @@ export default defineConfig({
                 { text: 'Introduction', link: '/guide/introduction' },
                 { text: 'Quick Start', link: '/guide/getting-started' },
                 { text: 'Core Concepts', link: '/guide/concepts' },
-                { text: '🚀 Benchmark', link: '/guide/benchmark' }
+                { text: '🚀 Benchmark', link: '/guide/benchmark' },
+                { text: '📊 Solution Comparison', link: '/guide/compared' }
               ]
             },
             {
@@ -84,7 +85,8 @@ export default defineConfig({
                 { text: '介绍', link: '/zh/guide/introduction' },
                 { text: '快速开始', link: '/zh/guide/getting-started' },
                 { text: '核心概念', link: '/zh/guide/concepts' },
-                { text: '🚀 性能测试', link: '/zh/guide/benchmark' }
+                { text: '🚀 性能测试', link: '/zh/guide/benchmark' },
+                { text: '📊 方案对比', link: '/zh/guide/compared' }
               ]
             },
             {

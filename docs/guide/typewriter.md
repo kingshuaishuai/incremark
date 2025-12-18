@@ -1,264 +1,200 @@
 # Typewriter Effect
 
-BlockTransformer provides typewriter effect support, displaying AI output content character by character to simulate a real typing experience.
+Incremark provides built-in typewriter effect support, displaying AI output content character by character to simulate a real typing experience.
 
 ## Features
 
 - ✅ **Smooth Animation** - Powered by `requestAnimationFrame`
 - ✅ **Random Step** - Support `charsPerTick: [1, 3]` for natural typing
-- ✅ **Animation Effects** - Support `typing` cursor effect
+- ✅ **Animation Effects** - Support `typing` cursor and `fade-in` effects
 - ✅ **Auto Pause** - Automatically pauses when page is hidden
 - ✅ **Plugin System** - Customize handling for special nodes
 - ✅ **Cross-framework** - Framework-agnostic core with Vue/React adapters
+- ✅ **Simple Integration** - Built into `useIncremark`, no separate hook needed
 
-## How It Works
+## Quick Start
 
-```
-Parser (Producer) → BlockTransformer (Middleware) → UI (Consumer)
-     ↓                      ↓                          ↓
-  Parse blocks        Control display speed       Render displayBlocks
-```
+Typewriter effect is now integrated into `useIncremark`. Just pass a `typewriter` configuration:
 
-BlockTransformer acts as middleware between parser and renderer:
-- **Consumer Role**: Consumes `completedBlocks` from Parser
-- **Producer Role**: Produces `displayBlocks` for UI rendering
-- **Core Function**: Controls characters per tick and display interval
-
-### Advantages over ant-design-x
-
-| Feature | Incremark | ant-design-x |
-|---------|-----------|--------------|
-| Timer | requestAnimationFrame | requestAnimationFrame |
-| Processing | AST nodes (preserves structure) | Plain text strings |
-| Markdown Parsing | Incremental O(n) | Full parsing O(n²) |
-| Complex Content | Plugin system | Not supported |
-| Random Step | ✅ Supported | ✅ Supported |
-| Page Visibility | ✅ Auto pause | ❌ Not supported |
-
-## Vue Integration
+### Vue
 
 ```vue
 <script setup>
-import { computed, ref, watch } from 'vue'
-import { 
-  useIncremark, 
-  useBlockTransformer, 
-  Incremark,
-  defaultPlugins 
-} from '@incremark/vue'
+import { useIncremark, Incremark } from '@incremark/vue'
 
-// 1. Create parser
-const { completedBlocks, append, finalize, reset: resetParser } = useIncremark()
-
-// 2. Configure typewriter parameters
-const charsPerTick = ref(2)    // 2 chars per tick (or [1, 3] for random)
-const tickInterval = ref(30)   // Every 30ms
-
-// 3. Convert to SourceBlock format
-const sourceBlocks = computed(() => 
-  completedBlocks.value.map(block => ({
-    id: block.id,
-    node: block.node,
-    status: block.status
-  }))
-)
-
-// 4. Create BlockTransformer
-const { 
-  displayBlocks, 
-  isProcessing,
-  isPaused,
-  effect,
-  skip, 
-  pause,
-  resume,
-  reset: resetTransformer,
-  setOptions 
-} = useBlockTransformer(sourceBlocks, {
-  charsPerTick: [1, 3],       // Random 1-3 characters
-  tickInterval: 30,
-  effect: 'typing',           // Cursor effect
-  pauseOnHidden: true,        // Pause when page hidden
-  plugins: defaultPlugins
+const { blocks, append, finalize, reset, typewriter } = useIncremark({
+  gfm: true,
+  typewriter: {
+    enabled: true,
+    charsPerTick: [1, 3],  // Random 1-3 characters per tick
+    tickInterval: 30,       // 30ms interval
+    effect: 'typing',       // 'none' | 'fade-in' | 'typing'
+    cursor: '|'             // Cursor character
+  }
 })
-
-// 5. Watch for config changes
-watch([charsPerTick, tickInterval], ([speed, interval]) => {
-  setOptions({ charsPerTick: speed, tickInterval: interval })
-})
-
-// 6. Convert to render format
-const renderBlocks = computed(() => 
-  displayBlocks.value.map(db => ({
-    id: db.id,
-    stableId: db.id,
-    node: db.displayNode,
-    status: db.isDisplayComplete ? 'completed' : 'pending'
-  }))
-)
-
-// 7. Unified reset
-function reset() {
-  resetParser()
-  resetTransformer()
-}
 </script>
 
 <template>
-  <div :class="['content', `effect-${effect}`]">
-    <Incremark :blocks="renderBlocks" />
+  <div :class="['content', `effect-${typewriter.effect.value}`]">
+    <!-- blocks already includes typewriter effect! -->
+    <Incremark :blocks="blocks" />
   </div>
   
-  <!-- Speed controls -->
-  <input type="range" v-model.number="charsPerTick" min="1" max="10" />
-  <input type="range" v-model.number="tickInterval" min="10" max="200" />
-  
   <!-- Control buttons -->
-  <button v-if="isProcessing && !isPaused" @click="pause">Pause</button>
-  <button v-if="isPaused" @click="resume">Resume</button>
-  <button v-if="isProcessing" @click="skip">Skip</button>
+  <button v-if="typewriter.isProcessing.value" @click="typewriter.skip">
+    Skip
+  </button>
+  <button v-if="typewriter.isPaused.value" @click="typewriter.resume">
+    Resume
+  </button>
 </template>
-
-<style>
-/* Typing cursor effect - cursor character is embedded in content */
-.effect-typing .incremark-pending {
-  /* Cursor character is embedded in content */
-}
-</style>
 ```
 
-## React Integration
+### React
 
 ```tsx
-import { useMemo, useState, useEffect, useCallback } from 'react'
-import { 
-  useIncremark, 
-  useBlockTransformer, 
-  Incremark,
-  defaultPlugins 
-} from '@incremark/react'
+import { useIncremark, Incremark } from '@incremark/react'
 
 function App() {
-  // 1. Create parser
-  const { completedBlocks, append, finalize, reset: resetParser } = useIncremark()
-  
-  // 2. Configure typewriter parameters
-  const [charsPerTick, setCharsPerTick] = useState(2)
-  const [tickInterval, setTickInterval] = useState(30)
-
-  // 3. Convert to SourceBlock format
-  const sourceBlocks = useMemo(() => 
-    completedBlocks.map(block => ({
-      id: block.id,
-      node: block.node,
-      status: block.status
-    })),
-    [completedBlocks]
-  )
-
-  // 4. Create BlockTransformer
-  const { 
-    displayBlocks, 
-    isProcessing,
-    isPaused,
-    effect,
-    skip,
-    pause,
-    resume,
-    reset: resetTransformer,
-    setOptions 
-  } = useBlockTransformer(sourceBlocks, {
-    charsPerTick: [1, 3],       // Random step
-    tickInterval: 30,
-    effect: 'typing',
-    pauseOnHidden: true,
-    plugins: defaultPlugins
+  const { blocks, append, finalize, reset, typewriter } = useIncremark({
+    gfm: true,
+    typewriter: {
+      enabled: true,
+      charsPerTick: [1, 3],
+      tickInterval: 30,
+      effect: 'typing',
+      cursor: '|'
+    }
   })
 
-  // 5. Watch for config changes
-  useEffect(() => {
-    setOptions({ charsPerTick, tickInterval })
-  }, [charsPerTick, tickInterval, setOptions])
-
-  // 6. Convert to render format
-  const renderBlocks = useMemo(() => 
-    displayBlocks.map(db => ({
-      ...db,
-      stableId: db.id,
-      node: db.displayNode,
-      status: db.isDisplayComplete ? 'completed' : 'pending'
-    })),
-    [displayBlocks]
-  )
-
-  // 7. Unified reset
-  const reset = useCallback(() => {
-    resetParser()
-    resetTransformer()
-  }, [resetParser, resetTransformer])
-
   return (
-    <div className={`content effect-${effect}`}>
-      <Incremark blocks={renderBlocks} />
+    <div className={`content effect-${typewriter.effect}`}>
+      {/* blocks already includes typewriter effect! */}
+      <Incremark blocks={blocks} />
       
-      {/* Speed controls */}
-      <input 
-        type="range" 
-        value={charsPerTick} 
-        onChange={e => setCharsPerTick(Number(e.target.value))}
-        min="1" 
-        max="10" 
-      />
-      
-      {/* Control buttons */}
-      {isProcessing && !isPaused && <button onClick={pause}>Pause</button>}
-      {isPaused && <button onClick={resume}>Resume</button>}
-      {isProcessing && <button onClick={skip}>Skip</button>}
+      {typewriter.isProcessing && (
+        <button onClick={typewriter.skip}>Skip</button>
+      )}
     </div>
   )
 }
 ```
 
+## Animation Effects
+
+Incremark supports three animation effects:
+
+### 1. None (`effect: 'none'`)
+
+No visual effect, just gradual character display.
+
+### 2. Typing Cursor (`effect: 'typing'`)
+
+Shows a cursor character at the end of the currently typing block.
+
+```css
+/* The cursor is embedded in content, style the pending block if needed */
+.effect-typing .incremark-pending {
+  /* Optional styling */
+}
+```
+
+### 3. Fade-in (`effect: 'fade-in'`) ✨ New
+
+Each newly displayed character segment fades in smoothly. This creates a beautiful, flowing animation effect.
+
+```css
+/* Fade-in animation is built-in via .incremark-fade-in class */
+.content.effect-fade-in .incremark-fade-in {
+  animation: incremark-fade-in 0.3s ease-out forwards;
+}
+
+@keyframes incremark-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+```
+
+The fade-in effect works by:
+1. Tracking character "chunks" as they are displayed
+2. Wrapping each chunk in a `<span class="incremark-fade-in">`
+3. Each span has a unique key based on creation time, ensuring smooth concurrent animations
+
 ## Configuration Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `charsPerTick` | `number \| [number, number]` | `1` | Characters per tick, array for random range |
-| `tickInterval` | `number` | `20` | Interval in milliseconds |
-| `effect` | `'none' \| 'typing'` | `'none'` | Animation effect |
+| `enabled` | `boolean` | `true` | Enable/disable typewriter (can toggle at runtime) |
+| `charsPerTick` | `number \| [number, number]` | `[1, 3]` | Characters per tick, array for random range |
+| `tickInterval` | `number` | `30` | Interval in milliseconds |
+| `effect` | `'none' \| 'fade-in' \| 'typing'` | `'none'` | Animation effect |
+| `cursor` | `string` | `'|'` | Cursor character (only for `typing` effect) |
 | `pauseOnHidden` | `boolean` | `true` | Pause when page is hidden |
-| `plugins` | `TransformerPlugin[]` | `[]` | Plugin list |
+| `plugins` | `TransformerPlugin[]` | `defaultPlugins` | Plugin list (auto-included) |
 
-### Random Step
+## Dynamic Configuration
 
-Use random step for more natural typing effect:
+You can update typewriter settings at runtime:
 
-```ts
-const { displayBlocks } = useBlockTransformer(sourceBlocks, {
-  charsPerTick: [1, 4],  // Random 1-4 characters each tick
-  tickInterval: 30
+### Vue
+
+```vue
+<script setup>
+const { typewriter } = useIncremark({
+  typewriter: { enabled: false }  // Start disabled
+})
+
+// Toggle enabled state
+typewriter.enabled.value = true
+
+// Update options
+typewriter.setOptions({
+  charsPerTick: [2, 5],
+  tickInterval: 20,
+  effect: 'fade-in'
+})
+</script>
+```
+
+### React
+
+```tsx
+const { typewriter } = useIncremark({
+  typewriter: { enabled: false }
+})
+
+// Toggle enabled state
+typewriter.setEnabled(true)
+
+// Update options
+typewriter.setOptions({
+  charsPerTick: [2, 5],
+  tickInterval: 20,
+  effect: 'fade-in'
 })
 ```
 
-### Animation Effects
+## Typewriter Controls
 
-```ts
-// Typing cursor effect
-const { effect } = useBlockTransformer(sourceBlocks, {
-  effect: 'typing'  // Show cursor at the end of typing block
-})
-```
+The `typewriter` object provides these controls:
 
-The cursor character is automatically appended to the end of the typing block content, defaults to `|`.
+| Property/Method | Vue Type | React Type | Description |
+|-----------------|----------|------------|-------------|
+| `enabled` | `Ref<boolean>` | `boolean` | Whether typewriter is enabled |
+| `setEnabled` | - | `(enabled: boolean) => void` | Set enabled state (React) |
+| `isProcessing` | `ComputedRef<boolean>` | `boolean` | Whether animation is ongoing |
+| `isPaused` | `ComputedRef<boolean>` | `boolean` | Whether paused |
+| `effect` | `ComputedRef<AnimationEffect>` | `AnimationEffect` | Current effect |
+| `skip()` | `Function` | `Function` | Skip all animations |
+| `pause()` | `Function` | `Function` | Pause animation |
+| `resume()` | `Function` | `Function` | Resume animation |
+| `setOptions()` | `Function` | `Function` | Update options dynamically |
 
-```css
-/* Typing cursor effect - cursor character is embedded in content */
-.effect-typing .incremark-pending {
-  /* Cursor character is embedded in content */
-}
-```
-
-### Speed Examples
+## Speed Examples
 
 | Scenario | charsPerTick | tickInterval | Effect |
 |----------|--------------|--------------|--------|
@@ -270,27 +206,23 @@ The cursor character is automatically appended to the end of the typing block co
 
 ## Plugin System
 
-### Default Plugins
+### Default Plugins (Auto-included)
 
-By default, all content participates in typewriter effect. `defaultPlugins` only includes:
+By default, `useIncremark` includes `defaultPlugins`:
 - `imagePlugin` - Images display immediately (no text content)
 - `thematicBreakPlugin` - Dividers display immediately (no text content)
-
-```ts
-import { defaultPlugins } from '@incremark/vue'
-// or
-import { defaultPlugins } from '@incremark/react'
-```
 
 ### All Plugins
 
 If you want code blocks, mermaid, math formulas to display as a whole:
 
 ```ts
-import { allPlugins } from '@incremark/vue'
+import { allPlugins } from '@incremark/vue'  // or @incremark/react
 
-const { displayBlocks } = useBlockTransformer(sourceBlocks, {
-  plugins: allPlugins  // Code blocks etc. display as whole
+const { blocks } = useIncremark({
+  typewriter: {
+    plugins: allPlugins  // Override default plugins
+  }
 })
 ```
 
@@ -316,37 +248,11 @@ const tablePlugin = createPlugin(
   }
 )
 
-const { displayBlocks } = useBlockTransformer(sourceBlocks, {
-  plugins: [...defaultPlugins, tablePlugin]
+const { blocks } = useIncremark({
+  typewriter: {
+    plugins: [tablePlugin]  // Custom plugins (defaultPlugins still included)
+  }
 })
-```
-
-## Pause and Resume
-
-BlockTransformer supports manual pause and resume:
-
-```ts
-const { pause, resume, isPaused } = useBlockTransformer(sourceBlocks)
-
-// Pause animation
-pause()
-
-// Resume animation
-resume()
-
-// Check if paused
-console.log(isPaused)  // true / false
-```
-
-Auto pause on page visibility:
-
-```ts
-const { displayBlocks } = useBlockTransformer(sourceBlocks, {
-  pauseOnHidden: true  // Enabled by default
-})
-
-// Automatically pauses when user switches to another tab
-// Automatically resumes when user switches back
 ```
 
 ## With Auto Scroll
@@ -355,22 +261,16 @@ Typewriter effect usually needs auto scroll:
 
 ```vue
 <script setup>
-import { 
-  useIncremark, 
-  useBlockTransformer, 
-  Incremark,
-  AutoScrollContainer,
-  defaultPlugins 
-} from '@incremark/vue'
+import { useIncremark, Incremark, AutoScrollContainer } from '@incremark/vue'
 
-// ... transformer setup ...
-
-const scrollRef = ref()
+const { blocks, typewriter } = useIncremark({
+  typewriter: { effect: 'fade-in' }
+})
 </script>
 
 <template>
-  <AutoScrollContainer ref="scrollRef" class="content">
-    <Incremark :blocks="renderBlocks" />
+  <AutoScrollContainer class="content">
+    <Incremark :blocks="blocks" />
   </AutoScrollContainer>
 </template>
 
@@ -384,39 +284,40 @@ const scrollRef = ref()
 
 See [Auto Scroll](./auto-scroll) guide for details.
 
-## API Reference
+## How It Works
 
-### useBlockTransformer Return Values
-
-| Property/Method | Type | Description |
-|-----------------|------|-------------|
-| `displayBlocks` | `DisplayBlock[]` | Blocks for rendering |
-| `isProcessing` | `boolean` | Whether processing is ongoing |
-| `isPaused` | `boolean` | Whether paused |
-| `effect` | `AnimationEffect` | Current animation effect |
-| `skip()` | `Function` | Skip all animations |
-| `reset()` | `Function` | Reset state |
-| `pause()` | `Function` | Pause animation |
-| `resume()` | `Function` | Resume animation |
-| `setOptions()` | `Function` | Update options dynamically |
-| `transformer` | `BlockTransformer` | Raw instance |
-
-### DisplayBlock Structure
-
-```ts
-interface DisplayBlock {
-  id: string                // Block ID
-  node: RootContent         // Source AST node
-  displayNode: RootContent  // Current display node (may be truncated)
-  progress: number          // Display progress 0-1
-  isDisplayComplete: boolean // Whether display is complete
-}
+```
+Parser (Producer) → BlockTransformer (Middleware) → UI (Consumer)
+     ↓                      ↓                          ↓
+  Parse blocks        Control display speed       Render displayBlocks
 ```
 
-### AnimationEffect Type
+BlockTransformer acts as middleware between parser and renderer:
+- **Consumer Role**: Consumes `completedBlocks` from Parser
+- **Producer Role**: Produces `displayBlocks` for UI rendering
+- **Core Function**: Controls characters per tick and display interval
+
+## Advanced: Using useBlockTransformer
+
+For advanced use cases, you can still use `useBlockTransformer` separately:
 
 ```ts
-type AnimationEffect = 'none' | 'typing'
+import { useIncremark, useBlockTransformer } from '@incremark/vue'
+
+const { completedBlocks } = useIncremark()
+
+const sourceBlocks = computed(() => 
+  completedBlocks.value.map(block => ({
+    id: block.id,
+    node: block.node,
+    status: block.status
+  }))
+)
+
+const { displayBlocks, isProcessing, skip } = useBlockTransformer(sourceBlocks, {
+  charsPerTick: [1, 3],
+  effect: 'fade-in'
+})
 ```
 
 ## Next Steps
