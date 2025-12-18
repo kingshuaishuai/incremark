@@ -158,7 +158,7 @@ const DefaultList: React.FC<{ node: List }> = ({ node }) => {
 const DefaultBlockquote: React.FC<{ node: Blockquote }> = ({ node }) => (
   <blockquote className="incremark-blockquote">
     {/* blockquote 的 children 是段落等块级节点 */}
-    {node.children?.map((child, i: number) => (
+    {node.children?.map((child: Blockquote['children'][number], i: number) => (
       <React.Fragment key={i}>
         {child.type === 'paragraph' ? (
           <p>{renderInlineChildren((child as Paragraph).children as ExtendedPhrasingContent[])}</p>
