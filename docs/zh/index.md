@@ -14,10 +14,10 @@ hero:
       link: /zh/guide/getting-started
     - theme: alt
       text: Vue 演示
-      link: https://incremark-vue.vercel.app/
+      link: https://vue.incremark.com/
     - theme: alt
       text: React 演示
-      link: https://incremark-react.vercel.app/
+      link: https://react.incremark.com/
     - theme: alt
       text: GitHub
       link: https://github.com/kingshuaishuai/incremark

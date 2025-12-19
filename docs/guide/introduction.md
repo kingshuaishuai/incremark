@@ -60,8 +60,8 @@ Receive new chunk → Append to buffer → Detect completed blocks → Only pars
 
 Try Incremark right now:
 
-- 🎮 [Vue Demo](https://incremark-vue.vercel.app/) - Vue 3 integration example
-- ⚛️ [React Demo](https://incremark-react.vercel.app/) - React integration example
+- 🎮 [Vue Demo](https://vue.incremark.com/) - Vue 3 integration example
+- ⚛️ [React Demo](https://react.incremark.com/) - React integration example
 
 ## Next Steps
 

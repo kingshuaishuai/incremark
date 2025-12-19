@@ -60,8 +60,8 @@ Incremark 采用**增量解析**策略：
 
 立即体验 Incremark：
 
-- 🎮 [Vue 演示](https://incremark-vue.vercel.app/) - Vue 3 集成示例
-- ⚛️ [React 演示](https://incremark-react.vercel.app/) - React 集成示例
+- 🎮 [Vue 演示](https://vue.incremark.com/) - Vue 3 集成示例
+- ⚛️ [React 演示](https://react.incremark.com/) - React 集成示例
 
 ## 下一步
 
