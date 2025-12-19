@@ -119,6 +119,15 @@ pnpm test
 pnpm build
 ```
 
+## 路线图
+
+- [ ] 🔧 DevTools Svelte 重构
+- [ ] 🎨 主题包分离
+- [ ] 🟠 Svelte / ⚡ Solid 支持
+- [ ] 💭 AI 场景增强 (thinking block, tool call, 引用标注)
+
+[查看完整路线图 →](https://www.incremark.com/zh/guide/roadmap)
+
 ## 文档
 
 完整文档请访问：[https://www.incremark.com/](https://www.incremark.com/)

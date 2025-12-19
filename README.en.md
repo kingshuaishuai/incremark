@@ -119,6 +119,15 @@ pnpm test
 pnpm build
 ```
 
+## Roadmap
+
+- [ ] 🔧 DevTools Svelte Rewrite
+- [ ] 🎨 Theme Package Separation
+- [ ] 🟠 Svelte / ⚡ Solid Support
+- [ ] 💭 AI Scenarios (thinking block, tool call, citations)
+
+[View full roadmap →](https://www.incremark.com/guide/roadmap)
+
 ## Documentation
 
 Full documentation available at: [https://www.incremark.com/](https://www.incremark.com/)

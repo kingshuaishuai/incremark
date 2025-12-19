@@ -1,6 +1,13 @@
 import { defineConfig } from 'vitepress'
+import taskLists from 'markdown-it-task-lists'
 
 export default defineConfig({
+  markdown: {
+    config: (md) => {
+      md.use(taskLists)
+    }
+  },
+
   title: 'Incremark',
   description: 'Incremental Markdown Parser for AI Streaming',
   
@@ -16,6 +23,7 @@ export default defineConfig({
         nav: [
           { text: 'Guide', link: '/guide/introduction' },
           { text: 'API', link: '/api/core' },
+          { text: 'Roadmap', link: '/roadmap' },
           { text: 'GitHub', link: 'https://github.com/kingshuaishuai/incremark' }
         ],
         sidebar: {
@@ -51,7 +59,7 @@ export default defineConfig({
                 { text: 'DevTools', link: '/guide/devtools' },
                 { text: 'Extensions', link: '/guide/extensions' }
               ]
-            }
+            },
           ],
           '/api/': [
             {
@@ -75,6 +83,7 @@ export default defineConfig({
         nav: [
           { text: '指南', link: '/zh/guide/introduction' },
           { text: 'API', link: '/zh/api/core' },
+          { text: '路线图', link: '/zh/roadmap' },
           { text: 'GitHub', link: 'https://github.com/kingshuaishuai/incremark' }
         ],
         sidebar: {
@@ -110,7 +119,7 @@ export default defineConfig({
                 { text: 'DevTools', link: '/zh/guide/devtools' },
                 { text: '扩展支持', link: '/zh/guide/extensions' }
               ]
-            }
+            },
           ],
           '/zh/api/': [
             {
