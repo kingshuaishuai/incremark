@@ -20,7 +20,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const rootDir = join(__dirname, '..')
 
-function exec(command: string, options?: { cwd?: string; stdio?: 'inherit' | 'pipe' }) {
+function exec(command: string, options?: { cwd?: string; stdio?: 'inherit' | 'pipe'; throwOnError?: boolean }) {
   console.log(`\n> ${command}`)
   try {
     const result = execSync(command, {
@@ -32,7 +32,10 @@ function exec(command: string, options?: { cwd?: string; stdio?: 'inherit' | 'pi
   } catch (error: any) {
     console.error(`Error executing: ${command}`)
     console.error(error.message)
-    process.exit(1)
+    if (options?.throwOnError !== false) {
+      process.exit(1)
+    }
+    throw error
   }
 }
 
@@ -91,16 +94,18 @@ function main() {
   exec(`pnpm exec changelogen --output CHANGELOG.md --from ${prevTag} --to ${newTag}`)
 
   // Step 5: Stage all changes
-  if (!isDryRun) {
+  if (isDryRun) {
+    console.log('\n📋 [DRY-RUN] Would stage changes with: git add .')
+    console.log('[DRY-RUN] Skipping git add (dry-run mode)')
+  } else {
     console.log('\n📋 Staging changes...')
     exec('git add .')
-  } else {
-    console.log('\n📋 [DRY-RUN] Would stage changes with: git add .')
   }
 
   // Step 6: Commit changes
   if (isDryRun) {
     console.log(`\n💾 [DRY-RUN] Would commit with: git commit -m "chore: release ${newTag}"`)
+    console.log('[DRY-RUN] Skipping git commit (dry-run mode)')
   } else {
     console.log('\n💾 Committing changes...')
     exec(`git commit -m "chore: release ${newTag}"`)
@@ -126,6 +131,7 @@ function main() {
   // Step 8: Push code and tags
   if (isDryRun) {
     console.log('\n📤 [DRY-RUN] Would push with: git push && git push --tags')
+    console.log('[DRY-RUN] Skipping git push (dry-run mode)')
   } else {
     console.log('\n📤 Pushing to remote...')
     exec('git push')
@@ -142,9 +148,41 @@ function main() {
     console.log('[DRY-RUN] To test publish, run: pnpm --filter "./packages/*" publish --access public --dry-run --registry https://registry.npmjs.org')
   } else {
     console.log('\n📦 Publishing packages...')
-    exec(
-      "pnpm --filter './packages/*' publish --access public --registry https://registry.npmjs.org"
-    )
+    // Publish each package individually to handle partial failures gracefully
+    const packages = ['core', 'devtools', 'react', 'vue']
+    let successCount = 0
+    let failCount = 0
+    
+    for (const pkg of packages) {
+      try {
+        console.log(`\n📦 Publishing @incremark/${pkg}...`)
+        exec(
+          `pnpm --filter @incremark/${pkg} publish --access public --registry https://registry.npmjs.org`,
+          { throwOnError: false }
+        )
+        successCount++
+        console.log(`✅ @incremark/${pkg} published successfully`)
+      } catch (error: any) {
+        const errorMessage = error.message || error.toString()
+        if (errorMessage.includes('previously published versions') || errorMessage.includes('403')) {
+          failCount++
+          console.log(`⚠️  @incremark/${pkg} version ${newVersion} already exists, skipping...`)
+        } else {
+          failCount++
+          console.error(`❌ Failed to publish @incremark/${pkg}:`, errorMessage)
+        }
+      }
+    }
+    
+    const skipCount = failCount
+    console.log(`\n📊 Publish summary: ${successCount} succeeded, ${skipCount} skipped/failed`)
+    
+    if (failCount > 0 && successCount === 0) {
+      console.error(`\n❌ All packages failed to publish. Please check the errors above.`)
+      process.exit(1)
+    } else if (failCount > 0) {
+      console.log(`\n⚠️  Some packages were skipped (already published) or failed, but release continues.`)
+    }
   }
 
   if (isDryRun) {
