@@ -15,8 +15,9 @@ User Input (Streaming Markdown)
 │    - Outputs text chunks with fade-in markers            │
 ├─────────────────────────────────────────────────────────┤
 │  useStreaming Hook                                       │
-│    - Regex detects incomplete tokens (links, images...)  │
+│    - Regex detects incomplete tokens (links, images, tables...) │
 │    - Caches incomplete parts, outputs only complete MD   │
+│    - Incomplete tokens can be replaced with placeholder components │
 │    ↓                                                    │
 │  Parser (marked.js)                                      │
 │    - Full parse: content → HTML string                   │
@@ -29,8 +30,9 @@ User Input (Streaming Markdown)
 ```
 
 **Key Characteristics:**
-- Full re-parse on each content change using `marked.parse()`
-- Typewriter animation operates on plain text strings
+- `useStreaming` caches incomplete tokens, outputs only complete Markdown
+- Full re-parse on each content change using `marked.parse()` on accumulated content
+- Typewriter animation operates on plain text strings (`useTyping`)
 - Uses HTML string as intermediate format
 
 ---
@@ -41,9 +43,10 @@ User Input (Streaming Markdown)
 User Input (Markdown String)
         ↓
 ┌─────────────────────────────────────────────────────────┐
-│  Preprocessing                                           │
+│  Preprocessing (inside parseMarkdownToStructure)         │
 │    - Fix streaming edge cases with regex                 │
 │    - "- *" → "- \*", strip dangling markers, etc.        │
+│    - Strip incomplete HTML tags, list markers, etc.       │
 │    ↓                                                    │
 │  markdown-it.parse()                                     │
 │    - Full parse → Token array                            │
@@ -61,8 +64,8 @@ User Input (Markdown String)
 
 **Key Characteristics:**
 - Full re-parse on each content change using `markdown-it.parse()`
-- Preprocessing layer handles streaming edge cases
-- Uses Vue `<transition>` for typewriter effect
+- Preprocessing inside `parseMarkdownToStructure` fixes streaming edge cases
+- Uses Vue `<transition>` for component-level fade-in animation (not character-level)
 
 ---
 
@@ -81,8 +84,9 @@ User Input (Streaming Markdown Chunks)
 │  Output: ParsedBlock[] with mdast AST                    │
 ├─────────────────────────────────────────────────────────┤
 │  BlockTransformer (Optional Middleware)                  │
-│    - Typewriter effect: sliceAst() truncates AST         │
+│    - Typewriter effect: incremental AST appending        │
 │    - Maintains TextChunk[] for fade-in animation         │
+│    - Stable nodes not re-traversed                       │
 │    - Can be skipped for instant rendering                │
 │    ↓                                                    │
 │  Output: DisplayBlock[] with truncated AST               │
@@ -109,8 +113,9 @@ User Input (Streaming Markdown Chunks)
 | **Parsing** | Full re-parse (marked.js) | Full re-parse (markdown-it) | Incremental (micromark) |
 | **Per-chunk Complexity** | O(n) | O(n) | O(k) where k = new block size |
 | **Total Complexity** | O(n × chunks) ≈ O(n²) | O(n × chunks) ≈ O(n²) | O(n) |
-| **Edge Case Handling** | Regex token detection | Preprocessing layer | Stable boundary detection |
-| **Typewriter Animation** | Text string level | Vue Transition | Preserves Markdown structure |
+| **Edge Case Handling** | Regex token detection + caching | Preprocessing before parsing | Stable boundary detection |
+| **Typewriter Animation** | Text string level | Vue Transition | Incremental AST appending |
+| **Animation Performance** | O(n) per tick | O(1) component mount | O(k) per tick, k=1-3 chars |
 | **Output Format** | HTML string | Custom AST | mdast (remark compatible) |
 | **Framework** | React | Vue | Vue + React |
 
@@ -156,24 +161,48 @@ All solutions must handle incomplete Markdown syntax during streaming. Each take
 
 | Approach | How It Works | Trade-offs |
 |----------|--------------|------------|
-| **Incremark** | Detects stable boundaries before parsing | Clean structure; may buffer some content |
-| **ant-design-x** | Regex patterns detect incomplete tokens | Immediate output; requires regex maintenance |
-| **markstream-vue** | Preprocesses content before parsing | Works with any parser; many edge cases to handle |
+| **Incremark** | Detects stable boundaries (empty lines, headings) before parsing | Clean structure; may buffer some content |
+| **ant-design-x** | Regex patterns detect incomplete tokens, caches incomplete parts | Immediate output of complete parts; requires regex maintenance |
+| **markstream-vue** | Preprocessing inside `parseMarkdownToStructure` fixes boundaries | Works with any parser; many edge cases to handle |
 
 ---
 
 ## Typewriter Animation
 
-| Solution | Level | Mechanism |
-|----------|-------|-----------|
-| **Incremark** | AST nodes | `sliceAst()` truncates AST, `TextChunk[]` tracks fade-in |
-| **ant-design-x** | Text string | Character-by-character text slicing |
-| **markstream-vue** | Component | Vue `<transition>` on component mount |
+| Solution | Level | Mechanism | Performance |
+|----------|-------|-----------|-------------|
+| **Incremark** | AST nodes | Incremental AST appending, `TextChunk[]` tracks fade-in | O(k) per tick, k=1-3 chars |
+| **ant-design-x** | Text string | Character-by-character text slicing | O(n) per tick |
+| **markstream-vue** | Component | Vue `<transition>` on component mount | O(1) component mount |
+
+### Performance Comparison
+
+**Incremark Incremental Appending:**
+- Process only new characters per tick: O(k), k=1-3
+- Stable nodes not re-traversed
+- Total complexity: O(n)
+
+```
+Tick 1: Process chars 0-2   → Traverse 2 chars
+Tick 2: Append chars 2-4      → Only process new 2 chars (skip 0-2)
+Tick 3: Append chars 4-6      → Only process new 2 chars (skip 0-4)
+...
+```
+
+**ant-design-x Text Slicing:**
+- `useTyping` slices from complete text on each tick: O(n)
+- Although `useStreaming` caches incomplete tokens, typing animation still processes complete text
+- Total complexity: O(n²)
+
+**markstream-vue Component Transition:**
+- `<transition>` animation triggered on component mount: O(1)
+- Animation granularity is component-level (entire node), cannot precisely control character-level animation
+- Suitable for block-level fade-in effects
 
 Each approach has its trade-offs:
-- **AST-level** allows structural awareness during animation
-- **Text-level** is simpler and framework-agnostic
-- **Component-level** integrates naturally with Vue's reactivity system
+- **AST-level (incremental)**: Structural awareness during animation, optimal performance, O(n) complexity
+- **Text-level**: Simpler and framework-agnostic, but requires re-processing each time, O(n²) complexity
+- **Component-level**: Natural Vue reactivity integration, but cannot precisely control character-level animation
 
 ---
 
@@ -230,14 +259,15 @@ Virtualization provides significant benefits when:
 
 #### Incremark
 
-**Focus: Efficient Incremental Parsing**
+**Focus: Efficient Incremental Parsing and Animation**
 
 - **Incremental parsing**: Completed blocks are never re-parsed, reducing CPU work significantly in long streaming sessions
+- **Incremental animation**: Typewriter effect uses incremental appending mechanism, stable nodes not re-traversed, O(n) complexity
 - **Cross-framework**: Same core library works for both Vue and React, reducing maintenance cost for multi-framework teams
 - **remark ecosystem compatible**: Standard mdast output allows using remark plugins for syntax extensions
 - **Structural typewriter**: Animation preserves Markdown structure, with plugin system for custom behaviors (e.g., show images immediately)
 
-*Suited for: Applications with long streaming content, multi-framework teams, or those needing remark plugin compatibility*
+*Suited for: Applications with long streaming content, high-performance animation needs, multi-framework teams, or those needing remark plugin compatibility*
 
 ---
 
@@ -249,6 +279,7 @@ Virtualization provides significant benefits when:
 | Large document virtualization | markstream-vue |
 | Vue-only application | markstream-vue |
 | Long streaming sessions / many chunks | Incremark |
+| High-performance typewriter animation | Incremark |
 | Vue + React in same codebase | Incremark |
 | Need remark plugins | Incremark |
 
@@ -258,6 +289,6 @@ Each solution addresses streaming Markdown with different priorities:
 
 - **ant-design-x** provides a complete AI chat UI solution tightly integrated with Ant Design
 - **markstream-vue** offers rich features and rendering optimizations for Vue applications
-- **Incremark** focuses on parsing efficiency and cross-framework flexibility
+- **Incremark** focuses on parsing efficiency and animation performance, achieving optimal performance through incremental mechanisms
 
-The choice depends on your specific requirements: ecosystem fit, document size, framework needs, and performance priorities.
+The choice depends on your specific requirements: ecosystem fit, document size, framework needs, and animation performance priorities.
