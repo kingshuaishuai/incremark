@@ -21,8 +21,8 @@
     "changelog": "changelogen --output CHANGELOG.md",
     "bump": "bumpp package.json packages/*/package.json --commit --push --tag",
     "bump:dry": "bumpp package.json packages/*/package.json --dry",
-    "release": "pnpm changelog && git add . && git commit -m 'chore: update changelog' && pnpm bump && pnpm --filter './packages/*' build && pnpm --filter './packages/*' publish --access public --registry https://registry.npmjs.org",
-    "release:dry": "pnpm --filter './packages/*' build && pnpm --filter './packages/*' publish --access public --dry-run --registry https://registry.npmjs.org"
+    "release": "npx tsx scripts/release.ts",
+    "release:dry": "npx tsx scripts/release.ts --dry"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
