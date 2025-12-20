@@ -1,6 +1,6 @@
 {
   "name": "@incremark/devtools",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "description": "Incremark DevTools - Framework-agnostic debugging panel",
   "type": "module",
