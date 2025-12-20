@@ -20,8 +20,10 @@
     "benchmark": "pnpm --filter @incremark/core benchmark",
     "changelog": "changelogen --output CHANGELOG.md",
     "bump": "bumpp package.json packages/*/package.json --commit --push --tag",
+    "bump:no-push": "bumpp package.json packages/*/package.json --commit --tag --no-push",
+    "bump:no-commit": "bumpp package.json packages/*/package.json --no-commit --no-push",
     "bump:dry": "bumpp package.json packages/*/package.json --dry",
-    "release": "pnpm changelog && git add . && git commit -m 'chore: update changelog' && pnpm bump && pnpm --filter './packages/*' build && pnpm --filter './packages/*' publish --access public --registry https://registry.npmjs.org",
+    "release": "pnpm bump:no-commit && pnpm changelog && git add . && sh -c 'VERSION=$(node -p \"require(\\\"./package.json\\\").version\"); git commit -m \"chore: release v$VERSION\"; git tag \"v$VERSION\"' && git push && git push --tags && pnpm --filter './packages/*' build && pnpm --filter './packages/*' publish --access public --registry https://registry.npmjs.org",
     "release:dry": "pnpm --filter './packages/*' build && pnpm --filter './packages/*' publish --access public --dry-run --registry https://registry.npmjs.org"
   },
   "devDependencies": {
