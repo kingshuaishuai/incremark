@@ -33,6 +33,7 @@
   "effectFadeIn": "Fade In",
   "effectTyping": "Cursor",
   "autoScroll": "📜 Auto Scroll",
-  "scrollPaused": "Paused"
+  "scrollPaused": "Paused",
+  "htmlMode": "🌐 HTML Render"
 }
 

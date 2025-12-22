@@ -44,6 +44,7 @@ export interface Messages {
   effectTyping: string
   autoScroll: string
   scrollPaused: string
+  htmlMode: string
 }
 
 export const messages: Record<Locale, Messages> = {

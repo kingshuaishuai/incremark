@@ -1,0 +1,127 @@
+/**
+ * Less 变量定义
+ * 
+ * 这些变量引用 CSS Variables，在运行时可以通过 ThemeProvider 动态修改
+ * 
+ * 注意：CSS Variables 定义在 css-variables.less 中（由脚本自动生成）
+ */
+
+// 导入 CSS Variables 定义
+@import './css-variables.less';
+
+/* ============ 颜色系统 ============ */
+
+// Neutral 中性色
+@color-neutral-1: var(--incremark-color-neutral-1);
+@color-neutral-2: var(--incremark-color-neutral-2);
+@color-neutral-3: var(--incremark-color-neutral-3);
+@color-neutral-4: var(--incremark-color-neutral-4);
+@color-neutral-5: var(--incremark-color-neutral-5);
+@color-neutral-6: var(--incremark-color-neutral-6);
+@color-neutral-7: var(--incremark-color-neutral-7);
+@color-neutral-8: var(--incremark-color-neutral-8);
+@color-neutral-9: var(--incremark-color-neutral-9);
+@color-neutral-10: var(--incremark-color-neutral-10);
+
+// 品牌主题色
+@color-brand-primary: var(--incremark-color-brand-primary);
+@color-brand-primary-hover: var(--incremark-color-brand-primary-hover);
+@color-brand-primary-active: var(--incremark-color-brand-primary-active);
+@color-brand-primary-light: var(--incremark-color-brand-primary-light);
+
+// 文本颜色
+@color-text-primary: var(--incremark-color-text-primary);
+@color-text-secondary: var(--incremark-color-text-secondary);
+@color-text-tertiary: var(--incremark-color-text-tertiary);
+@color-text-inverse: var(--incremark-color-text-inverse);
+
+// 背景颜色
+@color-background-base: var(--incremark-color-background-base);
+@color-background-elevated: var(--incremark-color-background-elevated);
+@color-background-overlay: var(--incremark-color-background-overlay);
+
+// 边框颜色
+@color-border-default: var(--incremark-color-border-default);
+@color-border-subtle: var(--incremark-color-border-subtle);
+@color-border-strong: var(--incremark-color-border-strong);
+
+// 代码相关颜色
+@color-code-inline-background: var(--incremark-color-code-inline-background);
+@color-code-inline-text: var(--incremark-color-code-inline-text);
+@color-code-block-background: var(--incremark-color-code-block-background);
+@color-code-block-text: var(--incremark-color-code-block-text);
+@color-code-header-background: var(--incremark-color-code-header-background);
+// code border 使用通用的 border-strong，不单独定义
+
+// 状态颜色
+@color-status-pending: var(--incremark-color-status-pending);
+@color-status-completed: var(--incremark-color-status-completed);
+
+// 交互元素颜色
+@color-interactive-link: var(--incremark-color-interactive-link);
+@color-interactive-link-hover: var(--incremark-color-interactive-link-hover);
+@color-interactive-link-visited: var(--incremark-color-interactive-link-visited);
+@color-interactive-checked: var(--incremark-color-interactive-checked);
+
+/* ============ 字体系统 ============ */
+
+// 字体族
+@font-family-base: var(--incremark-typography-font-family-base);
+@font-family-mono: var(--incremark-typography-font-family-mono);
+
+// 字体大小
+@font-size-xs: var(--incremark-typography-font-size-xs);
+@font-size-sm: var(--incremark-typography-font-size-sm);
+@font-size-base: var(--incremark-typography-font-size-base);
+@font-size-md: var(--incremark-typography-font-size-md);
+@font-size-lg: var(--incremark-typography-font-size-lg);
+@font-size-heading-h1: var(--incremark-typography-font-size-heading-h1);
+@font-size-heading-h2: var(--incremark-typography-font-size-heading-h2);
+@font-size-heading-h3: var(--incremark-typography-font-size-heading-h3);
+@font-size-heading-h4: var(--incremark-typography-font-size-heading-h4);
+@font-size-heading-h5: var(--incremark-typography-font-size-heading-h5);
+@font-size-heading-h6: var(--incremark-typography-font-size-heading-h6);
+
+// 字重
+@font-weight-normal: var(--incremark-typography-font-weight-normal);
+@font-weight-medium: var(--incremark-typography-font-weight-medium);
+@font-weight-semibold: var(--incremark-typography-font-weight-semibold);
+@font-weight-bold: var(--incremark-typography-font-weight-bold);
+
+// 行高
+@line-height-tight: var(--incremark-typography-line-height-tight);
+@line-height-normal: var(--incremark-typography-line-height-normal);
+@line-height-relaxed: var(--incremark-typography-line-height-relaxed);
+
+/* ============ 间距系统 ============ */
+
+@spacing-xs: var(--incremark-spacing-xs);
+@spacing-sm: var(--incremark-spacing-sm);
+@spacing-md: var(--incremark-spacing-md);
+@spacing-lg: var(--incremark-spacing-lg);
+@spacing-xl: var(--incremark-spacing-xl);
+
+/* ============ 边框系统 ============ */
+
+// 圆角
+@border-radius-sm: var(--incremark-border-radius-sm);
+@border-radius-md: var(--incremark-border-radius-md);
+@border-radius-lg: var(--incremark-border-radius-lg);
+
+/* ============ 阴影系统 ============ */
+
+@shadow-sm: var(--incremark-shadow-sm);
+@shadow-md: var(--incremark-shadow-md);
+@shadow-lg: var(--incremark-shadow-lg);
+
+/* ============ 动画系统 ============ */
+
+// 持续时间
+@duration-fast: var(--incremark-animation-duration-fast);
+@duration-normal: var(--incremark-animation-duration-normal);
+@duration-slow: var(--incremark-animation-duration-slow);
+
+// 缓动函数
+@easing-ease-in-out: var(--incremark-animation-easing-ease-in-out);
+@easing-ease-out: var(--incremark-animation-easing-ease-out);
+

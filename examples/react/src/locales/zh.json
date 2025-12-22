@@ -33,6 +33,7 @@
   "effectFadeIn": "渐入",
   "effectTyping": "光标",
   "autoScroll": "📜 自动滚动",
-  "scrollPaused": "已暂停"
+  "scrollPaused": "已暂停",
+  "htmlMode": "🌐 HTML 渲染"
 }
 

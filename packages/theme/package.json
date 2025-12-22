@@ -1,0 +1,50 @@
+{
+  "name": "@incremark/theme",
+  "version": "0.1.2",
+  "description": "Incremark 主题样式包 - 统一的主题系统",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./themes/*": "./dist/themes/*.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup && npm run generate:css-vars && npm run build:styles",
+    "build:styles": "tsx scripts/build-styles.ts",
+    "generate:css-vars": "tsx scripts/generate-css-variables.ts",
+    "dev": "tsup --watch",
+    "dev:styles": "npm run generate:css-vars && npm run build:styles -- --watch"
+  },
+  "devDependencies": {
+    "less": "^4.2.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "@incremark/colors": "workspace:*"
+  },
+  "keywords": [
+    "incremark",
+    "theme",
+    "styles",
+    "css"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kingshuaishuai/incremark.git",
+    "directory": "packages/theme"
+  },
+  "homepage": "https://www.incremark.com/"
+}
+

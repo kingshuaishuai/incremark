@@ -5,6 +5,6 @@ export default defineConfig({
   format: ['esm'],
   dts: true,
   clean: true,
-  external: ['react', '@incremark/core', '@incremark/devtools']
+  external: ['react', '@incremark/core', '@incremark/devtools', '@incremark/theme', 'katex', 'mermaid', 'shiki']
 })
 

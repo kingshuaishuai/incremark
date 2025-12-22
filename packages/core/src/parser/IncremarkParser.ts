@@ -25,6 +25,9 @@ import type {
   ContainerConfig
 } from '../types'
 
+import { transformHtmlNodes, type HtmlTreeExtensionOptions } from '../extensions/html-extension'
+import type { HTML, Paragraph, Text, Parent as MdastParent } from 'mdast'
+
 import {
   createInitialContext,
   updateContext,
@@ -51,6 +54,8 @@ export class IncremarkParser {
   private options: ParserOptions
   /** 缓存的容器配置，避免重复计算 */
   private readonly containerConfig: ContainerConfig | undefined
+  /** 缓存的 HTML 树配置，避免重复计算 */
+  private readonly htmlTreeConfig: HtmlTreeExtensionOptions | undefined
   /** 上次 append 返回的 pending blocks，用于 getAst 复用 */
   private lastPendingBlocks: ParsedBlock[] = []
 
@@ -62,6 +67,8 @@ export class IncremarkParser {
     this.context = createInitialContext()
     // 初始化容器配置（构造时计算一次）
     this.containerConfig = this.computeContainerConfig()
+    // 初始化 HTML 树配置
+    this.htmlTreeConfig = this.computeHtmlTreeConfig()
   }
 
   private generateBlockId(): string {
@@ -72,6 +79,95 @@ export class IncremarkParser {
     const containers = this.options.containers
     if (!containers) return undefined
     return containers === true ? {} : containers
+  }
+
+  private computeHtmlTreeConfig(): HtmlTreeExtensionOptions | undefined {
+    const htmlTree = this.options.htmlTree
+    if (!htmlTree) return undefined
+    return htmlTree === true ? {} : htmlTree
+  }
+
+  /**
+   * 将 HTML 节点转换为纯文本
+   * 递归处理 AST 中所有 html 类型的节点
+   * - 块级 HTML 节点 → 转换为 paragraph 包含 text
+   * - 内联 HTML 节点（在段落内部）→ 转换为 text 节点
+   */
+  private convertHtmlToText(ast: Root): Root {
+    // 处理内联节点（段落内部的 children）
+    const processInlineChildren = (children: unknown[]): unknown[] => {
+      return children.map(node => {
+        const n = node as RootContent
+        // 内联 html 节点转换为纯文本节点
+        if (n.type === 'html') {
+          const htmlNode = n as HTML
+          const textNode: Text = {
+            type: 'text',
+            value: htmlNode.value,
+            position: htmlNode.position
+          }
+          return textNode
+        }
+        
+        // 递归处理有 children 的内联节点（如 strong, emphasis 等）
+        if ('children' in n && Array.isArray(n.children)) {
+          const parent = n as MdastParent
+          return {
+            ...parent,
+            children: processInlineChildren(parent.children)
+          }
+        }
+        
+        return n
+      })
+    }
+
+    // 处理块级节点
+    const processBlockChildren = (children: RootContent[]): RootContent[] => {
+      return children.map(node => {
+        // 块级 html 节点转换为段落包含纯文本
+        if (node.type === 'html') {
+          const htmlNode = node as HTML
+          const textNode: Text = {
+            type: 'text',
+            value: htmlNode.value
+          }
+          const paragraphNode: Paragraph = {
+            type: 'paragraph',
+            children: [textNode],
+            position: htmlNode.position
+          }
+          return paragraphNode as RootContent
+        }
+        
+        // 递归处理有 children 的块级节点
+        if ('children' in node && Array.isArray(node.children)) {
+          const parent = node as MdastParent
+          // 对于段落等内联容器，使用 processInlineChildren
+          if (node.type === 'paragraph' || node.type === 'heading' || 
+              node.type === 'tableCell' || node.type === 'delete' ||
+              node.type === 'emphasis' || node.type === 'strong' ||
+              node.type === 'link' || node.type === 'linkReference') {
+            return {
+              ...parent,
+              children: processInlineChildren(parent.children)
+            } as RootContent
+          }
+          // 对于其他块级容器，递归处理
+          return {
+            ...parent,
+            children: processBlockChildren(parent.children as RootContent[])
+          } as RootContent
+        }
+        
+        return node
+      })
+    }
+    
+    return {
+      ...ast,
+      children: processBlockChildren(ast.children)
+    }
   }
 
   private parse(text: string): Root {
@@ -91,7 +187,18 @@ export class IncremarkParser {
       mdastExtensions.push(...this.options.mdastExtensions)
     }
 
-    return fromMarkdown(text, { extensions, mdastExtensions })
+    // 生成 AST
+    let ast = fromMarkdown(text, { extensions, mdastExtensions })
+    
+    // 如果启用了 HTML 树转换，应用转换
+    if (this.htmlTreeConfig) {
+      ast = transformHtmlNodes(ast, this.htmlTreeConfig)
+    } else {
+      // 如果未启用 HTML 树，将 HTML 节点转换为纯文本
+      ast = this.convertHtmlToText(ast)
+    }
+    
+    return ast
   }
 
   /**

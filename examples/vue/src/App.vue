@@ -1,108 +1,23 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useIncremark, useDevTools, Incremark, AutoScrollContainer } from '@incremark/vue'
-// @ts-ignore
-import { math } from 'micromark-extension-math'
-// @ts-ignore
-import { mathFromMarkdown } from 'mdast-util-math'
 import 'katex/dist/katex.min.css'
 
 // 本地 composables 和组件
-import { useLocale, useBenchmark } from './composables'
-import { BenchmarkPanel, CustomInputPanel, CustomHeading } from './components'
+import { useLocale } from './composables'
+import { IncremarkDemo } from './components'
 
 // ============ 国际化 ============
 const { locale, t, sampleMarkdown, toggleLocale } = useLocale()
 
-// ============ 打字机配置 ============
-const typewriterSpeed = ref(2)
-const typewriterInterval = ref(30)
-const typewriterRandomStep = ref(true)
-const typewriterEffect = ref<'none' | 'fade-in' | 'typing'>('typing')
+// ============ HTML 模式 ============
+const htmlEnabled = ref(true)
+// 用于强制重新创建 incremark 实例
+const incremarkKey = ref(0)
 
-// ============ 初始化 Incremark（集成打字机） ============
-const incremark = useIncremark({
-  gfm: true,
-  extensions: [math()],
-  mdastExtensions: [mathFromMarkdown()],
-  // 打字机配置（内部默认使用 defaultPlugins）
-  typewriter: {
-    enabled: false,
-    charsPerTick: [1, Math.max(2, typewriterSpeed.value)],
-    tickInterval: typewriterInterval.value,
-    effect: typewriterEffect.value,
-    cursor: '|'
-  }
+// 监听 HTML 模式或语言变化，重新创建 incremark 实例
+watch([htmlEnabled, locale], () => {
+  incremarkKey.value++
 })
-
-const { markdown, blocks, completedBlocks, pendingBlocks, append, finalize, reset, render, typewriter } = incremark
-
-useDevTools(incremark)
-
-// 监听打字机配置变化
-watch([typewriterSpeed, typewriterInterval, typewriterEffect, typewriterRandomStep], () => {
-  typewriter.setOptions({
-    charsPerTick: typewriterRandomStep.value
-      ? [1, Math.max(2, typewriterSpeed.value)] as [number, number]
-      : typewriterSpeed.value,
-    tickInterval: typewriterInterval.value,
-    effect: typewriterEffect.value
-  })
-})
-
-// ============ 流式输出 ============
-const isStreaming = ref(false)
-
-async function simulateStream() {
-  reset()
-  isStreaming.value = true
-
-  const content = customInputMode.value && customMarkdown.value.trim() 
-    ? customMarkdown.value 
-    : sampleMarkdown.value
-  const chunks = content.match(/[\s\S]{1,20}/g) || []
-
-  for (const chunk of chunks) {
-    append(chunk)
-    await new Promise((resolve) => setTimeout(resolve, 30))
-  }
-
-  finalize()
-  isStreaming.value = false
-}
-
-function renderOnce() {
-  const content = customInputMode.value && customMarkdown.value.trim() 
-    ? customMarkdown.value 
-    : sampleMarkdown.value
-  render(content)
-}
-
-// ============ 自动滚动 ============
-const autoScrollEnabled = ref(true)
-const scrollContainerRef = ref<InstanceType<typeof AutoScrollContainer> | null>(null)
-
-// ============ 自定义输入 ============
-const customInputMode = ref(false)
-const customMarkdown = ref('')
-
-// ============ Benchmark ============
-const { benchmarkMode, benchmarkRunning, benchmarkProgress, benchmarkStats, runBenchmark } = 
-  useBenchmark(append, finalize, reset)
-
-function handleRunBenchmark() {
-  const content = customInputMode.value && customMarkdown.value.trim() 
-    ? customMarkdown.value 
-    : sampleMarkdown.value
-  runBenchmark(content)
-}
-
-// ============ 自定义组件 ============
-const useCustomComponents = ref(false)
-const customComponents = { heading: CustomHeading }
-
-// 语言切换时重置
-watch(locale, () => reset())
 </script>
 
 <template>
@@ -114,102 +29,30 @@ watch(locale, () => reset())
           {{ locale === 'zh' ? '🇺🇸 English' : '🇨🇳 中文' }}
         </button>
       </div>
-      <div class="controls">
-        <button @click="simulateStream" :disabled="isStreaming || benchmarkRunning">
-          {{ isStreaming ? t.streaming : t.simulateAI }}
-        </button>
-        <button @click="renderOnce" :disabled="isStreaming || benchmarkRunning">{{ t.renderOnce }}</button>
-        <button @click="reset" :disabled="isStreaming || benchmarkRunning">{{ t.reset }}</button>
-        
-        <label class="checkbox">
-          <input type="checkbox" v-model="useCustomComponents" />
-          {{ t.customComponents }}
+      <div class="header-controls">
+        <label class="checkbox html-toggle">
+          <input type="checkbox" v-model="htmlEnabled" />
+          {{ t.htmlMode }}
         </label>
-        <label class="checkbox benchmark-toggle">
-          <input type="checkbox" v-model="benchmarkMode" />
-          {{ t.benchmarkMode }}
-        </label>
-        <label class="checkbox">
-          <input type="checkbox" v-model="customInputMode" />
-          {{ t.customInput }}
-        </label>
-        <label class="checkbox typewriter-toggle">
-          <input type="checkbox" v-model="typewriter.enabled.value" />
-          {{ t.typewriterMode }}
-        </label>
-        <label class="checkbox auto-scroll-toggle">
-          <input type="checkbox" v-model="autoScrollEnabled" />
-          {{ t.autoScroll }}
-        </label>
-        
-        <template v-if="typewriter.enabled.value">
-          <label class="speed-control">
-            <input type="range" v-model.number="typewriterSpeed" min="1" max="10" step="1" />
-            <span class="speed-value">{{ typewriterSpeed }} {{ t.charsPerTick }}</span>
-          </label>
-          <label class="speed-control">
-            <input type="range" v-model.number="typewriterInterval" min="10" max="200" step="10" />
-            <span class="speed-value">{{ typewriterInterval }} {{ t.intervalMs }}</span>
-          </label>
-          <label class="checkbox random-step-toggle">
-            <input type="checkbox" v-model="typewriterRandomStep" />
-            {{ t.randomStep }}
-          </label>
-          <select v-model="typewriterEffect" class="effect-select">
-            <option value="none">{{ t.effectNone }}</option>
-            <option value="fade-in">{{ t.effectFadeIn }}</option>
-            <option value="typing">{{ t.effectTyping }}</option>
-          </select>
-          <button v-if="typewriter.isProcessing.value && !typewriter.isPaused.value" class="pause-btn" @click="typewriter.pause">
-            ⏸️ {{ t.pause }}
-          </button>
-          <button v-if="typewriter.isPaused.value" class="resume-btn" @click="typewriter.resume">
-            ▶️ {{ t.resume }}
-          </button>
-          <button v-if="typewriter.isProcessing.value" class="skip-btn" @click="typewriter.skip">
-            ⏭️ {{ t.skip }}
-          </button>
-        </template>
-        
-        <span class="stats">
-          📝 {{ markdown.length }} {{ t.chars }} |
-          ✅ {{ completedBlocks.length }} {{ t.blocks }} |
-          ⏳ {{ pendingBlocks.length }} {{ t.pending }}
-          <template v-if="typewriter.enabled.value && typewriter.isProcessing.value">
-            | ⌨️ {{ typewriter.isPaused.value ? t.paused : t.typing }}
-          </template>
-        </span>
       </div>
     </header>
 
-    <BenchmarkPanel
-      v-if="benchmarkMode"
-      :stats="benchmarkStats"
-      :running="benchmarkRunning"
-      :progress="benchmarkProgress"
+    <IncremarkDemo 
+      :key="incremarkKey"
+      :html-enabled="htmlEnabled" 
+      :sample-markdown="sampleMarkdown" 
       :t="t"
-      @run="handleRunBenchmark"
     />
-
-    <CustomInputPanel
-      v-if="customInputMode"
-      v-model="customMarkdown"
-      :t="t"
-      @use-example="customMarkdown = sampleMarkdown"
-    />
-
-    <main :class="['content', typewriter.enabled.value && `effect-${typewriterEffect}`]">
-      <AutoScrollContainer ref="scrollContainerRef" :enabled="autoScrollEnabled" class="scroll-container">
-        <Incremark
-          :blocks="blocks"
-          :components="useCustomComponents ? customComponents : {}"
-          :show-block-status="true"
-        />
-      </AutoScrollContainer>
-    </main>
   </div>
 </template>
 
 <style>
-@import './styles/app.css';
+@import '../../shared/styles.css';
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+}
 </style>

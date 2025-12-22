@@ -12,6 +12,7 @@
     "@incremark/core": "workspace:*",
     "@incremark/vue": "workspace:*",
     "@incremark/devtools": "workspace:*",
+    "@incremark/theme": "workspace:*",
     "shiki": "^3.20.0",
     "mermaid": "^11.4.0",
     "katex": "^0.16.0",

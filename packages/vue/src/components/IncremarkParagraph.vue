@@ -12,10 +12,3 @@ defineProps<{
     <IncremarkInline :nodes="node.children" />
   </p>
 </template>
-
-<style scoped>
-.incremark-paragraph {
-  margin: 0.75em 0;
-  line-height: 1.6;
-}
-</style>

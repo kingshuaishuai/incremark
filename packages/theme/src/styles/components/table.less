@@ -1,0 +1,34 @@
+/**
+ * Table 组件样式
+ */
+
+@import '../variables.less';
+
+.incremark-table-wrapper {
+  overflow-x: auto;
+  margin: @spacing-lg 0;
+}
+
+.incremark-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: @font-size-base;
+  /* 固定表格布局，避免打字机效果时列宽抖动 */
+  table-layout: fixed;
+}
+
+.incremark-table th,
+.incremark-table td {
+  border: 1px solid @color-border-default;
+  padding: @spacing-md @spacing-lg;
+}
+
+.incremark-table th {
+  background: @color-background-elevated;
+  font-weight: @font-weight-semibold;
+}
+
+.incremark-table tr:nth-child(even) {
+  background: @color-background-elevated;
+}
+

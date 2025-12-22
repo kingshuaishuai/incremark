@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import type { PhrasingContent, Text, HTML } from 'mdast'
+import { computed } from 'vue'
+import type { PhrasingContent, RootContent } from 'mdast'
 import type { TextChunk } from '@incremark/core'
+import {
+  type TextNodeWithChunks,
+  hasChunks,
+  getStableText,
+  isHtmlNode
+} from '@incremark/shared'
 import IncremarkMath from './IncremarkMath.vue'
-
-// 扩展的文本节点类型（支持 chunks）
-interface TextNodeWithChunks extends Text {
-  stableLength?: number
-  chunks?: TextChunk[]
-}
+import IncremarkHtmlElement from './IncremarkHtmlElement.vue'
 
 // Math 节点类型
 interface MathNode {
@@ -15,42 +17,33 @@ interface MathNode {
   value: string
 }
 
-defineProps<{
+// HtmlElement 节点类型
+interface HtmlElementNode {
+  type: 'htmlElement'
+  tagName: string
+  attrs: Record<string, string>
+  children: RootContent[]
+}
+
+/**
+ * 类型守卫：检查是否是 htmlElement 节点
+ */
+function isHtmlElementNode(node: PhrasingContent): node is PhrasingContent & HtmlElementNode {
+  return (node as unknown as HtmlElementNode).type === 'htmlElement'
+}
+
+const props = defineProps<{
   nodes: PhrasingContent[]
 }>()
-
-/**
- * 获取文本节点的稳定部分（不需要动画）
- */
-function getStableText(node: TextNodeWithChunks): string {
-  if (!node.chunks || node.chunks.length === 0) {
-    return node.value
-  }
-  return node.value.slice(0, node.stableLength ?? 0)
-}
-
-/**
- * 类型守卫：检查是否是带 chunks 的文本节点
- */
-function hasChunks(node: PhrasingContent): node is TextNodeWithChunks {
-  return node.type === 'text' && 'chunks' in node && Array.isArray((node as TextNodeWithChunks).chunks)
-}
 
 /**
  * 获取节点的 chunks（类型安全）
  */
 function getChunks(node: PhrasingContent): TextChunk[] | undefined {
   if (hasChunks(node)) {
-    return node.chunks
+    return (node as TextNodeWithChunks).chunks
   }
   return undefined
-}
-
-/**
- * 类型守卫：检查是否是 HTML 节点
- */
-function isHtmlNode(node: PhrasingContent): node is HTML {
-  return node.type === 'html'
 }
 
 /**
@@ -60,6 +53,7 @@ function isHtmlNode(node: PhrasingContent): node is HTML {
 function isInlineMath(node: PhrasingContent): node is PhrasingContent & MathNode {
   return (node as unknown as MathNode).type === 'inlineMath'
 }
+
 </script>
 
 <template>
@@ -79,6 +73,15 @@ function isInlineMath(node: PhrasingContent): node is PhrasingContent & MathNode
     <!-- 行内公式 -->
     <IncremarkMath v-else-if="isInlineMath(node)" :node="(node as unknown as MathNode)" />
 
+    <!-- htmlElement 节点（结构化的 HTML 元素） -->
+    <IncremarkHtmlElement 
+      v-else-if="isHtmlElementNode(node)" 
+      :node="(node as unknown as HtmlElementNode)" 
+    />
+
+    <!-- HTML 节点（原始 HTML，如未启用 htmlTree 选项） -->
+    <span v-else-if="isHtmlNode(node)" style="display: contents;" v-html="(node as any).value"></span>
+
     <!-- 加粗 -->
     <strong v-else-if="node.type === 'strong'">
       <IncremarkInline :nodes="(node.children as PhrasingContent[])" />
@@ -90,14 +93,14 @@ function isInlineMath(node: PhrasingContent): node is PhrasingContent & MathNode
     </em>
 
     <!-- 行内代码 -->
-    <code v-else-if="node.type === 'inlineCode'" class="incremark-inline-code">{{ node.value }}</code>
+    <code v-else-if="node.type === 'inlineCode'" class="incremark-inline-code">{{ (node as any).value }}</code>
 
     <!-- 链接 -->
     <a
       v-else-if="node.type === 'link'"
       :href="node.url"
       target="_blank"
-      rel="noopener"
+      rel="noopener noreferrer"
     >
       <IncremarkInline :nodes="(node.children as PhrasingContent[])" />
     </a>
@@ -117,32 +120,5 @@ function isInlineMath(node: PhrasingContent): node is PhrasingContent & MathNode
     <del v-else-if="node.type === 'delete'">
       <IncremarkInline :nodes="(node.children as PhrasingContent[])" />
     </del>
-
-    <!-- 原始 HTML -->
-    <span v-else-if="isHtmlNode(node)" v-html="node.value"></span>
   </template>
 </template>
-
-<style>
-.incremark-inline-code {
-  padding: 0.2em 0.4em;
-  background: rgba(0, 0, 0, 0.06);
-  border-radius: 4px;
-  font-family: 'Fira Code', 'SF Mono', Consolas, monospace;
-  font-size: 0.9em;
-}
-
-/* 渐入动画 */
-.incremark-fade-in {
-  animation: incremark-fade-in 0.4s ease-out;
-}
-
-@keyframes incremark-fade-in {
-  from { 
-    opacity: 0; 
-  }
-  to { 
-    opacity: 1; 
-  }
-}
-</style>

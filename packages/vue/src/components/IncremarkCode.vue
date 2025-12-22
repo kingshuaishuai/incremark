@@ -188,14 +188,14 @@ async function copyCode() {
       <span class="language">MERMAID</span>
       <div class="mermaid-actions">
         <button 
-          class="view-toggle" 
+          class="code-btn" 
           @click="toggleMermaidView" 
           type="button"
           :disabled="!mermaidSvg"
         >
           {{ mermaidViewMode === 'preview' ? '源码' : '预览' }}
         </button>
-        <button class="copy-btn" @click="copyCode" type="button">
+        <button class="code-btn" @click="copyCode" type="button">
           {{ copied ? '✓ 已复制' : '复制' }}
         </button>
       </div>
@@ -218,7 +218,7 @@ async function copyCode() {
   <div v-else class="incremark-code">
     <div class="code-header">
       <span class="language">{{ language }}</span>
-      <button class="copy-btn" @click="copyCode" type="button">
+      <button class="code-btn" @click="copyCode" type="button">
         {{ copied ? '✓ 已复制' : '复制' }}
       </button>
     </div>
@@ -234,161 +234,3 @@ async function copyCode() {
     </div>
   </div>
 </template>
-
-<style scoped>
-/* Mermaid 样式 */
-.incremark-mermaid {
-  margin: 1em 0;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #1a1a2e;
-}
-
-.mermaid-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 16px;
-  background: #16213e;
-  border-bottom: 1px solid #0f3460;
-  font-size: 12px;
-}
-
-.mermaid-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.view-toggle {
-  padding: 4px 10px;
-  border: 1px solid #0f3460;
-  border-radius: 6px;
-  background: transparent;
-  color: #8b949e;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.view-toggle:hover:not(:disabled) {
-  background: #0f3460;
-  color: #e0e0e0;
-}
-
-.view-toggle:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.mermaid-content {
-  padding: 16px;
-  min-height: 100px;
-}
-
-.mermaid-loading {
-  color: #8b949e;
-  font-size: 14px;
-}
-
-.mermaid-source-code {
-  margin: 0;
-  padding: 12px;
-  background: #0d1117;
-  border-radius: 6px;
-  color: #c9d1d9;
-  font-family: 'Fira Code', 'SF Mono', monospace;
-  font-size: 13px;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  overflow-x: auto;
-}
-
-.mermaid-svg {
-  overflow-x: auto;
-}
-
-.mermaid-svg :deep(svg) {
-  max-width: 100%;
-  height: auto;
-}
-
-/* 代码块样式 */
-.incremark-code {
-  margin: 1em 0;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #24292e;
-}
-
-.code-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 16px;
-  background: #1f2428;
-  border-bottom: 1px solid #30363d;
-  font-size: 12px;
-}
-
-.language {
-  color: #8b949e;
-  text-transform: uppercase;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-}
-
-.copy-btn {
-  padding: 4px 12px;
-  border: 1px solid #30363d;
-  border-radius: 6px;
-  background: transparent;
-  color: #8b949e;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.copy-btn:hover {
-  background: #30363d;
-  color: #c9d1d9;
-}
-
-.code-content {
-  overflow-x: auto;
-}
-
-.code-loading {
-  opacity: 0.7;
-}
-
-/* Shiki 生成的代码样式 */
-.shiki-wrapper :deep(pre) {
-  margin: 0;
-  padding: 16px;
-  background: transparent !important;
-  overflow-x: auto;
-}
-
-.shiki-wrapper :deep(code) {
-  font-family: 'Fira Code', 'SF Mono', 'Monaco', 'Consolas', monospace;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-/* 回退样式 */
-.code-fallback,
-.code-loading pre {
-  margin: 0;
-  padding: 16px;
-  overflow-x: auto;
-  background: transparent;
-}
-
-.code-fallback code,
-.code-loading code {
-  font-family: 'Fira Code', 'SF Mono', 'Monaco', 'Consolas', monospace;
-  font-size: 14px;
-  line-height: 1.6;
-  color: #c9d1d9;
-}
-</style>

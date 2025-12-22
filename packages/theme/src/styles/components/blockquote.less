@@ -1,0 +1,38 @@
+/**
+ * Blockquote 组件样式
+ */
+
+@import '../variables.less';
+
+.incremark-blockquote {
+  position: relative;
+  margin: @spacing-lg 0;
+  padding: @spacing-md @spacing-lg;
+  background: @color-background-elevated;
+  border-radius: 0 @border-radius-md @border-radius-md 0;
+  color: @color-text-secondary;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 4px;
+    border-radius: 2px;
+    background: @color-brand-primary;
+    left: 0;
+    top: 0;
+    bottom: 0;
+  }
+}
+
+.incremark-blockquote p {
+  margin: @spacing-md 0;
+}
+
+.incremark-blockquote p:first-child {
+  margin-top: 0;
+}
+
+.incremark-blockquote p:last-child {
+  margin-bottom: 0;
+}
+

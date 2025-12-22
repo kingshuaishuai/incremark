@@ -1,0 +1,67 @@
+/**
+ * Button 组件样式
+ * 
+ * 公共按钮样式，供代码块、Mermaid 图表等使用
+ */
+
+@import '../variables.less';
+
+/* ============ 基础按钮样式 ============ */
+.incremark-btn {
+  padding: @spacing-xs @spacing-md;
+  border: 1px solid @color-border-default;
+  border-radius: @border-radius-sm;
+  background: transparent;
+  color: @color-text-tertiary;
+  font-size: @font-size-sm;
+  font-weight: @font-weight-medium;
+  cursor: pointer;
+  transition: all @duration-normal @easing-ease-out;
+  user-select: none;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background-color: @color-background-elevated;
+    color: @color-text-primary;
+    border-color: @color-border-strong;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* ============ 代码块专用按钮 ============ */
+.incremark-code-btn {
+  padding: @spacing-xs @spacing-md;
+  border: 1px solid @color-border-strong;  // 使用通用深色边框
+  border-radius: @border-radius-sm;
+  background: transparent;
+  color: @color-text-tertiary;
+  font-size: @font-size-sm;
+  font-weight: @font-weight-medium;
+  cursor: pointer;
+  transition: all @duration-normal @easing-ease-out;
+  user-select: none;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background-color: @color-border-strong;  // 使用通用深色边框
+    color: @color-text-inverse;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+

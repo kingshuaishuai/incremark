@@ -21,6 +21,17 @@ import type {
   TableRow,
   TableCell
 } from 'mdast'
+import { IncremarkHeading } from './IncremarkHeading'
+import { IncremarkParagraph } from './IncremarkParagraph'
+import { IncremarkInline } from './IncremarkInline'
+import { IncremarkCode } from './IncremarkCode'
+import { IncremarkList } from './IncremarkList'
+import { IncremarkBlockquote } from './IncremarkBlockquote'
+import { IncremarkTable } from './IncremarkTable'
+import { IncremarkThematicBreak } from './IncremarkThematicBreak'
+import { IncremarkMath } from './IncremarkMath'
+import { IncremarkHtmlElement, type HtmlElementNode } from './IncremarkHtmlElement'
+import { IncremarkDefault } from './IncremarkDefault'
 
 export interface IncremarkRendererProps {
   node: RootContent
@@ -63,144 +74,75 @@ function isTextNodeWithChunks(node: ExtendedPhrasingContent): node is TextNodeWi
   return node.type === 'text' && 'chunks' in node && Array.isArray((node as TextNodeWithChunks).chunks)
 }
 
-// 渲染 inline 子节点
+// 渲染 inline 子节点（使用 IncremarkInline 组件）
 function renderInlineChildren(children: ExtendedPhrasingContent[] | undefined): React.ReactNode {
   if (!children) return null
-
-  return children.map((child, i) => {
-    switch (child.type) {
-      case 'text': {
-        const textNode = child as TextNodeWithChunks
-        // 如果有 chunks，分别渲染稳定部分和 chunk 部分
-        if (textNode.chunks && textNode.chunks.length > 0) {
-          return (
-            <React.Fragment key={i}>
-              {getStableText(textNode)}
-              {textNode.chunks.map((chunk) => (
-                <span key={chunk.createdAt} className="incremark-fade-in">
-                  {chunk.text}
-                </span>
-              ))}
-            </React.Fragment>
-          )
-        }
-        return <React.Fragment key={i}>{textNode.value}</React.Fragment>
-      }
-      case 'strong':
-        return <strong key={i}>{renderInlineChildren(child.children as ExtendedPhrasingContent[])}</strong>
-      case 'emphasis':
-        return <em key={i}>{renderInlineChildren(child.children as ExtendedPhrasingContent[])}</em>
-      case 'inlineCode':
-        return (
-          <code key={i} className="incremark-inline-code">
-            {child.value}
-          </code>
-        )
-      case 'link':
-        return (
-          <a key={i} href={child.url} target="_blank" rel="noopener noreferrer">
-            {renderInlineChildren(child.children as ExtendedPhrasingContent[])}
-          </a>
-        )
-      case 'image':
-        return <img key={i} src={child.url} alt={child.alt || ''} loading="lazy" />
-      case 'break':
-        return <br key={i} />
-      case 'delete':
-        return <del key={i}>{renderInlineChildren(child.children as ExtendedPhrasingContent[])}</del>
-      case 'paragraph':
-        // 段落内的内容直接展开
-        return <React.Fragment key={i}>{renderInlineChildren((child as Paragraph).children as ExtendedPhrasingContent[])}</React.Fragment>
-      case 'html':
-        // 原始 HTML
-        return <span key={i} dangerouslySetInnerHTML={{ __html: (child as HTML).value }} />
-      default:
-        return <span key={i}>{(child as { value?: string }).value || ''}</span>
+  
+  // 分离 PhrasingContent 和其他类型
+  const phrasingNodes: PhrasingContent[] = []
+  const otherNodes: React.ReactNode[] = []
+  
+  children.forEach((child, i) => {
+    if (child.type === 'paragraph') {
+      otherNodes.push(
+        <React.Fragment key={i}>
+          <IncremarkInline nodes={(child as Paragraph).children as PhrasingContent[]} />
+        </React.Fragment>
+      )
+    } else if (child.type === 'html') {
+      otherNodes.push(
+        <span key={i} dangerouslySetInnerHTML={{ __html: (child as HTML).value }} />
+      )
+    } else {
+      phrasingNodes.push(child as PhrasingContent)
     }
   })
+  
+  return (
+    <>
+      {otherNodes}
+      {phrasingNodes.length > 0 && <IncremarkInline nodes={phrasingNodes} />}
+    </>
+  )
 }
 
 // 默认组件
 const DefaultHeading: React.FC<{ node: Heading }> = ({ node }) => {
-  const Tag = `h${node.depth}` as keyof JSX.IntrinsicElements
-  return <Tag className="incremark-heading">{renderInlineChildren(node.children as ExtendedPhrasingContent[])}</Tag>
+  return <IncremarkHeading node={node} />
 }
 
 const DefaultParagraph: React.FC<{ node: Paragraph }> = ({ node }) => (
-  <p className="incremark-paragraph">{renderInlineChildren(node.children as ExtendedPhrasingContent[])}</p>
+  <IncremarkParagraph node={node} />
 )
 
 const DefaultCode: React.FC<{ node: Code }> = ({ node }) => (
-  <div className="incremark-code">
-    <div className="code-header">
-      <span className="language">{node.lang || 'text'}</span>
-    </div>
-    <pre>
-      <code>{node.value}</code>
-    </pre>
-  </div>
+  <IncremarkCode node={node} />
 )
 
-const DefaultList: React.FC<{ node: List }> = ({ node }) => {
-  const Tag = node.ordered ? 'ol' : 'ul'
-  return (
-    <Tag className="incremark-list">
-      {node.children?.map((item: ListItem, i: number) => (
-        <li key={i}>
-          {/* listItem 的 children 通常是 paragraph，需要递归渲染 */}
-          {renderInlineChildren(item.children as ExtendedPhrasingContent[])}
-        </li>
-      ))}
-    </Tag>
-  )
-}
+const DefaultList: React.FC<{ node: List }> = ({ node }) => (
+  <IncremarkList node={node} />
+)
 
 const DefaultBlockquote: React.FC<{ node: Blockquote }> = ({ node }) => (
-  <blockquote className="incremark-blockquote">
-    {/* blockquote 的 children 是段落等块级节点 */}
-    {node.children?.map((child: Blockquote['children'][number], i: number) => (
-      <React.Fragment key={i}>
-        {child.type === 'paragraph' ? (
-          <p>{renderInlineChildren((child as Paragraph).children as ExtendedPhrasingContent[])}</p>
-        ) : 'children' in child && Array.isArray(child.children) ? (
-          renderInlineChildren(child.children as ExtendedPhrasingContent[])
-        ) : null}
-      </React.Fragment>
-    ))}
-  </blockquote>
+  <IncremarkBlockquote node={node} />
 )
 
 const DefaultTable: React.FC<{ node: Table }> = ({ node }) => (
-  <div className="incremark-table-wrapper">
-    <table className="incremark-table">
-      <thead>
-        {node.children?.[0] && (
-          <tr>
-            {(node.children[0] as TableRow).children?.map((cell: TableCell, i: number) => (
-              <th key={i}>{renderInlineChildren(cell.children as ExtendedPhrasingContent[])}</th>
-            ))}
-          </tr>
-        )}
-      </thead>
-      <tbody>
-        {node.children?.slice(1).map((row: TableRow, i: number) => (
-          <tr key={i}>
-            {row.children?.map((cell: TableCell, j: number) => (
-              <td key={j}>{renderInlineChildren(cell.children as ExtendedPhrasingContent[])}</td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
+  <IncremarkTable node={node} />
 )
 
-const DefaultThematicBreak: React.FC = () => <hr className="incremark-hr" />
+const DefaultThematicBreak: React.FC = () => <IncremarkThematicBreak />
+
+const DefaultMath: React.FC<{ node: any }> = ({ node }) => (
+  <IncremarkMath node={node} />
+)
+
+const DefaultHtmlElement: React.FC<{ node: HtmlElementNode }> = ({ node }) => (
+  <IncremarkHtmlElement node={node} />
+)
 
 const DefaultDefault: React.FC<{ node: RootContent }> = ({ node }) => (
-  <div className="incremark-unknown" data-type={node.type}>
-    <pre>{JSON.stringify(node, null, 2)}</pre>
-  </div>
+  <IncremarkDefault node={node} />
 )
 
 // 将具体组件类型转换为通用类型
@@ -213,13 +155,26 @@ const defaultComponents: Record<string, NodeComponent> = {
   list: DefaultList as NodeComponent,
   blockquote: DefaultBlockquote as NodeComponent,
   table: DefaultTable as NodeComponent,
-  thematicBreak: DefaultThematicBreak as NodeComponent
+  thematicBreak: DefaultThematicBreak as NodeComponent,
+  math: DefaultMath as NodeComponent,
+  inlineMath: DefaultMath as NodeComponent,
+  htmlElement: DefaultHtmlElement as NodeComponent,
+  default: DefaultDefault as NodeComponent
 }
 
 /**
  * 渲染单个 AST 节点
  */
 export const IncremarkRenderer: React.FC<IncremarkRendererProps> = ({ node, components = {} }) => {
+  // HTML 节点：渲染为代码块显示源代码
+  if (node.type === 'html') {
+    return (
+      <pre className="incremark-html-code">
+        <code>{(node as HTML).value}</code>
+      </pre>
+    )
+  }
+
   const mergedComponents = { ...defaultComponents, ...components }
   const Component = mergedComponents[node.type] || DefaultDefault
   return <Component node={node} />

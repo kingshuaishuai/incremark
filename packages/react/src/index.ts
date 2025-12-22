@@ -21,6 +21,12 @@ export {
   type AutoScrollContainerProps,
   type AutoScrollContainerRef
 } from './components'
+export {
+  IncremarkHtmlElement,
+  type IncremarkHtmlElementProps,
+  type HtmlElementNode
+} from './components'
+export { ThemeProvider, type ThemeProviderProps } from './ThemeProvider'
 
 // Re-export core types
 export type {
@@ -54,4 +60,14 @@ export {
   allPlugins,
   createPlugin
 } from '@incremark/core'
+
+// Re-export theme utilities
+export {
+  type DesignTokens,
+  defaultTheme,
+  darkTheme,
+  generateCSSVars,
+  mergeTheme,
+  applyTheme
+} from '@incremark/theme'
 

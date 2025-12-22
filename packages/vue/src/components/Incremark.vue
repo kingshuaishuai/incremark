@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
-import type { ParsedBlock } from '@incremark/core'
+import type { ParsedBlock, RootContent } from '@incremark/core'
+import type { HTML } from 'mdast'
 import IncremarkHeading from './IncremarkHeading.vue'
 import IncremarkParagraph from './IncremarkParagraph.vue'
 import IncremarkCode from './IncremarkCode.vue'
@@ -9,10 +10,18 @@ import IncremarkTable from './IncremarkTable.vue'
 import IncremarkBlockquote from './IncremarkBlockquote.vue'
 import IncremarkThematicBreak from './IncremarkThematicBreak.vue'
 import IncremarkMath from './IncremarkMath.vue'
+import IncremarkHtmlElement from './IncremarkHtmlElement.vue'
 import IncremarkDefault from './IncremarkDefault.vue'
 
 // 组件映射类型
 export type ComponentMap = Partial<Record<string, Component>>
+
+/**
+ * 检查是否是 html 节点
+ */
+function isHtmlNode(node: RootContent): node is HTML {
+  return node.type === 'html'
+}
 
 // 带稳定 ID 的块类型
 export interface BlockWithStableId extends ParsedBlock {
@@ -51,7 +60,8 @@ const defaultComponents: Record<string, Component> = {
   blockquote: IncremarkBlockquote,
   thematicBreak: IncremarkThematicBreak,
   math: IncremarkMath,
-  inlineMath: IncremarkMath
+  inlineMath: IncremarkMath,
+  htmlElement: IncremarkHtmlElement
 }
 
 // 合并用户组件和默认组件
@@ -78,24 +88,11 @@ function getComponent(type: string): Component {
           { 'incremark-last-pending': block.isLastPending }
         ]"
       >
-        <component :is="getComponent(block.node.type)" :node="block.node" />
+        <!-- HTML 节点：渲染为代码块显示源代码 -->
+        <pre v-if="isHtmlNode(block.node)" class="incremark-html-code"><code>{{ (block.node as HTML).value }}</code></pre>
+        <!-- 其他节点：使用对应组件 -->
+        <component v-else :is="getComponent(block.node.type)" :node="block.node" />
       </div>
     </TransitionGroup>
   </div>
 </template>
-
-<style scoped>
-.incremark-block.incremark-show-status.incremark-pending {
-  border-left: 3px solid #a855f7;
-  padding-left: 12px;
-  opacity: 0.8;
-}
-
-.incremark-fade-enter-active {
-  transition: opacity 0.2s ease-out;
-}
-
-.incremark-fade-enter-from {
-  opacity: 0;
-}
-</style>

@@ -40,35 +40,3 @@ function getCellContent(cell: TableCell): PhrasingContent[] {
   </div>
 </template>
 
-<style scoped>
-.incremark-table-wrapper {
-  overflow-x: auto;
-  margin: 1em 0;
-}
-
-.incremark-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-.incremark-table th,
-.incremark-table td {
-  border: 1px solid #ddd;
-  padding: 10px 14px;
-}
-
-.incremark-table th {
-  background: #f8f9fa;
-  font-weight: 600;
-}
-
-.incremark-table tr:nth-child(even) {
-  background: #fafafa;
-}
-
-.incremark-table tr:hover {
-  background: #f0f0f0;
-}
-</style>
-

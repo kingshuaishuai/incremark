@@ -1,0 +1,49 @@
+/**
+ * Math 组件样式
+ */
+
+@import '../variables.less';
+
+.incremark-math-inline {
+  display: inline;
+}
+
+.incremark-math-block {
+  margin: @spacing-lg 0;
+  padding: @spacing-lg;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.math-source {
+  background: @color-background-elevated;
+  padding: @spacing-xs @spacing-sm;
+  border-radius: @border-radius-sm;
+  font-size: @font-size-sm;
+  color: @color-text-tertiary;
+}
+
+.math-source-block {
+  margin: 0;
+  padding: @spacing-lg;
+  background: @color-background-elevated;
+  border-radius: @border-radius-sm;
+  text-align: left;
+}
+
+.math-source-block code {
+  font-family: @font-family-mono;
+  font-size: @font-size-sm;
+  color: @color-text-primary;
+}
+
+.math-rendered .katex {
+  font-size: @font-size-md;
+}
+
+.math-rendered .katex-display {
+  margin: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+

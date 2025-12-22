@@ -123,6 +123,11 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
       onChange: () => {
         // 使用 forceUpdate 触发重渲染
         setForceUpdateCount((c) => c + 1)
+        // 同步更新打字机处理状态
+        if (transformerRef.current) {
+          setIsTypewriterProcessing(transformerRef.current.isProcessing())
+          setIsTypewriterPaused(transformerRef.current.isPausedState())
+        }
       }
     })
   }

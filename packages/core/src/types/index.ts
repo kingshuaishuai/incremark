@@ -1,6 +1,7 @@
 import type { Root, RootContent } from 'mdast'
 import type { Extension as MicromarkExtension } from 'micromark-util-types'
 import type { Extension as MdastExtension } from 'mdast-util-from-markdown'
+import type { HtmlTreeExtensionOptions } from '../extensions/html-extension'
 
 /**
  * 解析块的状态
@@ -92,6 +93,13 @@ export interface ParserOptions {
    * - ContainerConfig: 使用自定义配置启用
    */
   containers?: boolean | ContainerConfig
+  /**
+   * 启用 HTML 树转换
+   * - false/undefined: 禁用（默认），HTML 节点保持原始 type: 'html' 格式
+   * - true: 使用默认配置启用，将 HTML 节点转换为结构化的 htmlElement 节点
+   * - HtmlTreeExtensionOptions: 使用自定义配置启用（可配置黑名单等）
+   */
+  htmlTree?: boolean | HtmlTreeExtensionOptions
   /** 自定义块边界检测函数 */
   blockBoundaryDetector?: (content: string, position: number) => boolean
   /** 自定义 micromark 扩展（如 directive） */

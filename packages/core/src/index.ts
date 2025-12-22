@@ -82,6 +82,39 @@ export type {
   TextNodeWithChunks
 } from './transformer'
 
+// HTML 树扩展
+export {
+  // 核心转换器
+  transformHtmlNodes,
+  createHtmlTreeTransformer,
+  // 解析工具
+  parseHtmlTag,
+  parseHtmlFragment,
+  detectHtmlContentType,
+  // 类型守卫
+  isHtmlElementNode,
+  // 遍历工具
+  walkHtmlElements,
+  findHtmlElementsByTag,
+  // 序列化
+  htmlElementToString,
+  // 黑名单常量
+  HTML_TAG_BLACKLIST,
+  HTML_ATTR_BLACKLIST,
+  HTML_PROTOCOL_BLACKLIST,
+  // mdast 扩展
+  htmlTreeExtension
+} from './extensions/html-extension'
+
+// HTML 扩展类型
+export type {
+  HtmlElementNode,
+  HtmlAttrInfo,
+  ParsedHtmlTag,
+  HtmlTreeExtensionOptions,
+  HtmlContentType
+} from './extensions/html-extension'
+
 /**
  * BlockTransformer 动画样式
  * 

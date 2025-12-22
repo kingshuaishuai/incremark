@@ -1,0 +1,77 @@
+/**
+ * Code Block 组件样式
+ */
+
+@import '../variables.less';
+
+/* ============ 代码块容器 ============ */
+.incremark-code {
+  margin: @spacing-lg 0;
+  border-radius: @border-radius-lg;
+  overflow: hidden;
+  background: @color-code-block-background;  // 代码块专用背景色
+}
+
+/* ============ 代码块头部 ============ */
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: @spacing-md @spacing-lg;
+  background: @color-code-header-background;
+  border-bottom: 1px solid @color-border-strong;  // 使用通用深色边框
+  font-size: @font-size-sm;
+
+  .language {
+    color: @color-text-tertiary;
+    text-transform: uppercase;
+    font-weight: @font-weight-medium;
+    letter-spacing: 0.5px;
+  }  
+}
+
+/* ============ 代码按钮样式（引用公共样式）============ */
+.incremark-code .code-btn {
+  .incremark-code-btn();
+}
+
+/* ============ 代码内容区域 ============ */
+.code-content {
+  overflow-x: auto;
+}
+
+.code-loading {
+  opacity: 0.7;
+}
+
+/* ============ Shiki 高亮样式 ============ */
+.shiki-wrapper pre {
+  margin: 0;
+  padding: @spacing-lg;
+  background: transparent !important;
+  overflow-x: auto;
+}
+
+.shiki-wrapper code {
+  font-family: @font-family-mono;
+  font-size: @font-size-base;
+  line-height: @line-height-normal;
+}
+
+/* ============ 回退样式（无高亮时） ============ */
+.code-fallback,
+.code-loading pre {
+  margin: 0;
+  padding: @spacing-lg;
+  overflow-x: auto;
+  background: transparent;
+}
+
+.code-fallback code,
+.code-loading code {
+  font-family: @font-family-mono;
+  font-size: @font-size-base;
+  line-height: @line-height-normal;
+  color: @color-code-block-text;  // 使用代码块文本颜色
+}
+

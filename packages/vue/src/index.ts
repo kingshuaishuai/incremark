@@ -23,10 +23,12 @@ export {
   IncremarkThematicBreak,
   IncremarkInline,
   IncremarkMath,
+  IncremarkHtmlElement,
   IncremarkDefault,
   AutoScrollContainer
 } from './components'
 export type { ComponentMap, BlockWithStableId } from './components'
+export { default as ThemeProvider } from './ThemeProvider.vue'
 
 // Re-export core types
 export type {
@@ -61,3 +63,13 @@ export {
   allPlugins,
   createPlugin
 } from '@incremark/core'
+
+// Re-export theme utilities
+export {
+  type DesignTokens,
+  defaultTheme,
+  darkTheme,
+  generateCSSVars,
+  mergeTheme,
+  applyTheme
+} from '@incremark/theme'

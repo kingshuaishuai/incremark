@@ -12,7 +12,8 @@
     "paths": {
       "@incremark/core": ["../../packages/core/src"],
       "@incremark/vue": ["../../packages/vue/src"],
-      "@incremark/vue/*": ["../../packages/vue/src/*"]
+      "@incremark/vue/*": ["../../packages/vue/src/*"],
+      "@incremark/shared": ["../../packages/shared/src"]
     }
   },
   "include": ["src/**/*"],

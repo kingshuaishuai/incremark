@@ -1,0 +1,78 @@
+/**
+ * 基础样式
+ */
+
+@import './variables.less';
+
+/* ============ 主容器 ============ */
+.incremark {
+  font-family: @font-family-base;
+  line-height: @line-height-normal;
+  color: @color-text-primary;
+}
+
+/* ============ 链接样式 ============ */
+.incremark a {
+  color: @color-interactive-link;
+  text-decoration: none;
+  transition: color @duration-normal @easing-ease-out;
+
+  &:hover {
+    color: @color-interactive-link-hover;
+    text-decoration: underline;
+  }
+
+  &:visited {
+    color: @color-interactive-link-visited;
+  }
+}
+
+/* ============ 块状态显示 ============ */
+.incremark-block {
+  transition: border-color @duration-normal @easing-ease-out;
+}
+
+.incremark-block.pending,
+.incremark-block.incremark-pending {
+  border-left: 3px solid @color-status-pending;
+  padding-left: @spacing-lg;
+  opacity: 0.8;
+}
+
+.incremark-block.incremark-show-status.incremark-pending {
+  border-left: 3px solid @color-status-pending;
+  padding-left: @spacing-lg;
+  opacity: 0.8;
+}
+
+/* ============ 动画效果 ============ */
+.incremark-fade-in {
+  animation: incremark-fade-in @duration-slow @easing-ease-out;
+}
+
+@keyframes incremark-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Vue Transition 支持 */
+.incremark-fade-enter-active {
+  transition: opacity @duration-normal @easing-ease-out;
+}
+
+.incremark-fade-enter-from {
+  opacity: 0;
+}
+
+.incremark-fade-leave-active {
+  transition: opacity @duration-normal @easing-ease-out;
+}
+
+.incremark-fade-leave-to {
+  opacity: 0;
+}
+

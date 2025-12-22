@@ -1,0 +1,56 @@
+/**
+ * List 组件样式
+ */
+
+@import '../variables.less';
+
+/* ============ 列表容器 ============ */
+.incremark-list {
+  margin: @spacing-lg 0;
+  padding-left: 2em;
+
+  /* 任务列表：移除默认标记 */
+  &.task-list {
+    list-style: none;
+    padding-left: 0;
+  }
+}
+
+/* ============ 列表项 ============ */
+.incremark-list-item {
+  margin: @spacing-sm 0;
+  line-height: @line-height-normal;
+
+  /* 任务列表项：移除标记 */
+  &.task-item {
+    list-style: none;
+
+    /* 任务标签容器 */
+    .task-label {
+      display: flex;
+      align-items: flex-start;
+      gap: @spacing-sm;
+      cursor: default;
+
+      /* 复选框 */
+      .checkbox {
+        margin-top: 0.3em;
+        flex-shrink: 0;
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        accent-color: @color-interactive-checked;
+
+        &:checked {
+          accent-color: @color-interactive-checked;
+        }
+      }
+
+      /* 任务内容 */
+      .task-content {
+        flex: 1;
+      }
+    }
+  }
+}
+

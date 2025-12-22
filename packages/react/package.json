@@ -12,21 +12,26 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./styles.css": "./dist/styles.css"
+    "./styles.css": "@incremark/theme/styles.css"
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup && cp src/styles.css dist/styles.css",
+    "build": "tsup",
     "dev": "tsup --watch"
   },
   "peerDependencies": {
     "@incremark/core": "workspace:*",
+    "mermaid": "^10.0.0 || ^11.0.0",
+    "katex": "^0.16.0",
     "react": ">=18.0.0"
   },
   "dependencies": {
-    "@incremark/devtools": "workspace:*"
+    "@incremark/devtools": "workspace:*",
+    "@incremark/shared": "workspace:*",
+    "@incremark/theme": "workspace:*",
+    "shiki": "^3.20.0"
   },
   "devDependencies": {
     "@types/mdast": "^4.0.0",

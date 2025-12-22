@@ -15,6 +15,7 @@ export { default as IncremarkBlockquote } from './IncremarkBlockquote.vue'
 export { default as IncremarkThematicBreak } from './IncremarkThematicBreak.vue'
 export { default as IncremarkInline } from './IncremarkInline.vue'
 export { default as IncremarkMath } from './IncremarkMath.vue'
+export { default as IncremarkHtmlElement } from './IncremarkHtmlElement.vue'
 export { default as IncremarkDefault } from './IncremarkDefault.vue'
 
 // 工具组件

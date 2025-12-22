@@ -1,0 +1,77 @@
+/**
+ * Mermaid 图表组件样式
+ */
+
+@import '../variables.less';
+
+/* ============ Mermaid 容器 ============ */
+.incremark-mermaid {
+  margin: @spacing-lg 0;
+  border-radius: @border-radius-lg;
+  overflow: hidden;
+  background: @color-code-block-background;  // 使用代码块背景色
+}
+
+/* ============ Mermaid 头部 ============ */
+.mermaid-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: @spacing-md @spacing-lg;
+  background: @color-code-header-background;
+  border-bottom: 1px solid @color-border-strong;  // 使用通用深色边框
+  font-size: @font-size-sm;
+
+  .language {
+    color: @color-text-tertiary;
+    text-transform: uppercase;
+    font-weight: @font-weight-medium;
+    letter-spacing: 0.5px;
+  }
+}
+
+/* ============ Mermaid 操作按钮（引用公共样式）============ */
+.incremark-mermaid .code-btn {
+  .incremark-code-btn();
+}
+
+/* ============ Mermaid 操作按钮组 ============ */
+.mermaid-actions {
+  display: flex;
+  gap: @spacing-sm;
+}
+
+/* ============ Mermaid 内容区域 ============ */
+.mermaid-content {
+  padding: @spacing-lg;
+  min-height: 100px;
+}
+
+.mermaid-loading {
+  color: @color-text-tertiary;
+  font-size: @font-size-base;
+}
+
+.mermaid-source-code {
+  margin: 0;
+  padding: @spacing-md;
+  background: @color-code-block-background;  // 使用代码块背景色
+  border-radius: @border-radius-sm;
+  color: @color-code-block-text;  // 使用代码块文本颜色
+  font-family: @font-family-mono;
+  font-size: @font-size-sm;
+  line-height: @line-height-normal;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+/* ============ Mermaid SVG 渲染 ============ */
+.mermaid-svg {
+  overflow-x: auto;
+}
+
+.mermaid-svg :deep(svg) {
+  max-width: 100%;
+  height: auto;
+}
+

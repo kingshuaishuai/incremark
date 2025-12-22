@@ -14,7 +14,7 @@
     "./components/*": {
       "import": "./src/components/*.vue"
     },
-    "./style.css": "./dist/index.css"
+    "./style.css": "@incremark/theme/styles.css"
   },
   "files": [
     "dist",
@@ -27,6 +27,8 @@
   "dependencies": {
     "@incremark/core": "workspace:*",
     "@incremark/devtools": "workspace:*",
+    "@incremark/shared": "workspace:*",
+    "@incremark/theme": "workspace:*",
     "shiki": "^3.20.0"
   },
   "peerDependencies": {

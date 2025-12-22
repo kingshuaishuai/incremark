@@ -18,7 +18,8 @@
     "paths": {
       "@incremark/core": ["../../packages/core/src"],
       "@incremark/react": ["../../packages/react/src"],
-      "@incremark/devtools": ["../../packages/devtools/src"]
+      "@incremark/devtools": ["../../packages/devtools/src"],
+      "@incremark/shared": ["../../packages/shared/src"]
     }
   },
   "include": ["src"],
