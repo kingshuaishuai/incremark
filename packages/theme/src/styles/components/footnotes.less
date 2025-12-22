@@ -1,0 +1,95 @@
+/**
+ * Footnotes 组件样式
+ * 
+ * 脚注在文档底部显示，包含标题、分隔线和列表
+ */
+
+@import '../variables.less';
+
+.incremark-footnotes {
+  padding-top: @spacing-md;
+  font-size: @font-size-base;
+
+  .incremark-list {
+    margin-bottom: @spacing-sm 0;
+  }
+}
+
+.incremark-footnotes-divider {
+  margin-bottom: @spacing-md;
+  border: none;
+  border-top: 1px solid @color-border-subtle;
+}
+
+.incremark-footnotes-title {
+  font-size: @font-size-md;
+  font-weight: @font-weight-semibold;
+  color: @color-text-primary;
+}
+
+.incremark-footnotes-list {
+  list-style: none;
+  padding-left: 0;
+  counter-reset: footnote-counter;
+}
+
+.incremark-footnote-item {
+  display: flex;
+  align-items: flex-start;
+  gap: @spacing-sm;
+  padding: @spacing-xs;
+  border-radius: @border-radius-sm;
+  transition: background-color @duration-fast @easing-ease-in-out;
+  line-height: @line-height-normal;
+}
+
+.incremark-footnote-item:target {
+  background-color: @color-neutral-2;
+}
+
+.incremark-footnote-content {
+  flex: 1;
+  display: flex;
+  gap: @spacing-sm;
+}
+
+.incremark-footnote-number {
+  flex-shrink: 0;
+  font-weight: @font-weight-semibold;
+  color: @color-text-secondary;
+  line-height: @line-height-normal;
+}
+
+.incremark-footnote-body {
+  flex: 1;
+  
+  // 移除第一个段落的上边距
+  & > :first-child {
+    margin-top: 0;
+  }
+  
+  // 移除最后一个段落的下边距
+  & > :last-child {
+    margin-bottom: 0;
+  }
+  
+  // 减小脚注内部段落间距
+  p {
+    margin: @spacing-xs 0;
+  }
+}
+
+.incremark-footnote-backref {
+  flex-shrink: 0;
+  color: @color-interactive-link;
+  text-decoration: none;
+  padding: 0 @spacing-xs;
+  border-radius: @border-radius-sm;
+  transition: background-color @duration-fast @easing-ease-in-out;
+  line-height: @line-height-normal;
+  
+  &:hover {
+    background-color: @color-neutral-2;
+  }
+}
+

@@ -26,7 +26,16 @@ export {
   type IncremarkHtmlElementProps,
   type HtmlElementNode
 } from './components'
+export { IncremarkFootnotes, type IncremarkFootnotesProps } from './components'
 export { ThemeProvider, type ThemeProviderProps } from './ThemeProvider'
+
+// Definitions Context
+export { 
+  DefinitionsProvider, 
+  useDefinitions,
+  type DefinitionsContextValue,
+  type DefinitionsProviderProps
+} from './contexts/DefinitionsContext'
 
 // Re-export core types
 export type {

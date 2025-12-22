@@ -19,6 +19,8 @@ const RE_HTML_BLOCK_1 = /^\s{0,3}<(script|pre|style|textarea|!--|!DOCTYPE|\?|!\[
 const RE_HTML_BLOCK_2 = /^\s{0,3}<\/?[a-zA-Z][a-zA-Z0-9-]*(\s|>|$)/
 const RE_TABLE_DELIMITER = /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?$/
 const RE_ESCAPE_SPECIAL = /[.*+?^${}()|[\]\\]/g
+const RE_FOOTNOTE_DEFINITION = /^\[\^[^\]]+\]:\s/
+const RE_FOOTNOTE_CONTINUATION = /^(?:    |\t)/
 
 /** fence 结束模式缓存 */
 const fenceEndPatternCache = new Map<string, RegExp>()
@@ -120,6 +122,34 @@ export function isHtmlBlock(line: string): boolean {
  */
 export function isTableDelimiter(line: string): boolean {
   return RE_TABLE_DELIMITER.test(line.trim())
+}
+
+// ============ 脚注检测 ============
+
+/**
+ * 检测是否是脚注定义的起始行
+ * 格式: [^id]: content
+ * 
+ * @example
+ * isFootnoteDefinitionStart('[^1]: 脚注内容') // true
+ * isFootnoteDefinitionStart('[^note]: 内容') // true
+ * isFootnoteDefinitionStart('    缩进内容')   // false
+ */
+export function isFootnoteDefinitionStart(line: string): boolean {
+  return RE_FOOTNOTE_DEFINITION.test(line)
+}
+
+/**
+ * 检测是否是脚注定义的延续行（缩进行）
+ * 至少4个空格或1个tab
+ * 
+ * @example
+ * isFootnoteContinuation('    第二行')  // true
+ * isFootnoteContinuation('\t第二行')    // true
+ * isFootnoteContinuation('  两个空格')   // false
+ */
+export function isFootnoteContinuation(line: string): boolean {
+  return RE_FOOTNOTE_CONTINUATION.test(line)
 }
 
 // ============ 容器检测 ============

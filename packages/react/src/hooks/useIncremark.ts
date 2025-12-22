@@ -14,6 +14,7 @@ import {
   type AnimationEffect,
   type BlockTransformer
 } from '@incremark/core'
+import { useDefinitions } from '../contexts/DefinitionsContext'
 
 /** 打字机效果配置 */
 export interface TypewriterOptions {
@@ -101,6 +102,9 @@ export interface TypewriterControls {
 export function useIncremark(options: UseIncremarkOptions = {}) {
   const parserRef = useRef<IncremarkParser | null>(null)
   const transformerRef = useRef<BlockTransformer<RootContent> | null>(null)
+  
+  // 获取 definitions context
+  const { setDefinitions, setFootnoteDefinitions } = useDefinitions()
 
   // 打字机配置
   const hasTypewriterConfig = !!options.typewriter
@@ -108,7 +112,16 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
 
   // 懒初始化 parser
   if (!parserRef.current) {
-    parserRef.current = createIncremarkParser(options)
+    parserRef.current = createIncremarkParser({
+      ...options,
+      onChange: (state) => {
+        // 更新 definitions context
+        setDefinitions(state.definitions)
+        setFootnoteDefinitions(state.footnoteDefinitions)
+        // 调用用户提供的 onChange
+        options.onChange?.(state)
+      }
+    })
   }
 
   // 懒初始化 transformer（如果有 typewriter 配置）
@@ -123,11 +136,6 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
       onChange: () => {
         // 使用 forceUpdate 触发重渲染
         setForceUpdateCount((c) => c + 1)
-        // 同步更新打字机处理状态
-        if (transformerRef.current) {
-          setIsTypewriterProcessing(transformerRef.current.isProcessing())
-          setIsTypewriterPaused(transformerRef.current.isPausedState())
-        }
       }
     })
   }
@@ -139,6 +147,8 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
   const [completedBlocks, setCompletedBlocks] = useState<ParsedBlock[]>([])
   const [pendingBlocks, setPendingBlocks] = useState<ParsedBlock[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isFinalized, setIsFinalized] = useState(false)
+  const [footnoteReferenceOrder, setFootnoteReferenceOrder] = useState<string[]>([])
   const [forceUpdateCount, setForceUpdateCount] = useState(0)
 
   // 打字机状态
@@ -276,6 +286,7 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
         setCompletedBlocks((prev) => [...prev, ...update.completed])
       }
       setPendingBlocks(update.pending)
+      setFootnoteReferenceOrder(update.footnoteReferenceOrder)
 
       return update
     },
@@ -292,6 +303,8 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
     }
     setPendingBlocks([])
     setIsLoading(false)
+    setIsFinalized(true)
+    setFootnoteReferenceOrder(update.footnoteReferenceOrder)
 
     return update
   }, [parser])
@@ -306,6 +319,8 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
     setPendingBlocks([])
     setMarkdown('')
     setIsLoading(false)
+    setIsFinalized(false)
+    setFootnoteReferenceOrder([])
 
     // 重置 transformer
     transformer?.reset()
@@ -319,6 +334,8 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
       setCompletedBlocks(parser.getCompletedBlocks())
       setPendingBlocks([])
       setIsLoading(false)
+      setIsFinalized(true)
+      setFootnoteReferenceOrder(update.footnoteReferenceOrder)
 
       return update
     },
@@ -400,6 +417,10 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
     blocks,
     /** 是否正在加载 */
     isLoading,
+    /** 是否已完成（finalize） */
+    isFinalized,
+    /** 脚注引用的出现顺序 */
+    footnoteReferenceOrder,
     /** 追加内容 */
     append,
     /** 完成解析 */

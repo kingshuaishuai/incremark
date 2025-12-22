@@ -16,4 +16,5 @@ export { IncremarkThematicBreak } from './IncremarkThematicBreak'
 export { IncremarkMath, type IncremarkMathProps } from './IncremarkMath'
 export { IncremarkHtmlElement, type IncremarkHtmlElementProps, type HtmlElementNode } from './IncremarkHtmlElement'
 export { IncremarkDefault, type IncremarkDefaultProps } from './IncremarkDefault'
+export { IncremarkFootnotes, type IncremarkFootnotesProps } from './IncremarkFootnotes'
 

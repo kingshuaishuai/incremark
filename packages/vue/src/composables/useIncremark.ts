@@ -14,6 +14,7 @@ import {
   type AnimationEffect,
   type BlockTransformer
 } from '@incremark/core'
+import { useProvideDefinations } from './useProvideDefinations'
 
 /** 打字机效果配置 */
 export interface TypewriterOptions {
@@ -94,12 +95,21 @@ export type UseIncremarkReturn = ReturnType<typeof useIncremark>
  * ```
  */
 export function useIncremark(options: UseIncremarkOptions = {}) {
+  const { setDefinations, setFootnoteDefinitions } = useProvideDefinations();
   // 解析器
-  const parser = createIncremarkParser(options)
+  const parser = createIncremarkParser({
+    ...options,
+    onChange: (state) => {
+      setDefinations(state.definitions);
+      setFootnoteDefinitions(state.footnoteDefinitions);
+    }
+  })
   const completedBlocks = shallowRef<ParsedBlock[]>([])
   const pendingBlocks = shallowRef<ParsedBlock[]>([])
   const isLoading = ref(false)
   const markdown = ref('')
+  const isFinalized = ref(false)
+  const footnoteReferenceOrder = ref<string[]>([])
 
   // 打字机相关状态
   const typewriterEnabled = ref(options.typewriter?.enabled ?? !!options.typewriter)
@@ -121,7 +131,7 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
       pauseOnHidden: twOptions.pauseOnHidden ?? true,
       plugins: twOptions.plugins ?? defaultPlugins,
       onChange: (blocks) => {
-        displayBlocksRef.value = blocks
+        displayBlocksRef.value = blocks as DisplayBlock<RootContent>[]
         isTypewriterProcessing.value = transformer?.isProcessing() ?? false
         isTypewriterPaused.value = transformer?.isPausedState() ?? false
       }
@@ -259,6 +269,9 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
       ]
     }
     pendingBlocks.value = update.pending.map((b) => markRaw(b))
+    
+    // 更新脚注引用顺序
+    footnoteReferenceOrder.value = update.footnoteReferenceOrder
 
     return update
   }
@@ -276,6 +289,10 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
     }
     pendingBlocks.value = []
     isLoading.value = false
+    isFinalized.value = true
+    
+    // 更新脚注引用顺序
+    footnoteReferenceOrder.value = update.footnoteReferenceOrder
 
     return update
   }
@@ -290,6 +307,8 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
     pendingBlocks.value = []
     markdown.value = ''
     isLoading.value = false
+    isFinalized.value = false
+    footnoteReferenceOrder.value = []
 
     // 重置 transformer
     transformer?.reset()
@@ -302,7 +321,9 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
     completedBlocks.value = parser.getCompletedBlocks().map(b => markRaw(b))
     pendingBlocks.value = []
     isLoading.value = false
-
+    isFinalized.value = true
+    footnoteReferenceOrder.value = update.footnoteReferenceOrder
+    console.log(">>>> footnoteReferenceOrder3", update.footnoteReferenceOrder)
     return update
   }
 
@@ -360,6 +381,10 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
     blocks,
     /** 是否正在加载 */
     isLoading,
+    /** 是否已完成（finalize） */
+    isFinalized,
+    /** 脚注引用的出现顺序 */
+    footnoteReferenceOrder,
     /** 追加内容 */
     append,
     /** 完成解析 */

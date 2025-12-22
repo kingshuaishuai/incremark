@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, watch, defineProps, defineEmits } from 'vue'
-import { useIncremark, useDevTools, Incremark, AutoScrollContainer } from '@incremark/vue'
+import { ref, watch } from 'vue'
+import { useIncremark, useDevTools, useProvideDefinations, Incremark, AutoScrollContainer } from '@incremark/vue'
 // @ts-ignore
 import { math } from 'micromark-extension-math'
 // @ts-ignore
@@ -9,6 +9,9 @@ import { mathFromMarkdown } from 'mdast-util-math'
 import { useBenchmark } from '../composables'
 import { BenchmarkPanel, CustomInputPanel, CustomHeading } from './index'
 import type { Messages } from '../locales'
+
+// 提供 definitions context（用于脚注等）
+useProvideDefinations()
 
 const props = defineProps<{
   htmlEnabled: boolean
@@ -37,7 +40,7 @@ const incremark = useIncremark({
   }
 })
 
-const { markdown, blocks, completedBlocks, pendingBlocks, append, finalize, reset, render, typewriter } = incremark
+const { markdown, blocks, completedBlocks, pendingBlocks, append, finalize, reset, render, typewriter, isFinalized, footnoteReferenceOrder } = incremark
 
 useDevTools(incremark)
 
@@ -204,6 +207,8 @@ defineExpose({
           :blocks="blocks"
           :components="useCustomComponents ? customComponents : {}"
           :show-block-status="true"
+          :is-finalized="isFinalized"
+          :footnote-reference-order="footnoteReferenceOrder"
         />
       </AutoScrollContainer>
     </main>

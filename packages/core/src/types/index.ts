@@ -2,6 +2,18 @@ import type { Root, RootContent } from 'mdast'
 import type { Extension as MicromarkExtension } from 'micromark-util-types'
 import type { Extension as MdastExtension } from 'mdast-util-from-markdown'
 import type { HtmlTreeExtensionOptions } from '../extensions/html-extension'
+import type { Definition, FootnoteDefinition } from 'mdast'
+
+/**
+ * Definition 映射类型
+ */
+export interface DefinitionMap {
+  [identifier: string]: Definition
+}
+
+export interface FootnoteDefinitionMap {
+  [identifier: string]: FootnoteDefinition
+}
 
 /**
  * 解析块的状态
@@ -52,6 +64,12 @@ export interface IncrementalUpdate {
   pending: ParsedBlock[]
   /** 完整的 AST（包含所有已解析的内容） */
   ast: Root
+  /** Definition 映射表（用于引用式图片和链接） */
+  definitions: DefinitionMap
+  /** Footnote Definition 映射表 */
+  footnoteDefinitions: FootnoteDefinitionMap
+  /** 脚注引用的出现顺序（用于渲染时排序） */
+  footnoteReferenceOrder: string[]
 }
 
 /**
@@ -77,7 +95,9 @@ export interface ParserState {
   /** 完整的 Markdown 内容 */
   markdown: string
   /** 完整的 AST */
-  ast: Root
+  ast: Root,
+  definitions: DefinitionMap,
+  footnoteDefinitions: FootnoteDefinitionMap
 }
 
 /**

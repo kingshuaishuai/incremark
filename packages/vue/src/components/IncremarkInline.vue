@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { PhrasingContent, RootContent } from 'mdast'
+import type { PhrasingContent, RootContent, ImageReference, LinkReference } from 'mdast'
 import type { TextChunk } from '@incremark/core'
 import {
   type TextNodeWithChunks,
@@ -10,6 +9,7 @@ import {
 } from '@incremark/shared'
 import IncremarkMath from './IncremarkMath.vue'
 import IncremarkHtmlElement from './IncremarkHtmlElement.vue'
+import { useDefinationsContext } from '../composables/useDefinationsContext'
 
 // Math 节点类型
 interface MathNode {
@@ -32,9 +32,28 @@ function isHtmlElementNode(node: PhrasingContent): node is PhrasingContent & Htm
   return (node as unknown as HtmlElementNode).type === 'htmlElement'
 }
 
+/**
+ * 类型守卫：检查是否是 imageReference 节点
+ */
+function isImageReference(node: PhrasingContent): node is ImageReference {
+  return node.type === 'imageReference'
+}
+
+/**
+ * 类型守卫：检查是否是 linkReference 节点
+ */
+function isLinkReference(node: PhrasingContent): node is LinkReference {
+  return node.type === 'linkReference'
+}
+
 const props = defineProps<{
   nodes: PhrasingContent[]
 }>()
+
+const {
+  definations,
+  footnoteDefinitions
+} = useDefinationsContext()
 
 /**
  * 获取节点的 chunks（类型安全）
@@ -98,6 +117,7 @@ function isInlineMath(node: PhrasingContent): node is PhrasingContent & MathNode
     <!-- 链接 -->
     <a
       v-else-if="node.type === 'link'"
+      class="incremark-link"
       :href="node.url"
       target="_blank"
       rel="noopener noreferrer"
@@ -108,10 +128,53 @@ function isInlineMath(node: PhrasingContent): node is PhrasingContent & MathNode
     <!-- 图片 -->
     <img
       v-else-if="node.type === 'image'"
+      class="incremark-image"
       :src="node.url"
       :alt="node.alt || ''"
+      :title="(node as any).title || undefined"
       loading="lazy"
     />
+
+    <!-- 引用式图片（imageReference） -->
+    <template v-else-if="isImageReference(node)">
+      <img
+        v-if="definations[node.identifier]"
+        class="incremark-image incremark-reference-image"
+        :src="definations[node.identifier].url"
+        :alt="(node as ImageReference).alt || ''"
+        :title="definations[node.identifier].title || undefined"
+        loading="lazy"
+      />
+      <!-- 如果没有找到定义，渲染为原始文本（降级处理） -->
+      <span v-else class="incremark-image-ref-missing">
+        ![{{ (node as ImageReference).alt }}][{{ (node as ImageReference).identifier || (node as ImageReference).label }}]
+      </span>
+    </template>
+
+    <!-- 引用式链接（linkReference） -->
+    <template v-else-if="isLinkReference(node)">
+      <a
+        v-if="definations[node.identifier]"
+        class="incremark-link incremark-reference-link"
+        :href="definations[node.identifier].url"
+        :title="definations[node.identifier].title || undefined"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <IncremarkInline :nodes="((node as LinkReference).children as PhrasingContent[])" />
+      </a>
+      <!-- 如果没有找到定义，渲染为原始文本（降级处理） -->
+      <span v-else class="incremark-link-ref-missing">
+        [{{ ((node as LinkReference).children as any[]).map((c: any) => c.value).join('') }}][{{ (node as LinkReference).identifier || (node as LinkReference).label }}]
+      </span>
+    </template>
+
+    <!-- 脚注引用（footnoteReference） -->
+    <sup v-else-if="node.type === 'footnoteReference'" class="incremark-footnote-ref">
+      <a :href="`#fn-${(node as any).identifier}`" :id="`fnref-${(node as any).identifier}`">
+        [{{ (node as any).identifier }}]
+      </a>
+    </sup>
 
     <!-- 换行 -->
     <br v-else-if="node.type === 'break'" />

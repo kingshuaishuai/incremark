@@ -41,7 +41,7 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
       cursor: '|'
     }
   })
-  const { markdown, blocks, completedBlocks, pendingBlocks, append, finalize, reset, render, typewriter } = incremark
+  const { markdown, blocks, completedBlocks, pendingBlocks, append, finalize, reset, render, typewriter, isFinalized, footnoteReferenceOrder } = incremark
 
   useDevTools(incremark)
 
@@ -190,7 +190,12 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
 
       <main className={`content ${typewriter.enabled ? `effect-${typewriterEffect}` : ''}`}>
         <AutoScrollContainer ref={scrollContainerRef} enabled={autoScrollEnabled} className="scroll-container">
-          <Incremark blocks={blocks} showBlockStatus={true} />
+          <Incremark 
+            blocks={blocks} 
+            showBlockStatus={true} 
+            isFinalized={isFinalized}
+            footnoteReferenceOrder={footnoteReferenceOrder}
+          />
         </AutoScrollContainer>
       </main>
     </div>

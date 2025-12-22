@@ -1,6 +1,7 @@
 import React from 'react'
 import type { ParsedBlock } from '@incremark/core'
 import { IncremarkRenderer } from './IncremarkRenderer'
+import { IncremarkFootnotes } from './IncremarkFootnotes'
 
 interface BlockWithStableId extends ParsedBlock {
   stableId: string
@@ -16,6 +17,10 @@ export interface IncremarkProps {
   showBlockStatus?: boolean
   /** 自定义类名 */
   className?: string
+  /** 是否已完成（用于决定是否显示脚注） */
+  isFinalized?: boolean
+  /** 脚注引用的出现顺序（用于渲染脚注列表） */
+  footnoteReferenceOrder?: string[]
 }
 
 /**
@@ -35,16 +40,25 @@ export const Incremark: React.FC<IncremarkProps> = ({
   blocks,
   components,
   showBlockStatus = true,
-  className = ''
+  className = '',
+  isFinalized = false,
+  footnoteReferenceOrder = []
 }) => {
   return (
     <div className={`incremark ${className}`}>
+      {/* 主要内容块 */}
       {blocks.map((block) => {
+        // 过滤掉 definition 和 footnoteDefinition 节点（它们会在其他地方渲染）
+        if (block.node.type === 'definition' || block.node.type === 'footnoteDefinition') {
+          return null
+        }
+
         const isPending = block.status === 'pending'
         const classes = [
           'incremark-block',
           isPending ? 'incremark-pending' : 'incremark-completed',
-          block.isLastPending ? 'incremark-last-pending' : ''
+          showBlockStatus && 'incremark-show-status',
+          block.isLastPending && 'incremark-last-pending'
         ].filter(Boolean).join(' ')
         
         return (
@@ -53,6 +67,11 @@ export const Incremark: React.FC<IncremarkProps> = ({
           </div>
         )
       })}
+
+      {/* 脚注列表（仅在 finalize 后显示） */}
+      {isFinalized && footnoteReferenceOrder.length > 0 && (
+        <IncremarkFootnotes footnoteReferenceOrder={footnoteReferenceOrder} />
+      )}
     </div>
   )
 }

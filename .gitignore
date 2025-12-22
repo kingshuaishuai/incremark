@@ -56,5 +56,6 @@ ehthumbs.db
 # Turbo
 .turbo/
 
-
+# local temp files
 epx*
+temp-docs*

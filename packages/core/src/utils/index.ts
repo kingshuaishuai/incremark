@@ -2,6 +2,8 @@
  * 工具函数
  */
 
+import type { Definition, FootnoteDefinition, RootContent } from "mdast"
+
 /**
  * 生成唯一 ID
  */
@@ -42,3 +44,10 @@ export function joinLines(lines: string[], start: number, end: number): string {
   return lines.slice(start, end + 1).join('\n')
 }
 
+export function isDefinitionNode(node: RootContent): node is Definition {
+  return node.type === 'definition'
+}
+
+export function isFootnoteDefinitionNode(node: RootContent): node is FootnoteDefinition {
+  return node.type === 'footnoteDefinition'
+}

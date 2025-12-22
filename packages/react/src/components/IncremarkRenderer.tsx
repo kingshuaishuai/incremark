@@ -166,6 +166,11 @@ const defaultComponents: Record<string, NodeComponent> = {
  * 渲染单个 AST 节点
  */
 export const IncremarkRenderer: React.FC<IncremarkRendererProps> = ({ node, components = {} }) => {
+  // footnoteDefinition 节点：不渲染（由 IncremarkFootnotes 组件统一处理）
+  if (node.type === 'footnoteDefinition') {
+    return null
+  }
+
   // HTML 节点：渲染为代码块显示源代码
   if (node.type === 'html') {
     return (

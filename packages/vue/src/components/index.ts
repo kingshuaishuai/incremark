@@ -17,6 +17,7 @@ export { default as IncremarkInline } from './IncremarkInline.vue'
 export { default as IncremarkMath } from './IncremarkMath.vue'
 export { default as IncremarkHtmlElement } from './IncremarkHtmlElement.vue'
 export { default as IncremarkDefault } from './IncremarkDefault.vue'
+export { default as IncremarkFootnotes } from './IncremarkFootnotes.vue'
 
 // 工具组件
 export { default as AutoScrollContainer } from './AutoScrollContainer.vue'

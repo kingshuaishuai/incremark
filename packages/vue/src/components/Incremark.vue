@@ -12,6 +12,7 @@ import IncremarkThematicBreak from './IncremarkThematicBreak.vue'
 import IncremarkMath from './IncremarkMath.vue'
 import IncremarkHtmlElement from './IncremarkHtmlElement.vue'
 import IncremarkDefault from './IncremarkDefault.vue'
+import IncremarkFootnotes from './IncremarkFootnotes.vue'
 
 // 组件映射类型
 export type ComponentMap = Partial<Record<string, Component>>
@@ -41,12 +42,18 @@ const props = withDefaults(
     completedClass?: string
     /** 是否显示块状态边框 */
     showBlockStatus?: boolean
+    /** 是否已完成（用于决定是否显示脚注） */
+    isFinalized?: boolean
+    /** 脚注引用的出现顺序（用于渲染脚注列表） */
+    footnoteReferenceOrder?: string[]
   }>(),
   {
     components: () => ({}),
     pendingClass: 'incremark-pending',
     completedClass: 'incremark-completed',
-    showBlockStatus: false
+    showBlockStatus: false,
+    isFinalized: false,
+    footnoteReferenceOrder: () => []
   }
 )
 
@@ -77,9 +84,10 @@ function getComponent(type: string): Component {
 
 <template>
   <div class="incremark">
-    <TransitionGroup name="incremark-fade">
+    <!-- 主要内容块 -->
+    <template v-for="block in blocks">
       <div
-        v-for="block in blocks"
+        v-if="block.node.type !== 'definition' && block.node.type !== 'footnoteDefinition'"
         :key="block.stableId"
         :class="[
           'incremark-block',
@@ -93,6 +101,12 @@ function getComponent(type: string): Component {
         <!-- 其他节点：使用对应组件 -->
         <component v-else :is="getComponent(block.node.type)" :node="block.node" />
       </div>
-    </TransitionGroup>
+    </template>
+
+    <!-- 脚注列表（仅在 finalize 后显示） -->
+    <IncremarkFootnotes 
+      v-if="isFinalized && footnoteReferenceOrder.length > 0"
+      :footnote-reference-order="footnoteReferenceOrder"
+    />
   </div>
 </template>

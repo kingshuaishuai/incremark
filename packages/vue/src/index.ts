@@ -1,5 +1,7 @@
 // Composables
 export { useIncremark, useStreamRenderer, useDevTools, useBlockTransformer } from './composables'
+export { useProvideDefinations } from './composables/useProvideDefinations'
+export { useDefinationsContext } from './composables/useDefinationsContext'
 export type {
   UseIncremarkOptions,
   TypewriterOptions,
@@ -25,6 +27,7 @@ export {
   IncremarkMath,
   IncremarkHtmlElement,
   IncremarkDefault,
+  IncremarkFootnotes,
   AutoScrollContainer
 } from './components'
 export type { ComponentMap, BlockWithStableId } from './components'
