@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(pnpm -F @incremark/react build:*)",
+      "Bash(pnpm -F @incremark/vue build:*)",
+      "Bash(pnpm build:*)",
+      "Bash(cat:*)",
+      "Bash(node -e:*)",
+      "Bash(npx tsx:*)",
+      "Bash(pnpm -F @incremark/theme build:*)",
+      "Bash(wc:*)"
+    ]
+  }
+}

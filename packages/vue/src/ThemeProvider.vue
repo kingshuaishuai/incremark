@@ -34,7 +34,7 @@ watch(
 </script>
 
 <template>
-  <div ref="containerRef" :class="props.class">
+  <div ref="containerRef" :class="props.class" class="incremark-theme-provider">
     <slot />
   </div>
 </template>

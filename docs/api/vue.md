@@ -21,7 +21,27 @@ function useIncremark(options?: UseIncremarkOptions): UseIncremarkReturn
 #### Parameters
 
 ```ts
-interface UseIncremarkOptions extends ParserOptions {}
+interface UseIncremarkOptions extends ParserOptions {
+  /** Typewriter effect configuration */
+  typewriter?: TypewriterOptions
+}
+
+interface TypewriterOptions {
+  /** Enable typewriter effect (default: true if typewriter is provided) */
+  enabled?: boolean
+  /** Characters per tick, can be a number or range [min, max] */
+  charsPerTick?: number | [number, number]
+  /** Update interval in ms */
+  tickInterval?: number
+  /** Animation effect: 'none' | 'fade-in' | 'typing' */
+  effect?: AnimationEffect
+  /** Cursor character (only for 'typing' effect) */
+  cursor?: string
+  /** Pause when page is hidden */
+  pauseOnHidden?: boolean
+  /** Custom transformer plugins */
+  plugins?: TransformerPlugin[]
+}
 ```
 
 Inherits from `@incremark/core`'s `ParserOptions`.
@@ -38,10 +58,12 @@ interface UseIncremarkReturn {
   pendingBlocks: ShallowRef<ParsedBlock[]>
   /** Current complete AST */
   ast: ComputedRef<Root>
-  /** All blocks (completed + pending), with stable ID */
-  blocks: ComputedRef<Array<ParsedBlock & { stableId: string }>>
+  /** All blocks (completed + pending), with stable ID (includes typewriter effect if enabled) */
+  blocks: ComputedRef<Array<ParsedBlock & { stableId: string; isLastPending?: boolean }>>
   /** Is loading */
   isLoading: Ref<boolean>
+  /** Is finalized */
+  isFinalized: Ref<boolean>
   /** Append content */
   append: (chunk: string) => IncrementalUpdate
   /** Finalize parsing */
@@ -54,6 +76,8 @@ interface UseIncremarkReturn {
   render: (content: string) => IncrementalUpdate
   /** Parser instance */
   parser: IncremarkParser
+  /** Typewriter controls (if typewriter is enabled) */
+  typewriter?: TypewriterControls
 }
 ```
 
@@ -142,6 +166,35 @@ const renderBlocks = computed(() =>
 </template>
 ```
 
+### useStreamRenderer
+
+> **Deprecated**: This composable is deprecated. `useIncremark` now returns blocks with `stableId` by default.
+
+Legacy composable for adding stable IDs to blocks for Vue's key attribute.
+
+```ts
+function useStreamRenderer(options: UseStreamRendererOptions): UseStreamRendererReturn
+```
+
+#### Parameters
+
+```ts
+interface UseStreamRendererOptions {
+  completedBlocks: Ref<ParsedBlock[]>
+  pendingBlocks: Ref<ParsedBlock[]>
+}
+```
+
+#### Returns
+
+```ts
+interface UseStreamRendererReturn {
+  stableCompletedBlocks: ComputedRef<BlockWithStableId[]>
+  stablePendingBlocks: ComputedRef<BlockWithStableId[]>
+  allStableBlocks: ComputedRef<BlockWithStableId[]>
+}
+```
+
 ### useDevTools
 
 DevTools Composable, one-line enable developer tools.
@@ -176,6 +229,10 @@ interface UseDevToolsOptions {
 Main render component.
 
 ```vue
+<!-- Recommended: Pass incremark object (auto-provides context) -->
+<Incremark :incremark="incremark" />
+
+<!-- Or use blocks directly -->
 <Incremark 
   :blocks="blocks"
   :components="customComponents"
@@ -187,7 +244,8 @@ Main render component.
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `blocks` | `Array<ParsedBlock & { stableId: string }>` | Required | Blocks to render |
+| `incremark` | `UseIncremarkReturn` | - | **Recommended**: Incremark instance (auto-provides definitions context) |
+| `blocks` | `Array<ParsedBlock & { stableId: string }>` | - | Blocks to render (required if `incremark` is not provided) |
 | `components` | `Record<string, Component>` | `{}` | Custom component mapping |
 | `showBlockStatus` | `boolean` | `true` | Show block status border |
 
@@ -244,6 +302,65 @@ Auto-scroll container for streaming content scenarios.
 - Resume auto-scroll when user scrolls back to bottom
 - Reset auto-scroll state when scrollbar disappears
 
+### IncremarkHtmlElement
+
+HTML element render component for HTML fragments.
+
+```vue
+<script setup>
+import { IncremarkHtmlElement } from '@incremark/vue'
+
+const customComponents = {
+  htmlElement: IncremarkHtmlElement
+}
+</script>
+```
+
+#### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `node` | `HtmlElementNode` | Required | HTML element AST node |
+
+### IncremarkFootnotes
+
+Footnotes list component (rendered automatically when using `Incremark` with `incremark` prop).
+
+```vue
+<!-- Automatically rendered when using: -->
+<Incremark :incremark="incremark" />
+
+<!-- Or manually: -->
+<template>
+  <IncremarkFootnotes />
+</template>
+```
+
+Footnotes are automatically displayed at the bottom of the document when `isFinalized` is true.
+
+### ThemeProvider
+
+Theme provider component for applying themes.
+
+```vue
+<script setup>
+import { ThemeProvider } from '@incremark/vue'
+import { darkTheme } from '@incremark/theme'
+</script>
+
+<template>
+  <ThemeProvider theme="dark">
+    <Incremark :incremark="incremark" />
+  </ThemeProvider>
+</template>
+```
+
+#### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `theme` | `'default' \| 'dark' \| DesignTokens \| Partial<DesignTokens>` | Required | Theme configuration |
+
 ### Built-in Render Components
 
 Can be imported individually:
@@ -258,6 +375,43 @@ Can be imported individually:
 - `IncremarkMath` - Math formulas
 - `IncremarkInline` - Inline content
 - `IncremarkDefault` - Default/unknown types
+- `IncremarkHtmlElement` - HTML elements
+
+## Composables
+
+### useProvideDefinations / useDefinationsContext
+
+Composables for managing definitions and footnotes.
+
+```vue
+<script setup>
+import { useProvideDefinations, useDefinationsContext } from '@incremark/vue'
+
+// In parent component
+const { definitions, footnoteDefinitions } = useProvideDefinations()
+
+// In child component
+const { definitions, footnoteDefinitions, footnoteReferenceOrder } = useDefinationsContext()
+</script>
+```
+
+## Theme
+
+### Design Tokens
+
+```ts
+import { type DesignTokens, defaultTheme, darkTheme } from '@incremark/theme'
+```
+
+### Theme Utilities
+
+```ts
+import {
+  applyTheme,
+  generateCSSVars,
+  mergeTheme
+} from '@incremark/theme'
+```
 
 ## Plugins
 
@@ -299,7 +453,64 @@ async function handleStream(stream) {
 </script>
 
 <template>
-  <Incremark :blocks="blocks" />
+  <!-- Recommended: Pass incremark object -->
+  <Incremark :incremark="incremark" />
+</template>
+```
+
+### With HTML Fragments
+
+HTML fragments in Markdown are automatically parsed and rendered:
+
+```vue
+<script setup>
+import { useIncremark, Incremark } from '@incremark/vue'
+
+const incremark = useIncremark()
+// Markdown with HTML:
+// <div class="custom">Hello</div>
+</script>
+
+<template>
+  <Incremark :incremark="incremark" />
+</template>
+```
+
+### With Footnotes
+
+Footnotes are automatically rendered at the bottom:
+
+```vue
+<script setup>
+import { useIncremark, Incremark } from '@incremark/vue'
+
+const incremark = useIncremark()
+// Markdown with footnotes:
+// Text[^1] and more[^2]
+// 
+// [^1]: First footnote
+// [^2]: Second footnote
+</script>
+
+<template>
+  <Incremark :incremark="incremark" />
+</template>
+```
+
+### With Theme
+
+```vue
+<script setup>
+import { useIncremark, Incremark, ThemeProvider } from '@incremark/vue'
+import { darkTheme } from '@incremark/theme'
+
+const incremark = useIncremark()
+</script>
+
+<template>
+  <ThemeProvider theme="dark">
+    <Incremark :incremark="incremark" />
+  </ThemeProvider>
 </template>
 ```
 

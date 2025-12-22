@@ -116,6 +116,7 @@ button.secondary:hover:not(:disabled),
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 12px;
 }
 
 /* ============ 复选框 - 统一蓝色 ============ */
@@ -171,6 +172,28 @@ button.secondary:hover:not(:disabled),
 }
 
 .effect-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* ============ 主题选择器 ============ */
+.theme-select {
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: white;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: #374151;
+  min-width: 140px;
+}
+
+.theme-select:hover {
+  border-color: #9ca3af;
+}
+
+.theme-select:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
@@ -236,14 +259,15 @@ button.secondary:hover:not(:disabled),
   background: white;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  min-height: 400px;
-  max-height: 70vh;
+  height: 400px;
   overflow: hidden;
 }
 
 .scroll-container {
   height: 100%;
   max-height: 70vh;
+}
+.incremark {
   padding: 2rem;
 }
 
@@ -468,3 +492,4 @@ button.secondary:hover:not(:disabled),
     margin-top: 0.5rem;
   }
 }
+

@@ -14,15 +14,17 @@ pnpm add @incremark/vue
 <script setup>
 import { useIncremark, Incremark } from '@incremark/vue'
 
-const { blocks, append, finalize, reset, markdown } = useIncremark({
+const incremark = useIncremark({
   gfm: true
 })
+const { blocks, append, finalize, reset, markdown } = incremark
 </script>
 
 <template>
   <div>
     <p>Received {{ markdown.length }} characters</p>
-    <Incremark :blocks="blocks" />
+    <!-- Recommended: Pass incremark object -->
+    <Incremark :incremark="incremark" />
   </div>
 </template>
 ```
@@ -150,6 +152,10 @@ interface TypewriterControls {
 Main rendering component that accepts blocks and renders them.
 
 ```vue
+<!-- Recommended: Pass incremark object (auto-provides context) -->
+<Incremark :incremark="incremark" />
+
+<!-- Or use blocks directly -->
 <Incremark 
   :blocks="blocks"
   :components="customComponents"
@@ -161,7 +167,8 @@ Main rendering component that accepts blocks and renders them.
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `blocks` | `Block[]` | Required | Blocks to render |
+| `incremark` | `UseIncremarkReturn` | - | **Recommended**: Incremark instance (auto-provides definitions context) |
+| `blocks` | `Block[]` | - | Blocks to render (required if `incremark` is not provided) |
 | `components` | `Record<string, Component>` | `{}` | Custom components |
 | `showBlockStatus` | `boolean` | `true` | Show block status border |
 
@@ -238,12 +245,83 @@ useDevTools(incremark)  // One line to enable!
 </script>
 ```
 
+## HTML Fragments
+
+v0.2.0 supports HTML fragments in Markdown:
+
+```vue
+<script setup>
+import { useIncremark, Incremark } from '@incremark/vue'
+
+const incremark = useIncremark()
+// Markdown with HTML:
+// <div class="custom">
+//   <span>Hello</span>
+// </div>
+</script>
+
+<template>
+  <Incremark :incremark="incremark" />
+</template>
+```
+
+HTML fragments are automatically parsed and rendered as structured HTML elements.
+
+## Footnotes
+
+v0.2.0 supports footnotes:
+
+```vue
+<script setup>
+import { useIncremark, Incremark } from '@incremark/vue'
+
+const incremark = useIncremark()
+// Markdown with footnotes:
+// Text[^1] and more[^2]
+// 
+// [^1]: First footnote
+// [^2]: Second footnote
+</script>
+
+<template>
+  <Incremark :incremark="incremark" />
+</template>
+```
+
+Footnotes are automatically rendered at the bottom of the document when `isFinalized` is true.
+
+## Theme
+
+v0.2.0 introduces a new theme system:
+
+```vue
+<script setup>
+import { useIncremark, Incremark, ThemeProvider } from '@incremark/vue'
+import { darkTheme, mergeTheme, defaultTheme } from '@incremark/theme'
+
+const incremark = useIncremark()
+</script>
+
+<template>
+  <!-- Use preset theme -->
+  <ThemeProvider theme="dark">
+    <Incremark :incremark="incremark" />
+  </ThemeProvider>
+  
+  <!-- Or use custom theme -->
+  <ThemeProvider :theme="customTheme">
+    <Incremark :incremark="incremark" />
+  </ThemeProvider>
+</template>
+```
+
 ## Complete Example
 
 ```vue
 <script setup>
 import { ref } from 'vue'
-import { useIncremark, useDevTools, Incremark, AutoScrollContainer } from '@incremark/vue'
+import { useIncremark, useDevTools, Incremark, AutoScrollContainer, ThemeProvider } from '@incremark/vue'
+import '@incremark/theme/styles.css'
 
 const incremark = useIncremark({ 
   gfm: true,
@@ -278,22 +356,24 @@ async function simulateAI() {
 </script>
 
 <template>
-  <div :class="['app', `effect-${typewriter.effect.value}`]">
-    <header>
-      <button @click="simulateAI" :disabled="isStreaming">
-        {{ isStreaming ? 'Generating...' : 'Start Chat' }}
-      </button>
-      <span>{{ markdown.length }} characters</span>
+  <ThemeProvider theme="default">
+    <div :class="['app', `effect-${typewriter.effect.value}`]">
+      <header>
+        <button @click="simulateAI" :disabled="isStreaming">
+          {{ isStreaming ? 'Generating...' : 'Start Chat' }}
+        </button>
+        <span>{{ markdown.length }} characters</span>
+        
+        <button v-if="typewriter.isProcessing.value" @click="typewriter.skip">
+          Skip
+        </button>
+      </header>
       
-      <button v-if="typewriter.isProcessing.value" @click="typewriter.skip">
-        Skip
-      </button>
-    </header>
-    
-    <AutoScrollContainer class="content">
-      <Incremark :blocks="blocks" />
-    </AutoScrollContainer>
-  </div>
+      <AutoScrollContainer class="content">
+        <Incremark :incremark="incremark" />
+      </AutoScrollContainer>
+    </div>
+  </ThemeProvider>
 </template>
 ```
 

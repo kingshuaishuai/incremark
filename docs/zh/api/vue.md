@@ -21,7 +21,27 @@ function useIncremark(options?: UseIncremarkOptions): UseIncremarkReturn
 #### 参数
 
 ```ts
-interface UseIncremarkOptions extends ParserOptions {}
+interface UseIncremarkOptions extends ParserOptions {
+  /** 打字机效果配置 */
+  typewriter?: TypewriterOptions
+}
+
+interface TypewriterOptions {
+  /** 启用打字机效果（默认：如果提供了 typewriter 则为 true） */
+  enabled?: boolean
+  /** 每次显示的字符数，可以是数字或范围 [min, max] */
+  charsPerTick?: number | [number, number]
+  /** 更新间隔（毫秒） */
+  tickInterval?: number
+  /** 动画效果：'none' | 'fade-in' | 'typing' */
+  effect?: AnimationEffect
+  /** 光标字符（仅用于 'typing' 效果） */
+  cursor?: string
+  /** 页面隐藏时暂停 */
+  pauseOnHidden?: boolean
+  /** 自定义转换插件 */
+  plugins?: TransformerPlugin[]
+}
 ```
 
 继承自 `@incremark/core` 的 `ParserOptions`。
@@ -38,10 +58,12 @@ interface UseIncremarkReturn {
   pendingBlocks: ShallowRef<ParsedBlock[]>
   /** 当前完整的 AST */
   ast: ComputedRef<Root>
-  /** 所有块（完成 + 待处理），带稳定 ID */
-  blocks: ComputedRef<Array<ParsedBlock & { stableId: string }>>
+  /** 所有块（完成 + 待处理），带稳定 ID（如果启用打字机效果则包含打字机效果） */
+  blocks: ComputedRef<Array<ParsedBlock & { stableId: string; isLastPending?: boolean }>>
   /** 是否正在加载 */
   isLoading: Ref<boolean>
+  /** 是否已完成 */
+  isFinalized: Ref<boolean>
   /** 追加内容 */
   append: (chunk: string) => IncrementalUpdate
   /** 完成解析 */
@@ -54,6 +76,8 @@ interface UseIncremarkReturn {
   render: (content: string) => IncrementalUpdate
   /** 解析器实例 */
   parser: IncremarkParser
+  /** 打字机控制器（如果启用了打字机效果） */
+  typewriter?: TypewriterControls
 }
 ```
 
@@ -142,6 +166,35 @@ const renderBlocks = computed(() =>
 </template>
 ```
 
+### useStreamRenderer
+
+> **已弃用**：此 composable 已弃用。`useIncremark` 现在默认返回带有 `stableId` 的 blocks。
+
+旧版 composable，用于为块添加稳定 ID 以供 Vue 的 key 属性使用。
+
+```ts
+function useStreamRenderer(options: UseStreamRendererOptions): UseStreamRendererReturn
+```
+
+#### 参数
+
+```ts
+interface UseStreamRendererOptions {
+  completedBlocks: Ref<ParsedBlock[]>
+  pendingBlocks: Ref<ParsedBlock[]>
+}
+```
+
+#### 返回值
+
+```ts
+interface UseStreamRendererReturn {
+  stableCompletedBlocks: ComputedRef<BlockWithStableId[]>
+  stablePendingBlocks: ComputedRef<BlockWithStableId[]>
+  allStableBlocks: ComputedRef<BlockWithStableId[]>
+}
+```
+
 ### useDevTools
 
 DevTools Composable，一行启用开发者工具。
@@ -176,7 +229,11 @@ interface UseDevToolsOptions {
 主渲染组件。
 
 ```vue
-<Incremark 
+<!-- 推荐：传入 incremark 对象（自动提供上下文） -->
+<Incremark :incremark="incremark" />
+
+<!-- 或直接使用 blocks -->
+<Incremark
   :blocks="blocks"
   :components="customComponents"
   :show-block-status="true"
@@ -187,7 +244,8 @@ interface UseDevToolsOptions {
 
 | Prop | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `blocks` | `Array<ParsedBlock & { stableId: string }>` | 必填 | 要渲染的块 |
+| `incremark` | `UseIncremarkReturn` | - | **推荐**：Incremark 实例（自动提供 definitions 上下文） |
+| `blocks` | `Array<ParsedBlock & { stableId: string }>` | - | 要渲染的块（如果没有提供 `incremark` 则必填） |
 | `components` | `Record<string, Component>` | `{}` | 自定义组件映射 |
 | `showBlockStatus` | `boolean` | `true` | 是否显示块状态边框 |
 
@@ -244,6 +302,65 @@ interface UseDevToolsOptions {
 - 用户滚动回底部时恢复自动滚动
 - 滚动条消失时自动恢复自动滚动状态
 
+### IncremarkHtmlElement
+
+HTML 元素渲染组件，用于渲染 HTML 片段。
+
+```vue
+<script setup>
+import { IncremarkHtmlElement } from '@incremark/vue'
+
+const customComponents = {
+  htmlElement: IncremarkHtmlElement
+}
+</script>
+```
+
+#### Props
+
+| Prop | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `node` | `HtmlElementNode` | 必填 | HTML 元素 AST 节点 |
+
+### IncremarkFootnotes
+
+脚注列表组件（使用 `incremark` prop 时自动渲染）。
+
+```vue
+<!-- 使用以下方式时自动渲染： -->
+<Incremark :incremark="incremark" />
+
+<!-- 或手动使用： -->
+<template>
+  <IncremarkFootnotes />
+</template>
+```
+
+当 `isFinalized` 为 true 时，脚注会自动显示在文档底部。
+
+### ThemeProvider
+
+主题 provider 组件，用于应用主题。
+
+```vue
+<script setup>
+import { ThemeProvider } from '@incremark/vue'
+import { darkTheme } from '@incremark/theme'
+</script>
+
+<template>
+  <ThemeProvider theme="dark">
+    <Incremark :incremark="incremark" />
+  </ThemeProvider>
+</template>
+```
+
+#### Props
+
+| Prop | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `theme` | `'default' \| 'dark' \| DesignTokens \| Partial<DesignTokens>` | 必填 | 主题配置 |
+
 ### 内置渲染组件
 
 可单独导入使用：
@@ -258,6 +375,43 @@ interface UseDevToolsOptions {
 - `IncremarkMath` - 数学公式
 - `IncremarkInline` - 行内内容
 - `IncremarkDefault` - 默认/未知类型
+- `IncremarkHtmlElement` - HTML 元素
+
+## Composables
+
+### useProvideDefinations / useDefinationsContext
+
+用于管理定义和脚注的 Composables。
+
+```vue
+<script setup>
+import { useProvideDefinations, useDefinationsContext } from '@incremark/vue'
+
+// 在父组件中
+const { definitions, footnoteDefinitions } = useProvideDefinations()
+
+// 在子组件中
+const { definitions, footnoteDefinitions, footnoteReferenceOrder } = useDefinationsContext()
+</script>
+```
+
+## 主题
+
+### Design Tokens
+
+```ts
+import { type DesignTokens, defaultTheme, darkTheme } from '@incremark/theme'
+```
+
+### 主题工具
+
+```ts
+import {
+  applyTheme,
+  generateCSSVars,
+  mergeTheme
+} from '@incremark/theme'
+```
 
 ## 插件
 
@@ -299,7 +453,64 @@ async function handleStream(stream) {
 </script>
 
 <template>
-  <Incremark :blocks="blocks" />
+  <!-- 推荐：传入 incremark 对象 -->
+  <Incremark :incremark="incremark" />
+</template>
+```
+
+### 使用 HTML 片段
+
+Markdown 中的 HTML 片段会自动解析和渲染：
+
+```vue
+<script setup>
+import { useIncremark, Incremark } from '@incremark/vue'
+
+const incremark = useIncremark()
+// Markdown 包含 HTML：
+// <div class="custom">Hello</div>
+</script>
+
+<template>
+  <Incremark :incremark="incremark" />
+</template>
+```
+
+### 使用脚注
+
+脚注会自动渲染在底部：
+
+```vue
+<script setup>
+import { useIncremark, Incremark } from '@incremark/vue'
+
+const incremark = useIncremark()
+// Markdown 包含脚注：
+// Text[^1] and more[^2]
+//
+// [^1]: First footnote
+// [^2]: Second footnote
+</script>
+
+<template>
+  <Incremark :incremark="incremark" />
+</template>
+```
+
+### 使用主题
+
+```vue
+<script setup>
+import { useIncremark, Incremark, ThemeProvider } from '@incremark/vue'
+import { darkTheme } from '@incremark/theme'
+
+const incremark = useIncremark()
+</script>
+
+<template>
+  <ThemeProvider theme="dark">
+    <Incremark :incremark="incremark" />
+  </ThemeProvider>
 </template>
 ```
 

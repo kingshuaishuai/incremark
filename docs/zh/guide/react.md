@@ -14,14 +14,16 @@ pnpm add @incremark/react
 import { useIncremark, Incremark } from '@incremark/react'
 
 function App() {
-  const { blocks, append, finalize, reset, markdown } = useIncremark({
+  const incremark = useIncremark({
     gfm: true
   })
+  const { blocks, append, finalize, reset, markdown } = incremark
 
   return (
     <div>
       <p>已接收 {markdown.length} 字符</p>
-      <Incremark blocks={blocks} />
+      {/* 推荐：传入 incremark 对象 */}
+      <Incremark incremark={incremark} />
     </div>
   )
 }
@@ -142,7 +144,11 @@ interface TypewriterControls {
 主渲染组件，接收 blocks 并渲染。
 
 ```tsx
-<Incremark 
+// 推荐：传入 incremark 对象（自动提供上下文）
+<Incremark incremark={incremark} />
+
+// 或直接使用 blocks
+<Incremark
   blocks={blocks}
   components={customComponents}
   showBlockStatus={true}
@@ -153,9 +159,11 @@ interface TypewriterControls {
 
 | 属性 | 类型 | 默认值 | 说明 |
 |-----|------|-------|------|
-| `blocks` | `Block[]` | 必填 | 要渲染的块 |
+| `incremark` | `UseIncremarkReturn` | - | **推荐**：Incremark 实例（自动提供 definitions 上下文） |
+| `blocks` | `Block[]` | - | 要渲染的块（如果没有提供 `incremark` 则必填） |
 | `components` | `Record<string, Component>` | `{}` | 自定义组件 |
 | `showBlockStatus` | `boolean` | `true` | 显示块状态边框 |
+| `className` | `string` | `''` | 自定义类名 |
 
 ## 自定义组件
 
@@ -188,8 +196,86 @@ import { useIncremark, useDevTools } from '@incremark/react'
 function App() {
   const incremark = useIncremark()
   useDevTools(incremark)  // 一行启用！
-  
+
   return <Incremark blocks={incremark.blocks} />
+}
+```
+
+## HTML 片段
+
+v0.2.0 支持 Markdown 中的 HTML 片段：
+
+```tsx
+import { useIncremark, Incremark } from '@incremark/react'
+
+function App() {
+  const incremark = useIncremark()
+
+  // Markdown 包含 HTML：
+  // <div class="custom">
+  //   <span>Hello</span>
+  // </div>
+
+  return <Incremark incremark={incremark} />
+}
+```
+
+HTML 片段会自动解析并渲染为结构化的 HTML 元素。
+
+## 脚注
+
+v0.2.0 支持脚注：
+
+```tsx
+import { useIncremark, Incremark } from '@incremark/react'
+
+function App() {
+  const incremark = useIncremark()
+
+  // Markdown 包含脚注：
+  // Text[^1] and more[^2]
+  //
+  // [^1]: First footnote
+  // [^2]: Second footnote
+
+  return <Incremark incremark={incremark} />
+}
+```
+
+当 `isFinalized` 为 true 时，脚注会自动渲染在文档底部。
+
+## 主题
+
+v0.2.0 引入了新的主题系统：
+
+```tsx
+import { useIncremark, Incremark, ThemeProvider } from '@incremark/react'
+import { darkTheme, mergeTheme, defaultTheme } from '@incremark/theme'
+
+function App() {
+  const incremark = useIncremark()
+
+  // 使用预设主题
+  return (
+    <ThemeProvider theme="dark">
+      <Incremark incremark={incremark} />
+    </ThemeProvider>
+  )
+
+  // 或使用自定义主题
+  const customTheme = mergeTheme(defaultTheme, {
+    color: {
+      text: {
+        primary: '#custom-color'
+      }
+    }
+  })
+
+  return (
+    <ThemeProvider theme={customTheme}>
+      <Incremark incremark={incremark} />
+    </ThemeProvider>
+  )
 }
 ```
 
@@ -197,10 +283,11 @@ function App() {
 
 ```tsx
 import { useState, useCallback } from 'react'
-import { useIncremark, useDevTools, Incremark, AutoScrollContainer } from '@incremark/react'
+import { useIncremark, useDevTools, Incremark, AutoScrollContainer, ThemeProvider } from '@incremark/react'
+import '@incremark/theme/styles.css'
 
 function ChatApp() {
-  const incremark = useIncremark({ 
+  const incremark = useIncremark({
     gfm: true,
     typewriter: {
       effect: 'fade-in',
@@ -208,46 +295,48 @@ function ChatApp() {
     }
   })
   const { blocks, append, finalize, reset, markdown, typewriter } = incremark
-  
+
   useDevTools(incremark)
-  
+
   const [isStreaming, setIsStreaming] = useState(false)
 
   const handleChat = useCallback(async () => {
     reset()
     setIsStreaming(true)
-    
+
     const response = await fetch('/api/chat', { method: 'POST' })
     const reader = response.body!.getReader()
     const decoder = new TextDecoder()
-    
+
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
       append(decoder.decode(value))
     }
-    
+
     finalize()
     setIsStreaming(false)
   }, [append, finalize, reset])
 
   return (
-    <div className={`app effect-${typewriter.effect}`}>
-      <header>
-        <button onClick={handleChat} disabled={isStreaming}>
-          {isStreaming ? '生成中...' : '开始对话'}
-        </button>
-        <span>{markdown.length} 字符</span>
-        
-        {typewriter.isProcessing && (
-          <button onClick={typewriter.skip}>跳过</button>
-        )}
-      </header>
-      
-      <AutoScrollContainer className="content">
-        <Incremark blocks={blocks} />
-      </AutoScrollContainer>
-    </div>
+    <ThemeProvider theme="default">
+      <div className={`app effect-${typewriter.effect}`}>
+        <header>
+          <button onClick={handleChat} disabled={isStreaming}>
+            {isStreaming ? '生成中...' : '开始对话'}
+          </button>
+          <span>{markdown.length} 字符</span>
+
+          {typewriter.isProcessing && (
+            <button onClick={typewriter.skip}>跳过</button>
+          )}
+        </header>
+
+        <AutoScrollContainer className="content">
+          <Incremark incremark={incremark} />
+        </AutoScrollContainer>
+      </div>
+    </ThemeProvider>
   )
 }
 ```

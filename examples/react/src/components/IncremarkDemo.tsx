@@ -1,10 +1,12 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
-import { 
-  useIncremark, 
-  useDevTools, 
-  Incremark, 
-  AutoScrollContainer, 
-  type AutoScrollContainerRef 
+import {
+  useIncremark,
+  useDevTools,
+  Incremark,
+  AutoScrollContainer,
+  ThemeProvider,
+  type AutoScrollContainerRef,
+  type DesignTokens
 } from '@incremark/react'
 
 import { useBenchmark } from '../hooks'
@@ -61,10 +63,37 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
   const [customInputMode, setCustomInputMode] = useState(false)
   const [customMarkdown, setCustomMarkdown] = useState('')
 
-  const currentMarkdown = useMemo(() => 
+  const currentMarkdown = useMemo(() =>
     customInputMode && customMarkdown.trim() ? customMarkdown : sampleMarkdown,
     [customInputMode, customMarkdown, sampleMarkdown]
   )
+
+  // ============ 主题系统 ============
+  const [themeMode, setThemeMode] = useState<'default' | 'dark' | 'custom'>('default')
+
+  // 自定义主题示例 - 紫色主题（部分覆盖）
+  const customThemeOverride: Partial<DesignTokens> = useMemo(() => ({
+    color: {
+      brand: {
+        primary: '#8b5cf6',
+        primaryHover: '#7c3aed',
+        primaryActive: '#6d28d9',
+        primaryLight: '#a78bfa'
+      }
+    } as any
+  }), [])
+
+  // 计算当前主题
+  const currentTheme = useMemo<'default' | 'dark' | DesignTokens | Partial<DesignTokens>>(() => {
+    switch (themeMode) {
+      case 'dark':
+        return 'dark'
+      case 'custom':
+        return customThemeOverride
+      default:
+        return 'default'
+    }
+  }, [themeMode, customThemeOverride])
 
   // ============ Benchmark ============
   const { 
@@ -129,7 +158,13 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
           <input type="checkbox" checked={autoScrollEnabled} onChange={(e) => setAutoScrollEnabled(e.target.checked)} />
           {t.autoScroll}
         </label>
-        
+
+        <select value={themeMode} onChange={(e) => setThemeMode(e.target.value as 'default' | 'dark' | 'custom')} className="theme-select">
+          <option value="default">🌞 Light Theme</option>
+          <option value="dark">🌙 Dark Theme</option>
+          <option value="custom">💜 Custom Theme</option>
+        </select>
+
         {typewriter.enabled && (
           <>
             <label className="speed-control">
@@ -189,12 +224,14 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
       )}
 
       <main className={`content ${typewriter.enabled ? `effect-${typewriterEffect}` : ''}`}>
-        <AutoScrollContainer ref={scrollContainerRef} enabled={autoScrollEnabled} className="scroll-container">
-          <Incremark
-            incremark={incremark}
-            showBlockStatus={true}
-          />
-        </AutoScrollContainer>
+        <ThemeProvider theme={currentTheme}>
+          <AutoScrollContainer ref={scrollContainerRef} enabled={autoScrollEnabled} className="scroll-container">
+            <Incremark
+              incremark={incremark}
+              showBlockStatus={true}
+            />
+          </AutoScrollContainer>
+        </ThemeProvider>
       </main>
     </div>
   )

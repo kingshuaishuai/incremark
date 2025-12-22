@@ -21,7 +21,27 @@ function useIncremark(options?: UseIncremarkOptions): UseIncremarkReturn
 #### Parameters
 
 ```ts
-interface UseIncremarkOptions extends ParserOptions {}
+interface UseIncremarkOptions extends ParserOptions {
+  /** Typewriter effect configuration */
+  typewriter?: TypewriterOptions
+}
+
+interface TypewriterOptions {
+  /** Enable typewriter effect (default: true if typewriter is provided) */
+  enabled?: boolean
+  /** Characters per tick, can be a number or range [min, max] */
+  charsPerTick?: number | [number, number]
+  /** Update interval in ms */
+  tickInterval?: number
+  /** Animation effect: 'none' | 'fade-in' | 'typing' */
+  effect?: AnimationEffect
+  /** Cursor character (only for 'typing' effect) */
+  cursor?: string
+  /** Pause when page is hidden */
+  pauseOnHidden?: boolean
+  /** Custom transformer plugins */
+  plugins?: TransformerPlugin[]
+}
 ```
 
 Inherits from `@incremark/core`'s `ParserOptions`.
@@ -38,10 +58,12 @@ interface UseIncremarkReturn {
   pendingBlocks: ParsedBlock[]
   /** Current complete AST */
   ast: Root
-  /** All blocks (completed + pending), with stable ID */
-  blocks: Array<ParsedBlock & { stableId: string }>
+  /** All blocks (completed + pending), with stable ID (includes typewriter effect if enabled) */
+  blocks: Array<ParsedBlock & { stableId: string; isLastPending?: boolean }>
   /** Is loading */
   isLoading: boolean
+  /** Is finalized */
+  isFinalized: boolean
   /** Append content */
   append: (chunk: string) => IncrementalUpdate
   /** Finalize parsing */
@@ -54,6 +76,10 @@ interface UseIncremarkReturn {
   render: (content: string) => IncrementalUpdate
   /** Parser instance */
   parser: IncremarkParser
+  /** Typewriter controls (if typewriter is enabled) */
+  typewriter?: TypewriterControls
+  /** @internal Definitions context value (for Incremark component) */
+  _definitionsContextValue?: DefinitionsContextValue
 }
 ```
 
@@ -180,6 +206,10 @@ interface UseDevToolsOptions {
 Main render component.
 
 ```tsx
+// Recommended: Pass incremark object (auto-provides context)
+<Incremark incremark={incremark} />
+
+// Or use blocks directly
 <Incremark 
   blocks={blocks}
   components={customComponents}
@@ -191,9 +221,11 @@ Main render component.
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `blocks` | `Array<ParsedBlock & { stableId: string }>` | Required | Blocks to render |
+| `incremark` | `UseIncremarkReturn` | - | **Recommended**: Incremark instance (auto-provides definitions context) |
+| `blocks` | `Array<ParsedBlock & { stableId: string }>` | - | Blocks to render (required if `incremark` is not provided) |
 | `components` | `Record<string, ComponentType>` | `{}` | Custom component mapping |
 | `showBlockStatus` | `boolean` | `true` | Show block status border |
+| `className` | `string` | `''` | Custom class name |
 
 ### IncremarkRenderer
 
@@ -209,6 +241,95 @@ Single block render component.
 |------|------|---------|-------------|
 | `node` | `RootContent` | Required | AST node |
 | `components` | `Record<string, ComponentType>` | `{}` | Custom component mapping |
+
+### IncremarkHtmlElement
+
+HTML element render component for HTML fragments.
+
+```tsx
+import { IncremarkHtmlElement } from '@incremark/react'
+
+const customComponents = {
+  htmlElement: IncremarkHtmlElement
+}
+```
+
+#### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `node` | `HtmlElementNode` | Required | HTML element AST node |
+
+#### HtmlElementNode
+
+```ts
+interface HtmlElementNode {
+  type: 'htmlElement'
+  tagName: string
+  attrs: Record<string, string>
+  children: RootContent[]
+  data?: {
+    rawHtml?: string
+    parsed?: boolean
+    originalType?: string
+  }
+}
+```
+
+### IncremarkFootnotes
+
+Footnotes list component (rendered automatically when using `Incremark` with `incremark` prop).
+
+```tsx
+// Automatically rendered when using:
+<Incremark incremark={incremark} />
+
+// Or manually:
+import { IncremarkFootnotes } from '@incremark/react'
+<IncremarkFootnotes />
+```
+
+Footnotes are automatically displayed at the bottom of the document when `isFinalized` is true.
+
+### IncremarkContainerProvider
+
+Container-level provider for definitions context (automatically used when passing `incremark` to `Incremark`).
+
+```tsx
+import { IncremarkContainerProvider } from '@incremark/react'
+
+<IncremarkContainerProvider definitions={definitionsContextValue}>
+  <Incremark blocks={blocks} />
+</IncremarkContainerProvider>
+```
+
+#### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `definitions` | `DefinitionsContextValue` | Required | Definitions context value |
+| `children` | `ReactNode` | Required | Child components |
+
+### ThemeProvider
+
+Theme provider component for applying themes.
+
+```tsx
+import { ThemeProvider } from '@incremark/react'
+import { darkTheme } from '@incremark/theme'
+
+<ThemeProvider theme="dark">
+  <Incremark incremark={incremark} />
+</ThemeProvider>
+```
+
+#### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `theme` | `'default' \| 'dark' \| DesignTokens \| Partial<DesignTokens>` | Required | Theme configuration |
+| `children` | `ReactNode` | Required | Child components |
+| `className` | `string` | `''` | Custom class name |
 
 ### AutoScrollContainer
 
@@ -260,6 +381,53 @@ function App() {
 - Resume auto-scroll when user scrolls back to bottom
 - Reset auto-scroll state when scrollbar disappears
 
+## Contexts
+
+### DefinitionsContext
+
+Context for managing definitions and footnotes.
+
+```tsx
+import { useDefinitions } from '@incremark/react'
+
+function MyComponent() {
+  const { definitions, footnoteDefinitions, footnoteReferenceOrder } = useDefinitions()
+  // ...
+}
+```
+
+#### Returns
+
+```ts
+interface DefinitionsContextValue {
+  /** Image/link definition map */
+  definitions: Record<string, Definition>
+  /** Footnote definition map */
+  footnoteDefinitions: Record<string, FootnoteDefinition>
+  /** Footnote reference order */
+  footnoteReferenceOrder: string[]
+  // ... setter methods
+}
+```
+
+## Theme
+
+### Design Tokens
+
+```ts
+import { type DesignTokens, defaultTheme, darkTheme } from '@incremark/theme'
+```
+
+### Theme Utilities
+
+```ts
+import {
+  applyTheme,
+  generateCSSVars,
+  mergeTheme
+} from '@incremark/theme'
+```
+
 ## Plugins
 
 Plugins exported from `@incremark/react`:
@@ -304,7 +472,62 @@ function App() {
     finalize()
   }
 
-  return <Incremark blocks={blocks} />
+  // Recommended: Pass incremark object
+  return <Incremark incremark={incremark} />
+}
+```
+
+### With HTML Fragments
+
+HTML fragments in Markdown are automatically parsed and rendered:
+
+```tsx
+import { useIncremark, Incremark } from '@incremark/react'
+
+function App() {
+  const incremark = useIncremark()
+  
+  // Markdown with HTML:
+  // <div class="custom">Hello</div>
+  
+  return <Incremark incremark={incremark} />
+}
+```
+
+### With Footnotes
+
+Footnotes are automatically rendered at the bottom:
+
+```tsx
+import { useIncremark, Incremark } from '@incremark/react'
+
+function App() {
+  const incremark = useIncremark()
+  
+  // Markdown with footnotes:
+  // Text[^1] and more[^2]
+  // 
+  // [^1]: First footnote
+  // [^2]: Second footnote
+  
+  return <Incremark incremark={incremark} />
+}
+```
+
+### With Theme
+
+```tsx
+import { useIncremark, Incremark, ThemeProvider } from '@incremark/react'
+import { darkTheme } from '@incremark/theme'
+
+function App() {
+  const incremark = useIncremark()
+  
+  return (
+    <ThemeProvider theme="dark">
+      <Incremark incremark={incremark} />
+    </ThemeProvider>
+  )
 }
 ```
 

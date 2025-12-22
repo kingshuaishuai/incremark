@@ -21,7 +21,27 @@ function useIncremark(options?: UseIncremarkOptions): UseIncremarkReturn
 #### 参数
 
 ```ts
-interface UseIncremarkOptions extends ParserOptions {}
+interface UseIncremarkOptions extends ParserOptions {
+  /** 打字机效果配置 */
+  typewriter?: TypewriterOptions
+}
+
+interface TypewriterOptions {
+  /** 启用打字机效果（默认：如果提供了 typewriter 则为 true） */
+  enabled?: boolean
+  /** 每次显示的字符数，可以是数字或范围 [min, max] */
+  charsPerTick?: number | [number, number]
+  /** 更新间隔（毫秒） */
+  tickInterval?: number
+  /** 动画效果：'none' | 'fade-in' | 'typing' */
+  effect?: AnimationEffect
+  /** 光标字符（仅用于 'typing' 效果） */
+  cursor?: string
+  /** 页面隐藏时暂停 */
+  pauseOnHidden?: boolean
+  /** 自定义转换插件 */
+  plugins?: TransformerPlugin[]
+}
 ```
 
 继承自 `@incremark/core` 的 `ParserOptions`。
@@ -38,10 +58,12 @@ interface UseIncremarkReturn {
   pendingBlocks: ParsedBlock[]
   /** 当前完整的 AST */
   ast: Root
-  /** 所有块（完成 + 待处理），带稳定 ID */
-  blocks: Array<ParsedBlock & { stableId: string }>
+  /** 所有块（完成 + 待处理），带稳定 ID（如果启用打字机效果则包含打字机效果） */
+  blocks: Array<ParsedBlock & { stableId: string; isLastPending?: boolean }>
   /** 是否正在加载 */
   isLoading: boolean
+  /** 是否已完成 */
+  isFinalized: boolean
   /** 追加内容 */
   append: (chunk: string) => IncrementalUpdate
   /** 完成解析 */
@@ -54,6 +76,10 @@ interface UseIncremarkReturn {
   render: (content: string) => IncrementalUpdate
   /** 解析器实例 */
   parser: IncremarkParser
+  /** 打字机控制器（如果启用了打字机效果） */
+  typewriter?: TypewriterControls
+  /** @internal 定义上下文值（用于 Incremark 组件） */
+  _definitionsContextValue?: DefinitionsContextValue
 }
 ```
 
@@ -180,7 +206,11 @@ interface UseDevToolsOptions {
 主渲染组件。
 
 ```tsx
-<Incremark 
+// 推荐：传入 incremark 对象（自动提供上下文）
+<Incremark incremark={incremark} />
+
+// 或直接使用 blocks
+<Incremark
   blocks={blocks}
   components={customComponents}
   showBlockStatus={true}
@@ -191,9 +221,11 @@ interface UseDevToolsOptions {
 
 | Prop | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `blocks` | `Array<ParsedBlock & { stableId: string }>` | 必填 | 要渲染的块 |
+| `incremark` | `UseIncremarkReturn` | - | **推荐**：Incremark 实例（自动提供 definitions 上下文） |
+| `blocks` | `Array<ParsedBlock & { stableId: string }>` | - | 要渲染的块（如果没有提供 `incremark` 则必填） |
 | `components` | `Record<string, ComponentType>` | `{}` | 自定义组件映射 |
 | `showBlockStatus` | `boolean` | `true` | 是否显示块状态边框 |
+| `className` | `string` | `''` | 自定义类名 |
 
 ### IncremarkRenderer
 
@@ -209,6 +241,95 @@ interface UseDevToolsOptions {
 |------|------|--------|------|
 | `node` | `RootContent` | 必填 | AST 节点 |
 | `components` | `Record<string, ComponentType>` | `{}` | 自定义组件映射 |
+
+### IncremarkHtmlElement
+
+HTML 元素渲染组件，用于渲染 HTML 片段。
+
+```tsx
+import { IncremarkHtmlElement } from '@incremark/react'
+
+const customComponents = {
+  htmlElement: IncremarkHtmlElement
+}
+```
+
+#### Props
+
+| Prop | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `node` | `HtmlElementNode` | 必填 | HTML 元素 AST 节点 |
+
+#### HtmlElementNode
+
+```ts
+interface HtmlElementNode {
+  type: 'htmlElement'
+  tagName: string
+  attrs: Record<string, string>
+  children: RootContent[]
+  data?: {
+    rawHtml?: string
+    parsed?: boolean
+    originalType?: string
+  }
+}
+```
+
+### IncremarkFootnotes
+
+脚注列表组件（使用 `incremark` prop 时自动渲染）。
+
+```tsx
+// 使用以下方式时自动渲染：
+<Incremark incremark={incremark} />
+
+// 或手动使用：
+import { IncremarkFootnotes } from '@incremark/react'
+<IncremarkFootnotes />
+```
+
+当 `isFinalized` 为 true 时，脚注会自动显示在文档底部。
+
+### IncremarkContainerProvider
+
+容器级别的 provider，用于提供 definitions 上下文（传入 `incremark` 给 `Incremark` 时自动使用）。
+
+```tsx
+import { IncremarkContainerProvider } from '@incremark/react'
+
+<IncremarkContainerProvider definitions={definitionsContextValue}>
+  <Incremark blocks={blocks} />
+</IncremarkContainerProvider>
+```
+
+#### Props
+
+| Prop | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `definitions` | `DefinitionsContextValue` | 必填 | 定义上下文值 |
+| `children` | `ReactNode` | 必填 | 子组件 |
+
+### ThemeProvider
+
+主题 provider 组件，用于应用主题。
+
+```tsx
+import { ThemeProvider } from '@incremark/react'
+import { darkTheme } from '@incremark/theme'
+
+<ThemeProvider theme="dark">
+  <Incremark incremark={incremark} />
+</ThemeProvider>
+```
+
+#### Props
+
+| Prop | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `theme` | `'default' \| 'dark' \| DesignTokens \| Partial<DesignTokens>` | 必填 | 主题配置 |
+| `children` | `ReactNode` | 必填 | 子组件 |
+| `className` | `string` | `''` | 自定义类名 |
 
 ### AutoScrollContainer
 
@@ -260,6 +381,53 @@ function App() {
 - 用户滚动回底部时恢复自动滚动
 - 滚动条消失时自动恢复自动滚动状态
 
+## 上下文
+
+### DefinitionsContext
+
+用于管理定义和脚注的上下文。
+
+```tsx
+import { useDefinitions } from '@incremark/react'
+
+function MyComponent() {
+  const { definitions, footnoteDefinitions, footnoteReferenceOrder } = useDefinitions()
+  // ...
+}
+```
+
+#### 返回值
+
+```ts
+interface DefinitionsContextValue {
+  /** 图片/链接定义映射 */
+  definitions: Record<string, Definition>
+  /** 脚注定义映射 */
+  footnoteDefinitions: Record<string, FootnoteDefinition>
+  /** 脚注引用顺序 */
+  footnoteReferenceOrder: string[]
+  // ... setter 方法
+}
+```
+
+## 主题
+
+### Design Tokens
+
+```ts
+import { type DesignTokens, defaultTheme, darkTheme } from '@incremark/theme'
+```
+
+### 主题工具
+
+```ts
+import {
+  applyTheme,
+  generateCSSVars,
+  mergeTheme
+} from '@incremark/theme'
+```
+
 ## 插件
 
 从 `@incremark/react` 导出的插件：
@@ -294,17 +462,72 @@ function App() {
     reset()
     const reader = stream.getReader()
     const decoder = new TextDecoder()
-    
+
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
       append(decoder.decode(value))
     }
-    
+
     finalize()
   }
 
-  return <Incremark blocks={blocks} />
+  // 推荐：传入 incremark 对象
+  return <Incremark incremark={incremark} />
+}
+```
+
+### 使用 HTML 片段
+
+Markdown 中的 HTML 片段会自动解析和渲染：
+
+```tsx
+import { useIncremark, Incremark } from '@incremark/react'
+
+function App() {
+  const incremark = useIncremark()
+
+  // Markdown 包含 HTML：
+  // <div class="custom">Hello</div>
+
+  return <Incremark incremark={incremark} />
+}
+```
+
+### 使用脚注
+
+脚注会自动渲染在底部：
+
+```tsx
+import { useIncremark, Incremark } from '@incremark/react'
+
+function App() {
+  const incremark = useIncremark()
+
+  // Markdown 包含脚注：
+  // Text[^1] and more[^2]
+  //
+  // [^1]: First footnote
+  // [^2]: Second footnote
+
+  return <Incremark incremark={incremark} />
+}
+```
+
+### 使用主题
+
+```tsx
+import { useIncremark, Incremark, ThemeProvider } from '@incremark/react'
+import { darkTheme } from '@incremark/theme'
+
+function App() {
+  const incremark = useIncremark()
+
+  return (
+    <ThemeProvider theme="dark">
+      <Incremark incremark={incremark} />
+    </ThemeProvider>
+  )
 }
 ```
 

@@ -14,15 +14,17 @@ pnpm add @incremark/vue
 <script setup>
 import { useIncremark, Incremark } from '@incremark/vue'
 
-const { blocks, append, finalize, reset, markdown } = useIncremark({
+const incremark = useIncremark({
   gfm: true
 })
+const { blocks, append, finalize, reset, markdown } = incremark
 </script>
 
 <template>
   <div>
     <p>已接收 {{ markdown.length }} 字符</p>
-    <Incremark :blocks="blocks" />
+    <!-- 推荐：传递 incremark 对象 -->
+    <Incremark :incremark="incremark" />
   </div>
 </template>
 ```
@@ -42,17 +44,17 @@ const {
   pendingBlocks,   // ShallowRef<Block[]> - 待处理块
   ast,             // ComputedRef<Root> - 完整 AST
   isLoading,       // Ref<boolean> - 加载状态
-  
+
   // 方法
   append,          // (chunk: string) => Update
   finalize,        // () => Update
   abort,           // () => Update - 强制中断
   reset,           // () => void - 重置解析器和打字机
   render,          // (content: string) => Update - 一次性渲染
-  
+
   // 打字机控制
   typewriter,      // TypewriterControls - 打字机控制对象
-  
+
   // 实例
   parser           // IncremarkParser - 底层解析器
 } = useIncremark(options)
@@ -67,7 +69,7 @@ interface UseIncremarkOptions {
   containers?: boolean       // 启用 ::: 容器
   extensions?: Extension[]   // micromark 扩展
   mdastExtensions?: Extension[]  // mdast 扩展
-  
+
   // 打字机选项（传入即启用）
   typewriter?: {
     enabled?: boolean              // 启用/禁用（默认: true）
@@ -106,22 +108,22 @@ const { blocks, append, finalize, reset, typewriter } = useIncremark({
       <!-- blocks 已包含打字机效果！ -->
       <Incremark :blocks="blocks" />
     </AutoScrollContainer>
-    
+
     <!-- 打字机控制 -->
-    <button 
-      v-if="typewriter.isProcessing.value && !typewriter.isPaused.value" 
+    <button
+      v-if="typewriter.isProcessing.value && !typewriter.isPaused.value"
       @click="typewriter.pause"
     >
       暂停
     </button>
-    <button 
-      v-if="typewriter.isPaused.value" 
+    <button
+      v-if="typewriter.isPaused.value"
       @click="typewriter.resume"
     >
       继续
     </button>
-    <button 
-      v-if="typewriter.isProcessing.value" 
+    <button
+      v-if="typewriter.isProcessing.value"
       @click="typewriter.skip"
     >
       跳过
@@ -150,7 +152,11 @@ interface TypewriterControls {
 主渲染组件，接收 blocks 并渲染。
 
 ```vue
-<Incremark 
+<!-- 推荐：传递 incremark 对象（自动提供上下文） -->
+<Incremark :incremark="incremark" />
+
+<!-- 或直接使用 blocks -->
+<Incremark
   :blocks="blocks"
   :components="customComponents"
   :show-block-status="true"
@@ -160,8 +166,9 @@ interface TypewriterControls {
 ### Props
 
 | 属性 | 类型 | 默认值 | 说明 |
-|-----|------|-------|------|
-| `blocks` | `Block[]` | 必填 | 要渲染的块 |
+|------|------|---------|-------------|
+| `incremark` | `UseIncremarkReturn` | - | **推荐**：Incremark 实例（自动提供定义上下文） |
+| `blocks` | `Block[]` | - | 要渲染的块（如果未提供 `incremark` 则必填） |
 | `components` | `Record<string, Component>` | `{}` | 自定义组件 |
 | `showBlockStatus` | `boolean` | `true` | 显示块状态边框 |
 
@@ -197,8 +204,8 @@ defineProps<{ node: { depth: number; children: any[] } }>()
 </script>
 
 <template>
-  <component 
-    :is="`h${node.depth}`" 
+  <component
+    :is="`h${node.depth}`"
     class="my-heading"
   >
     <slot />
@@ -238,14 +245,85 @@ useDevTools(incremark)  // 一行启用！
 </script>
 ```
 
+## HTML 片段
+
+v0.2.0 支持 Markdown 中的 HTML 片段：
+
+```vue
+<script setup>
+import { useIncremark, Incremark } from '@incremark/vue'
+
+const incremark = useIncremark()
+// 包含 HTML 的 Markdown:
+// <div class="custom">
+//   <span>Hello</span>
+// </div>
+</script>
+
+<template>
+  <Incremark :incremark="incremark" />
+</template>
+```
+
+HTML 片段会自动解析并渲染为结构化的 HTML 元素。
+
+## 脚注
+
+v0.2.0 支持脚注：
+
+```vue
+<script setup>
+import { useIncremark, Incremark } from '@incremark/vue'
+
+const incremark = useIncremark()
+// 包含脚注的 Markdown:
+// Text[^1] and more[^2]
+//
+// [^1]: First footnote
+// [^2]: Second footnote
+</script>
+
+<template>
+  <Incremark :incremark="incremark" />
+</template>
+```
+
+当 `isFinalized` 为 true 时，脚注会自动渲染在文档底部。
+
+## 主题系统
+
+v0.2.0 引入新的主题系统：
+
+```vue
+<script setup>
+import { useIncremark, Incremark, ThemeProvider } from '@incremark/vue'
+import { darkTheme, mergeTheme, defaultTheme } from '@incremark/theme'
+
+const incremark = useIncremark()
+</script>
+
+<template>
+  <!-- 使用预设主题 -->
+  <ThemeProvider theme="dark">
+    <Incremark :incremark="incremark" />
+  </ThemeProvider>
+
+  <!-- 或使用自定义主题 -->
+  <ThemeProvider :theme="customTheme">
+    <Incremark :incremark="incremark" />
+  </ThemeProvider>
+</template>
+```
+
 ## 完整示例
 
 ```vue
 <script setup>
 import { ref } from 'vue'
-import { useIncremark, useDevTools, Incremark, AutoScrollContainer } from '@incremark/vue'
+import { useIncremark, useDevTools, Incremark, AutoScrollContainer, ThemeProvider } from '@incremark/vue'
+import '@incremark/theme/styles.css'
 
-const incremark = useIncremark({ 
+const incremark = useIncremark({
   gfm: true,
   typewriter: {
     effect: 'fade-in',
@@ -261,39 +339,41 @@ const isStreaming = ref(false)
 async function simulateAI() {
   reset()
   isStreaming.value = true
-  
+
   const response = await fetch('/api/chat', { method: 'POST' })
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
-  
+
   while (true) {
     const { done, value } = await reader.read()
     if (done) break
     append(decoder.decode(value))
   }
-  
+
   finalize()
   isStreaming.value = false
 }
 </script>
 
 <template>
-  <div :class="['app', `effect-${typewriter.effect.value}`]">
-    <header>
-      <button @click="simulateAI" :disabled="isStreaming">
-        {{ isStreaming ? '生成中...' : '开始对话' }}
-      </button>
-      <span>{{ markdown.length }} 字符</span>
-      
-      <button v-if="typewriter.isProcessing.value" @click="typewriter.skip">
-        跳过
-      </button>
-    </header>
-    
-    <AutoScrollContainer class="content">
-      <Incremark :blocks="blocks" />
-    </AutoScrollContainer>
-  </div>
+  <ThemeProvider theme="default">
+    <div :class="['app', `effect-${typewriter.effect.value}`]">
+      <header>
+        <button @click="simulateAI" :disabled="isStreaming">
+          {{ isStreaming ? '生成中...' : '开始对话' }}
+        </button>
+        <span>{{ markdown.length }} 字符</span>
+
+        <button v-if="typewriter.isProcessing.value" @click="typewriter.skip">
+          跳过
+        </button>
+      </header>
+
+      <AutoScrollContainer class="content">
+        <Incremark :incremark="incremark" />
+      </AutoScrollContainer>
+    </div>
+  </ThemeProvider>
 </template>
 ```
 

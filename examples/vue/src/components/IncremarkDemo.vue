@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { useIncremark, useDevTools, Incremark, AutoScrollContainer } from '@incremark/vue'
+import { ref, watch, computed } from 'vue'
+import { useIncremark, useDevTools, Incremark, AutoScrollContainer, ThemeProvider, type DesignTokens } from '@incremark/vue'
 // @ts-ignore
 import { math } from 'micromark-extension-math'
 // @ts-ignore
@@ -103,6 +103,33 @@ function handleRunBenchmark() {
 const useCustomComponents = ref(false)
 const customComponents = { heading: CustomHeading }
 
+// ============ 主题系统 ============
+const themeMode = ref<'default' | 'dark' | 'custom'>('default')
+
+// 自定义主题示例 - 紫色主题（部分覆盖）
+const customThemeOverride: Partial<DesignTokens> = {
+  color: {
+    brand: {
+      primary: '#8b5cf6',
+      primaryHover: '#7c3aed',
+      primaryActive: '#6d28d9',
+      primaryLight: '#a78bfa'
+    }
+  } as any
+}
+
+// 计算当前主题
+const currentTheme = computed<'default' | 'dark' | DesignTokens | Partial<DesignTokens>>(() => {
+  switch (themeMode.value) {
+    case 'dark':
+      return 'dark'
+    case 'custom':
+      return customThemeOverride
+    default:
+      return 'default'
+  }
+})
+
 // 暴露方法供父组件调用
 defineExpose({
   reset,
@@ -142,7 +169,13 @@ defineExpose({
         <input type="checkbox" v-model="autoScrollEnabled" />
         {{ t.autoScroll }}
       </label>
-      
+
+      <select v-model="themeMode" class="theme-select">
+        <option value="default">🌞 Light Theme</option>
+        <option value="dark">🌙 Dark Theme</option>
+        <option value="custom">💜 Custom Theme</option>
+      </select>
+
       <template v-if="typewriter.enabled.value">
         <label class="speed-control">
           <input type="range" v-model.number="typewriterSpeed" min="1" max="10" step="1" />
@@ -199,13 +232,15 @@ defineExpose({
     />
 
     <main :class="['content', typewriter.enabled.value && `effect-${typewriterEffect}`]">
-      <AutoScrollContainer ref="scrollContainerRef" :enabled="autoScrollEnabled" class="scroll-container">
-        <Incremark
-          :incremark="incremark"
-          :components="useCustomComponents ? customComponents : {}"
-          :show-block-status="true"
-        />
-      </AutoScrollContainer>
+      <ThemeProvider :theme="currentTheme">
+        <AutoScrollContainer ref="scrollContainerRef" :enabled="autoScrollEnabled" class="scroll-container">
+          <Incremark
+            :incremark="incremark"
+            :components="useCustomComponents ? customComponents : {}"
+            :show-block-status="true"
+          />
+        </AutoScrollContainer>
+      </ThemeProvider>
     </main>
   </div>
 </template>

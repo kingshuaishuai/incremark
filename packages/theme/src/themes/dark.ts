@@ -13,18 +13,18 @@ const darkBrandColors = generateBrand('#60a5fa')
 const darkBasePurple = generateBrand('#c084fc')
 const darkBaseGreen = generateBrand('#34d399')
 
-// 暗色模式中性色系列（反转后的颜色）
+// 暗色模式中性色系列（反转后的颜色，增强 1-2 对比度）
 const darkNeutralSeries = {
-  1: '#01122d',   // 原 neutral-10 反转
-  2: '#011431',   // 原 neutral-9 反转
-  3: '#34435a',   // 原 neutral-8 反转
-  4: '#677284',   // 原 neutral-7 反转
-  5: '#9ca4b1',   // 原 neutral-6 反转
-  6: '#cdd1da',   // 原 neutral-5 反转
-  7: '#e2e5ec',   // 原 neutral-4 反转
-  8: '#f1f3f8',   // 原 neutral-3 反转
-  9: '#f8f9fc',   // 原 neutral-2 反转
-  10: '#ffffff'   // 原 neutral-1 反转
+  1: '#0a1628',
+  2: '#162033',
+  3: '#273548',
+  4: '#546070',
+  5: '#8891a0',
+  6: '#cdd1da',
+  7: '#e2e5ec',
+  8: '#f1f3f8',
+  9: '#f8f9fc',
+  10: '#ffffff'
 } as const
 
 export const darkTheme: DesignTokens = {
@@ -72,7 +72,7 @@ export const darkTheme: DesignTokens = {
     code: {
       inlineBackground: darkNeutralSeries[3],   // neutral-3 (dark) - 行内代码适中暗色背景
       inlineText: darkNeutralSeries[8],         // neutral-8 (dark) - 行内代码浅色文本
-      blockBackground: darkNeutralSeries[1],    // neutral-1 (dark) - 代码块深色背景
+      blockBackground: darkNeutralSeries[3],    // neutral-2 (dark) - 代码块深色背景
       blockText: darkNeutralSeries[9],          // neutral-9 (dark) - 代码块极浅文本
       headerBackground: darkNeutralSeries[2]    // neutral-2 (dark) - 代码块头部背景
       // border 使用通用的 border.strong，不单独定义

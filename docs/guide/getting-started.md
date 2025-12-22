@@ -7,15 +7,15 @@ This guide will help you integrate Incremark in 5 minutes.
 ::: code-group
 
 ```bash [pnpm]
-pnpm add @incremark/core @incremark/vue
+pnpm add @incremark/core @incremark/vue @incremark/theme
 ```
 
 ```bash [npm]
-npm install @incremark/core @incremark/vue
+npm install @incremark/core @incremark/vue @incremark/theme
 ```
 
 ```bash [yarn]
-yarn add @incremark/core @incremark/vue
+yarn add @incremark/core @incremark/vue @incremark/theme
 ```
 
 :::
@@ -23,19 +23,23 @@ yarn add @incremark/core @incremark/vue
 For React:
 
 ```bash
-pnpm add @incremark/core @incremark/react
+pnpm add @incremark/core @incremark/react @incremark/theme
 ```
+
+> **Note**: `@incremark/theme` is optional but recommended for styling.
 
 ## Vue Integration
 
 ```vue
 <script setup>
 import { useIncremark, Incremark } from '@incremark/vue'
+import '@incremark/theme/styles.css'
 
 // Create parser instance
-const { blocks, append, finalize, reset } = useIncremark({
+const incremark = useIncremark({
   gfm: true  // Enable GFM extensions
 })
+const { blocks, append, finalize, reset } = incremark
 
 // Simulate AI streaming output
 async function simulateStream() {
@@ -55,7 +59,8 @@ async function simulateStream() {
 
 <template>
   <button @click="simulateStream">Start</button>
-  <Incremark :blocks="blocks" />
+  <!-- Recommended: Pass incremark object -->
+  <Incremark :incremark="incremark" />
 </template>
 ```
 
@@ -63,9 +68,11 @@ async function simulateStream() {
 
 ```tsx
 import { useIncremark, Incremark } from '@incremark/react'
+import '@incremark/theme/styles.css'
 
 function App() {
-  const { blocks, append, finalize, reset } = useIncremark({ gfm: true })
+  const incremark = useIncremark({ gfm: true })
+  const { blocks, append, finalize, reset } = incremark
 
   async function simulateStream() {
     reset()
@@ -84,7 +91,8 @@ function App() {
   return (
     <>
       <button onClick={simulateStream}>Start</button>
-      <Incremark blocks={blocks} />
+      {/* Recommended: Pass incremark object */}
+      <Incremark incremark={incremark} />
     </>
   )
 }
@@ -99,22 +107,35 @@ Returns:
 | Property | Type | Description |
 |----------|------|-------------|
 | `markdown` | `string` | Collected complete Markdown |
-| `blocks` | `Block[]` | All blocks (with stable IDs) |
+| `blocks` | `Block[]` | All blocks (with stable IDs, includes typewriter effect if enabled) |
 | `completedBlocks` | `Block[]` | Completed blocks |
 | `pendingBlocks` | `Block[]` | Pending blocks |
+| `isFinalized` | `boolean` | Whether parsing is finalized |
 | `append(chunk)` | `Function` | Append content |
 | `finalize()` | `Function` | Complete parsing |
 | `reset()` | `Function` | Reset state |
 | `abort()` | `Function` | Abort parsing |
+| `typewriter` | `TypewriterControls` | Typewriter controls (if enabled) |
 
 ### Configuration Options
 
 ```ts
-interface ParserOptions {
+interface UseIncremarkOptions extends ParserOptions {
+  // Parser options
   gfm?: boolean              // Enable GFM (tables, task lists, etc.)
   containers?: boolean       // Enable ::: container syntax
   extensions?: Extension[]   // Custom micromark extensions
   mdastExtensions?: Extension[]  // Custom mdast extensions
+  
+  // Typewriter options (v0.2.0+)
+  typewriter?: {
+    enabled?: boolean              // Enable/disable (default: true if provided)
+    charsPerTick?: number | [number, number]  // Chars per tick (default: [1, 3])
+    tickInterval?: number          // Interval in ms (default: 30)
+    effect?: 'none' | 'fade-in' | 'typing'  // Animation effect
+    cursor?: string                // Cursor character (default: '|')
+    pauseOnHidden?: boolean        // Pause when hidden (default: true)
+  }
 }
 ```
 
@@ -129,8 +150,45 @@ useDevTools(incremark)  // One line to enable!
 
 Click the 🔧 button in the bottom right to open the DevTools panel.
 
+## New Features in v0.2.0
+
+### HTML Fragments
+
+HTML fragments in Markdown are automatically parsed and rendered:
+
+```markdown
+<div class="custom">
+  <span>Hello</span>
+</div>
+```
+
+### Footnotes
+
+Footnotes are automatically rendered at the bottom:
+
+```markdown
+Text[^1] and more[^2]
+
+[^1]: First footnote
+[^2]: Second footnote
+```
+
+### Theme System
+
+Use `ThemeProvider` to apply themes:
+
+```tsx
+import { ThemeProvider } from '@incremark/react'
+import { darkTheme } from '@incremark/theme'
+
+<ThemeProvider theme="dark">
+  <Incremark incremark={incremark} />
+</ThemeProvider>
+```
+
 ## Next Steps
 
+- [Migration Guide](./migration-guide) - Upgrade from v0.1.x to v0.2.0
 - [Core Concepts](./concepts) - Deep dive into incremental parsing
 - [Vue Integration](./vue) - Complete Vue guide
 - [React Integration](./react) - Complete React guide

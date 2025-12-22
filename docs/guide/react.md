@@ -14,14 +14,16 @@ pnpm add @incremark/react
 import { useIncremark, Incremark } from '@incremark/react'
 
 function App() {
-  const { blocks, append, finalize, reset, markdown } = useIncremark({
+  const incremark = useIncremark({
     gfm: true
   })
+  const { blocks, append, finalize, reset, markdown } = incremark
 
   return (
     <div>
       <p>Received {markdown.length} characters</p>
-      <Incremark blocks={blocks} />
+      {/* Recommended: Pass incremark object */}
+      <Incremark incremark={incremark} />
     </div>
   )
 }
@@ -142,6 +144,10 @@ interface TypewriterControls {
 Main rendering component that accepts blocks and renders them.
 
 ```tsx
+// Recommended: Pass incremark object (auto-provides context)
+<Incremark incremark={incremark} />
+
+// Or use blocks directly
 <Incremark 
   blocks={blocks}
   components={customComponents}
@@ -153,9 +159,11 @@ Main rendering component that accepts blocks and renders them.
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `blocks` | `Block[]` | Required | Blocks to render |
+| `incremark` | `UseIncremarkReturn` | - | **Recommended**: Incremark instance (auto-provides definitions context) |
+| `blocks` | `Block[]` | - | Blocks to render (required if `incremark` is not provided) |
 | `components` | `Record<string, Component>` | `{}` | Custom components |
 | `showBlockStatus` | `boolean` | `true` | Show block status border |
+| `className` | `string` | `''` | Custom class name |
 
 ## Custom Components
 
@@ -193,11 +201,90 @@ function App() {
 }
 ```
 
+## HTML Fragments
+
+v0.2.0 supports HTML fragments in Markdown:
+
+```tsx
+import { useIncremark, Incremark } from '@incremark/react'
+
+function App() {
+  const incremark = useIncremark()
+  
+  // Markdown with HTML:
+  // <div class="custom">
+  //   <span>Hello</span>
+  // </div>
+  
+  return <Incremark incremark={incremark} />
+}
+```
+
+HTML fragments are automatically parsed and rendered as structured HTML elements.
+
+## Footnotes
+
+v0.2.0 supports footnotes:
+
+```tsx
+import { useIncremark, Incremark } from '@incremark/react'
+
+function App() {
+  const incremark = useIncremark()
+  
+  // Markdown with footnotes:
+  // Text[^1] and more[^2]
+  // 
+  // [^1]: First footnote
+  // [^2]: Second footnote
+  
+  return <Incremark incremark={incremark} />
+}
+```
+
+Footnotes are automatically rendered at the bottom of the document when `isFinalized` is true.
+
+## Theme
+
+v0.2.0 introduces a new theme system:
+
+```tsx
+import { useIncremark, Incremark, ThemeProvider } from '@incremark/react'
+import { darkTheme, mergeTheme, defaultTheme } from '@incremark/theme'
+
+function App() {
+  const incremark = useIncremark()
+  
+  // Use preset theme
+  return (
+    <ThemeProvider theme="dark">
+      <Incremark incremark={incremark} />
+    </ThemeProvider>
+  )
+  
+  // Or use custom theme
+  const customTheme = mergeTheme(defaultTheme, {
+    color: {
+      text: {
+        primary: '#custom-color'
+      }
+    }
+  })
+  
+  return (
+    <ThemeProvider theme={customTheme}>
+      <Incremark incremark={incremark} />
+    </ThemeProvider>
+  )
+}
+```
+
 ## Complete Example
 
 ```tsx
 import { useState, useCallback } from 'react'
-import { useIncremark, useDevTools, Incremark, AutoScrollContainer } from '@incremark/react'
+import { useIncremark, useDevTools, Incremark, AutoScrollContainer, ThemeProvider } from '@incremark/react'
+import '@incremark/theme/styles.css'
 
 function ChatApp() {
   const incremark = useIncremark({ 
@@ -232,22 +319,24 @@ function ChatApp() {
   }, [append, finalize, reset])
 
   return (
-    <div className={`app effect-${typewriter.effect}`}>
-      <header>
-        <button onClick={handleChat} disabled={isStreaming}>
-          {isStreaming ? 'Generating...' : 'Start Chat'}
-        </button>
-        <span>{markdown.length} characters</span>
+    <ThemeProvider theme="default">
+      <div className={`app effect-${typewriter.effect}`}>
+        <header>
+          <button onClick={handleChat} disabled={isStreaming}>
+            {isStreaming ? 'Generating...' : 'Start Chat'}
+          </button>
+          <span>{markdown.length} characters</span>
+          
+          {typewriter.isProcessing && (
+            <button onClick={typewriter.skip}>Skip</button>
+          )}
+        </header>
         
-        {typewriter.isProcessing && (
-          <button onClick={typewriter.skip}>Skip</button>
-        )}
-      </header>
-      
-      <AutoScrollContainer className="content">
-        <Incremark blocks={blocks} />
-      </AutoScrollContainer>
-    </div>
+        <AutoScrollContainer className="content">
+          <Incremark incremark={incremark} />
+        </AutoScrollContainer>
+      </div>
+    </ThemeProvider>
   )
 }
 ```
