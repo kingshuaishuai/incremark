@@ -1,4 +1,4 @@
-import type { PhrasingContent } from 'mdast'
+import type { PhrasingContent, Text } from 'mdast'
 import type { TextNodeWithChunks } from './types'
 
 /**
@@ -13,8 +13,8 @@ export function hasChunks(node: PhrasingContent): node is TextNodeWithChunks {
  */
 export function getStableText(node: TextNodeWithChunks): string {
   if (!node.chunks || node.chunks.length === 0) {
-    return node.value
+    return (node as Text).value
   }
-  return node.value.slice(0, node.stableLength ?? 0)
+  return (node as Text).value.slice(0, node.stableLength ?? 0)
 }
 
