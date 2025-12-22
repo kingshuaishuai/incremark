@@ -42,7 +42,8 @@ export default defineConfig({
               text: 'Framework Integration',
               items: [
                 { text: 'Vue', link: '/guide/vue' },
-                { text: 'React', link: '/guide/react' }
+                { text: 'React', link: '/guide/react' },
+                { text: 'Svelte', link: '/guide/svelte' }
               ]
             },
             {
@@ -68,6 +69,7 @@ export default defineConfig({
                 { text: '@incremark/core', link: '/api/core' },
                 { text: '@incremark/vue', link: '/api/vue' },
                 { text: '@incremark/react', link: '/api/react' },
+                { text: '@incremark/svelte', link: '/api/svelte' },
                 { text: '@incremark/devtools', link: '/api/devtools' }
               ]
             }
@@ -102,7 +104,8 @@ export default defineConfig({
               text: '框架集成',
               items: [
                 { text: 'Vue', link: '/zh/guide/vue' },
-                { text: 'React', link: '/zh/guide/react' }
+                { text: 'React', link: '/zh/guide/react' },
+                { text: 'Svelte', link: '/zh/guide/svelte' }
               ]
             },
             {
@@ -128,6 +131,7 @@ export default defineConfig({
                 { text: '@incremark/core', link: '/zh/api/core' },
                 { text: '@incremark/vue', link: '/zh/api/vue' },
                 { text: '@incremark/react', link: '/zh/api/react' },
+                { text: '@incremark/svelte', link: '/zh/api/svelte' },
                 { text: '@incremark/devtools', link: '/zh/api/devtools' }
               ]
             }

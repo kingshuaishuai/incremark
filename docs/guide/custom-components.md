@@ -40,6 +40,22 @@ function App() {
 }
 ```
 
+```svelte [Svelte]
+<script lang="ts">
+  import { useIncremark, Incremark } from '@incremark/svelte'
+  import MyHeading from './MyHeading.svelte'
+
+  const incremark = useIncremark()
+  const { blocks } = incremark
+
+  const components = {
+    heading: MyHeading
+  }
+</script>
+
+<Incremark {blocks} components={components} />
+```
+
 :::
 
 ## Supported Node Types
@@ -134,6 +150,44 @@ export function CustomCode({ node }) {
 }
 ```
 
+```svelte [Svelte]
+<!-- CustomCode.svelte -->
+<script lang="ts">
+  import { onMount } from 'svelte'
+  import { codeToHtml } from 'shiki'
+
+  interface Props {
+    node: { lang?: string; value: string }
+  }
+
+  let { node }: Props = $props()
+
+  let html = $state('')
+  let copied = $state(false)
+
+  onMount(async () => {
+    html = await codeToHtml(node.value, {
+      lang: node.lang || 'text',
+      theme: 'github-dark'
+    })
+  })
+
+  async function copy() {
+    await navigator.clipboard.writeText(node.value)
+    copied = true
+    setTimeout(() => copied = false, 2000)
+  }
+</script>
+
+<div class="code-block">
+  <div class="header">
+    <span>{node.lang}</span>
+    <button on:click={copy}>{copied ? '✓' : 'Copy'}</button>
+  </div>
+  {@html html}
+</div>
+```
+
 :::
 
 ## Example: Mermaid Diagrams
@@ -182,9 +236,11 @@ watch(() => props.node.value, render)
 
 ## Accessing Context
 
-Custom components can access parent context via provide/inject:
+Custom components can access parent context:
 
-```vue
+::: code-group
+
+```vue [Vue]
 <!-- Parent component -->
 <script setup>
 import { provide } from 'vue'
@@ -199,3 +255,42 @@ import { inject } from 'vue'
 const theme = inject('incremark-theme', 'light')
 </script>
 ```
+
+```tsx [React]
+// Parent component
+import { createContext, useContext } from 'react'
+
+const ThemeContext = createContext('light')
+
+function Parent() {
+  return (
+    <ThemeContext.Provider value="dark">
+      <Incremark blocks={blocks} />
+    </ThemeContext.Provider>
+  )
+}
+
+// Child component
+function CustomComponent() {
+  const theme = useContext(ThemeContext)
+  return <div className={`theme-${theme}`}>...</div>
+}
+```
+
+```svelte [Svelte]
+<!-- Parent component -->
+<script lang="ts">
+  import { setContext } from 'svelte'
+  
+  setContext('incremark-theme', 'dark')
+</script>
+
+<!-- Child component -->
+<script lang="ts">
+  import { getContext } from 'svelte'
+  
+  const theme = getContext('incremark-theme') || 'light'
+</script>
+```
+
+:::

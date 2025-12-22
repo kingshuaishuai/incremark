@@ -9,7 +9,7 @@ Incremark 提供内置的打字机效果支持，逐字显示 AI 输出内容，
 - ✅ **动画效果** - 支持 `typing` 光标和 `fade-in` 渐入效果
 - ✅ **自动暂停** - 页面不可见时自动暂停
 - ✅ **插件系统** - 自定义特殊节点处理
-- ✅ **跨框架** - 框架无关核心，Vue/React 适配器
+- ✅ **跨框架** - 框架无关核心，Vue/React/Svelte 适配器
 - ✅ **简单集成** - 内置于 `useIncremark`，无需单独 hook
 
 ## 快速开始
@@ -78,6 +78,37 @@ function App() {
     </div>
   )
 }
+```
+
+### Svelte
+
+```svelte
+<script lang="ts">
+  import { useIncremark, Incremark } from '@incremark/svelte'
+
+  const { blocks, append, finalize, reset, typewriter } = useIncremark({
+    gfm: true,
+    typewriter: {
+      enabled: true,
+      charsPerTick: [1, 3],
+      tickInterval: 30,
+      effect: 'typing',
+      cursor: '|'
+    }
+  })
+</script>
+
+<div class="content effect-{$typewriter.effect}">
+  <!-- blocks 已包含打字机效果！ -->
+  <Incremark {blocks} />
+  
+  {#if $typewriter.isProcessing}
+    <button on:click={() => typewriter.skip()}>跳过</button>
+  {/if}
+  {#if $typewriter.isPaused}
+    <button on:click={() => typewriter.resume()}>继续</button>
+  {/if}
+</div>
 ```
 
 ## 动画效果
@@ -178,21 +209,41 @@ typewriter.setOptions({
 })
 ```
 
+### Svelte
+
+```svelte
+<script lang="ts">
+  const { typewriter } = useIncremark({
+    typewriter: { enabled: false }
+  })
+
+  // 切换启用状态
+  typewriter.setEnabled(true)
+
+  // 更新选项
+  typewriter.setOptions({
+    charsPerTick: [2, 5],
+    tickInterval: 20,
+    effect: 'fade-in'
+  })
+</script>
+```
+
 ## 打字机控制
 
 `typewriter` 对象提供以下控制：
 
-| 属性/方法 | Vue 类型 | React 类型 | 说明 |
-|----------|---------|-----------|------|
-| `enabled` | `Ref<boolean>` | `boolean` | 是否启用 |
-| `setEnabled` | - | `(enabled: boolean) => void` | 设置启用状态（React） |
-| `isProcessing` | `ComputedRef<boolean>` | `boolean` | 是否正在动画 |
-| `isPaused` | `ComputedRef<boolean>` | `boolean` | 是否暂停 |
-| `effect` | `ComputedRef<AnimationEffect>` | `AnimationEffect` | 当前效果 |
-| `skip()` | `Function` | `Function` | 跳过所有动画 |
-| `pause()` | `Function` | `Function` | 暂停动画 |
-| `resume()` | `Function` | `Function` | 恢复动画 |
-| `setOptions()` | `Function` | `Function` | 动态更新选项 |
+| 属性/方法 | Vue 类型 | React 类型 | Svelte 类型 | 说明 |
+|----------|---------|-----------|-------------|------|
+| `enabled` | `Ref<boolean>` | `boolean` | `Readable<boolean>` | 是否启用 |
+| `setEnabled` | - | `(enabled: boolean) => void` | `(enabled: boolean) => void` | 设置启用状态 |
+| `isProcessing` | `ComputedRef<boolean>` | `boolean` | `Readable<boolean>` | 是否正在动画 |
+| `isPaused` | `ComputedRef<boolean>` | `boolean` | `Readable<boolean>` | 是否暂停 |
+| `effect` | `ComputedRef<AnimationEffect>` | `AnimationEffect` | `Readable<AnimationEffect>` | 当前效果 |
+| `skip()` | `Function` | `Function` | `Function` | 跳过所有动画 |
+| `pause()` | `Function` | `Function` | `Function` | 暂停动画 |
+| `resume()` | `Function` | `Function` | `Function` | 恢复动画 |
+| `setOptions()` | `Function` | `Function` | `Function` | 动态更新选项 |
 
 ## 速度示例
 
@@ -217,7 +268,7 @@ typewriter.setOptions({
 如果希望代码块、mermaid、数学公式整体显示：
 
 ```ts
-import { allPlugins } from '@incremark/vue'  // 或 @incremark/react
+import { allPlugins } from '@incremark/vue'  // 或 @incremark/react 或 @incremark/svelte
 
 const { blocks } = useIncremark({
   typewriter: {
@@ -236,7 +287,7 @@ const { blocks } = useIncremark({
 ### 自定义插件
 
 ```ts
-import { createPlugin } from '@incremark/vue'
+import { createPlugin } from '@incremark/vue'  // 或 @incremark/react 或 @incremark/svelte
 
 // 让表格整体显示
 const tablePlugin = createPlugin(
@@ -259,7 +310,7 @@ const { blocks } = useIncremark({
 
 打字机效果通常需要自动滚动：
 
-```vue
+```vue [Vue]
 <script setup>
 import { useIncremark, Incremark, AutoScrollContainer } from '@incremark/vue'
 
@@ -273,6 +324,27 @@ const { blocks, typewriter } = useIncremark({
     <Incremark :blocks="blocks" />
   </AutoScrollContainer>
 </template>
+
+<style>
+.content {
+  max-height: 70vh;
+  overflow: hidden;
+}
+</style>
+```
+
+```svelte [Svelte]
+<script lang="ts">
+  import { useIncremark, Incremark, AutoScrollContainer } from '@incremark/svelte'
+
+  const { blocks, typewriter } = useIncremark({
+    typewriter: { effect: 'fade-in' }
+  })
+</script>
+
+<AutoScrollContainer class="content">
+  <Incremark {blocks} />
+</AutoScrollContainer>
 
 <style>
 .content {
@@ -301,7 +373,11 @@ BlockTransformer 作为解析器和渲染器之间的中间件：
 
 对于高级用例，仍可单独使用 `useBlockTransformer`：
 
-```ts
+::: code-group
+
+```vue [Vue]
+<script setup>
+import { computed } from 'vue'
 import { useIncremark, useBlockTransformer } from '@incremark/vue'
 
 const { completedBlocks } = useIncremark()
@@ -318,10 +394,62 @@ const { displayBlocks, isProcessing, skip } = useBlockTransformer(sourceBlocks, 
   charsPerTick: [1, 3],
   effect: 'fade-in'
 })
+</script>
 ```
+
+```tsx [React]
+import { useMemo } from 'react'
+import { useIncremark, useBlockTransformer } from '@incremark/react'
+
+function App() {
+  const { completedBlocks } = useIncremark()
+
+  const sourceBlocks = useMemo(() => 
+    completedBlocks.map(block => ({
+      id: block.id,
+      node: block.node,
+      status: block.status
+    })),
+    [completedBlocks]
+  )
+
+  const { displayBlocks, isProcessing, skip } = useBlockTransformer(sourceBlocks, {
+    charsPerTick: [1, 3],
+    effect: 'fade-in'
+  })
+
+  return <Incremark blocks={displayBlocks} />
+}
+```
+
+```svelte [Svelte]
+<script lang="ts">
+  import { derived } from 'svelte/store'
+  import { useIncremark, useBlockTransformer } from '@incremark/svelte'
+
+  const { completedBlocks } = useIncremark()
+
+  const sourceBlocks = derived(completedBlocks, ($blocks) => 
+    $blocks.map(block => ({
+      id: block.id,
+      node: block.node,
+      status: block.status
+    }))
+  )
+
+  const { displayBlocks, isProcessing, skip } = useBlockTransformer(sourceBlocks, {
+    charsPerTick: [1, 3],
+    effect: 'fade-in'
+  })
+</script>
+
+<Incremark blocks={$displayBlocks} />
+```
+
+:::
 
 ## 下一步
 
 - [自动滚动](./auto-scroll) - AutoScrollContainer 使用指南
 - [自定义组件](./custom-components) - 自定义渲染组件
-- [API 参考](/api/vue) - 完整 API 文档
+- [API 参考](/zh/api/vue) 或 [API 参考](/zh/api/react) 或 [API 参考](/zh/api/svelte) - 完整 API 文档

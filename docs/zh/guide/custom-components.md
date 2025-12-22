@@ -40,6 +40,22 @@ function App() {
 }
 ```
 
+```svelte [Svelte]
+<script lang="ts">
+  import { useIncremark, Incremark } from '@incremark/svelte'
+  import MyHeading from './MyHeading.svelte'
+
+  const incremark = useIncremark()
+  const { blocks } = incremark
+
+  const components = {
+    heading: MyHeading
+  }
+</script>
+
+<Incremark {blocks} components={components} />
+```
+
 :::
 
 ## 支持的节点类型
@@ -134,6 +150,44 @@ export function CustomCode({ node }) {
 }
 ```
 
+```svelte [Svelte]
+<!-- CustomCode.svelte -->
+<script lang="ts">
+  import { onMount } from 'svelte'
+  import { codeToHtml } from 'shiki'
+
+  interface Props {
+    node: { lang?: string; value: string }
+  }
+
+  let { node }: Props = $props()
+
+  let html = $state('')
+  let copied = $state(false)
+
+  onMount(async () => {
+    html = await codeToHtml(node.value, {
+      lang: node.lang || 'text',
+      theme: 'github-dark'
+    })
+  })
+
+  async function copy() {
+    await navigator.clipboard.writeText(node.value)
+    copied = true
+    setTimeout(() => copied = false, 2000)
+  }
+</script>
+
+<div class="code-block">
+  <div class="header">
+    <span>{node.lang}</span>
+    <button on:click={copy}>{copied ? '✓' : '复制'}</button>
+  </div>
+  {@html html}
+</div>
+```
+
 :::
 
 ## 示例：Mermaid 图表
@@ -182,9 +236,11 @@ watch(() => props.node.value, render)
 
 ## 访问上下文
 
-自定义组件可以通过 provide/inject 访问父级上下文：
+自定义组件可以访问父级上下文：
 
-```vue
+::: code-group
+
+```vue [Vue]
 <!-- 父组件 -->
 <script setup>
 import { provide } from 'vue'
@@ -199,4 +255,43 @@ import { inject } from 'vue'
 const theme = inject('incremark-theme', 'light')
 </script>
 ```
+
+```tsx [React]
+// 父组件
+import { createContext, useContext } from 'react'
+
+const ThemeContext = createContext('light')
+
+function Parent() {
+  return (
+    <ThemeContext.Provider value="dark">
+      <Incremark blocks={blocks} />
+    </ThemeContext.Provider>
+  )
+}
+
+// 子组件
+function CustomComponent() {
+  const theme = useContext(ThemeContext)
+  return <div className={`theme-${theme}`}>...</div>
+}
+```
+
+```svelte [Svelte]
+<!-- 父组件 -->
+<script lang="ts">
+  import { setContext } from 'svelte'
+  
+  setContext('incremark-theme', 'dark')
+</script>
+
+<!-- 子组件 -->
+<script lang="ts">
+  import { getContext } from 'svelte'
+  
+  const theme = getContext('incremark-theme') || 'light'
+</script>
+```
+
+:::
 

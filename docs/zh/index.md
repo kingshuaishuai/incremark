@@ -19,6 +19,9 @@ hero:
       text: React 演示
       link: https://react.incremark.com/
     - theme: alt
+      text: Svelte 演示
+      link: https://svelte.incremark.com/
+    - theme: alt
       text: GitHub
       link: https://github.com/kingshuaishuai/incremark
 
@@ -34,7 +37,7 @@ features:
     details: 智能识别 Markdown 块边界，支持代码块、列表、引用等复杂嵌套结构
   - icon: 🔌
     title: 框架无关
-    details: 核心库与框架解耦，提供 Vue、React 官方集成，易于扩展其他框架
+    details: 核心库与框架解耦，提供 Vue、React、Svelte 官方集成，易于扩展其他框架
   - icon: 📊
     title: DevTools
     details: 内置开发者工具，可视化查看解析状态、块结构和性能指标
@@ -62,6 +65,9 @@ pnpm add @incremark/core @incremark/vue
 
 # 或使用 React
 pnpm add @incremark/core @incremark/react
+
+# 或使用 Svelte
+pnpm add @incremark/core @incremark/svelte
 ```
 
 ```vue

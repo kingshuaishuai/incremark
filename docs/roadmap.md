@@ -5,8 +5,8 @@ This page tracks the development roadmap for Incremark.
 ## Architecture
 
 - [ ] 🔧 DevTools Svelte Rewrite
-- [ ] 🎨 Theme Package Separation
-- [ ] 🟠 Svelte Support
+- [x] 🎨 Theme Package Separation
+- [x] 🟠 Svelte Support
 - [ ] ⚡ Solid Support
 
 ## AI Scenarios

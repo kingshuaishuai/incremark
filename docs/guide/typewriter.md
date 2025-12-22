@@ -9,7 +9,7 @@ Incremark provides built-in typewriter effect support, displaying AI output cont
 - ✅ **Animation Effects** - Support `typing` cursor and `fade-in` effects
 - ✅ **Auto Pause** - Automatically pauses when page is hidden
 - ✅ **Plugin System** - Customize handling for special nodes
-- ✅ **Cross-framework** - Framework-agnostic core with Vue/React adapters
+- ✅ **Cross-framework** - Framework-agnostic core with Vue/React/Svelte adapters
 - ✅ **Simple Integration** - Built into `useIncremark`, no separate hook needed
 
 ## Quick Start
@@ -78,6 +78,37 @@ function App() {
     </div>
   )
 }
+```
+
+### Svelte
+
+```svelte
+<script lang="ts">
+  import { useIncremark, Incremark } from '@incremark/svelte'
+
+  const { blocks, append, finalize, reset, typewriter } = useIncremark({
+    gfm: true,
+    typewriter: {
+      enabled: true,
+      charsPerTick: [1, 3],
+      tickInterval: 30,
+      effect: 'typing',
+      cursor: '|'
+    }
+  })
+</script>
+
+<div class="content effect-{$typewriter.effect}">
+  <!-- blocks already includes typewriter effect! -->
+  <Incremark {blocks} />
+  
+  {#if $typewriter.isProcessing}
+    <button on:click={() => typewriter.skip()}>Skip</button>
+  {/if}
+  {#if $typewriter.isPaused}
+    <button on:click={() => typewriter.resume()}>Resume</button>
+  {/if}
+</div>
 ```
 
 ## Animation Effects
@@ -178,6 +209,26 @@ typewriter.setOptions({
 })
 ```
 
+### Svelte
+
+```svelte
+<script lang="ts">
+  const { typewriter } = useIncremark({
+    typewriter: { enabled: false }
+  })
+
+  // Toggle enabled state
+  typewriter.setEnabled(true)
+
+  // Update options
+  typewriter.setOptions({
+    charsPerTick: [2, 5],
+    tickInterval: 20,
+    effect: 'fade-in'
+  })
+</script>
+```
+
 ## Typewriter Controls
 
 The `typewriter` object provides these controls:
@@ -217,7 +268,7 @@ By default, `useIncremark` includes `defaultPlugins`:
 If you want code blocks, mermaid, math formulas to display as a whole:
 
 ```ts
-import { allPlugins } from '@incremark/vue'  // or @incremark/react
+import { allPlugins } from '@incremark/vue'  // or @incremark/react or @incremark/svelte
 
 const { blocks } = useIncremark({
   typewriter: {
@@ -236,7 +287,7 @@ const { blocks } = useIncremark({
 ### Custom Plugins
 
 ```ts
-import { createPlugin } from '@incremark/vue'
+import { createPlugin } from '@incremark/vue'  // or @incremark/react or @incremark/svelte
 
 // Make tables display as whole
 const tablePlugin = createPlugin(
@@ -259,7 +310,7 @@ const { blocks } = useIncremark({
 
 Typewriter effect usually needs auto scroll:
 
-```vue
+```vue [Vue]
 <script setup>
 import { useIncremark, Incremark, AutoScrollContainer } from '@incremark/vue'
 
@@ -284,6 +335,27 @@ const { blocks, typewriter } = useIncremark({
 
 See [Auto Scroll](./auto-scroll) guide for details.
 
+```svelte [Svelte]
+<script lang="ts">
+  import { useIncremark, Incremark, AutoScrollContainer } from '@incremark/svelte'
+
+  const { blocks, typewriter } = useIncremark({
+    typewriter: { effect: 'fade-in' }
+  })
+</script>
+
+<AutoScrollContainer class="content">
+  <Incremark {blocks} />
+</AutoScrollContainer>
+
+<style>
+.content {
+  max-height: 70vh;
+  overflow: hidden;
+}
+</style>
+```
+
 ## How It Works
 
 ```
@@ -301,7 +373,11 @@ BlockTransformer acts as middleware between parser and renderer:
 
 For advanced use cases, you can still use `useBlockTransformer` separately:
 
-```ts
+::: code-group
+
+```vue [Vue]
+<script setup>
+import { computed } from 'vue'
 import { useIncremark, useBlockTransformer } from '@incremark/vue'
 
 const { completedBlocks } = useIncremark()
@@ -318,10 +394,62 @@ const { displayBlocks, isProcessing, skip } = useBlockTransformer(sourceBlocks, 
   charsPerTick: [1, 3],
   effect: 'fade-in'
 })
+</script>
 ```
+
+```tsx [React]
+import { useMemo } from 'react'
+import { useIncremark, useBlockTransformer } from '@incremark/react'
+
+function App() {
+  const { completedBlocks } = useIncremark()
+
+  const sourceBlocks = useMemo(() => 
+    completedBlocks.map(block => ({
+      id: block.id,
+      node: block.node,
+      status: block.status
+    })),
+    [completedBlocks]
+  )
+
+  const { displayBlocks, isProcessing, skip } = useBlockTransformer(sourceBlocks, {
+    charsPerTick: [1, 3],
+    effect: 'fade-in'
+  })
+
+  return <Incremark blocks={displayBlocks} />
+}
+```
+
+```svelte [Svelte]
+<script lang="ts">
+  import { derived } from 'svelte/store'
+  import { useIncremark, useBlockTransformer } from '@incremark/svelte'
+
+  const { completedBlocks } = useIncremark()
+
+  const sourceBlocks = derived(completedBlocks, ($blocks) => 
+    $blocks.map(block => ({
+      id: block.id,
+      node: block.node,
+      status: block.status
+    }))
+  )
+
+  const { displayBlocks, isProcessing, skip } = useBlockTransformer(sourceBlocks, {
+    charsPerTick: [1, 3],
+    effect: 'fade-in'
+  })
+</script>
+
+<Incremark blocks={$displayBlocks} />
+```
+
+:::
 
 ## Next Steps
 
 - [Auto Scroll](./auto-scroll) - AutoScrollContainer usage guide
 - [Custom Components](./custom-components) - Custom rendering components
-- [API Reference](/api/vue) - Complete API documentation
+- [API Reference](/api/vue) or [API Reference](/api/react) or [API Reference](/api/svelte) - Complete API documentation

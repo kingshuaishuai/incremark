@@ -26,6 +26,12 @@ yarn add @incremark/core @incremark/vue @incremark/theme
 pnpm add @incremark/core @incremark/react @incremark/theme
 ```
 
+如果使用 Svelte：
+
+```bash
+pnpm add @incremark/core @incremark/svelte @incremark/theme
+```
+
 > **注意**：`@incremark/theme` 是可选的，但推荐用于样式支持。
 
 ## Vue 集成
@@ -96,6 +102,36 @@ function App() {
     </>
   )
 }
+```
+
+## Svelte 集成
+
+```svelte
+<script lang="ts">
+  import { useIncremark, Incremark } from '@incremark/svelte'
+  import '@incremark/svelte/style.css'
+
+  const incremark = useIncremark({ gfm: true })
+  const { blocks, append, finalize, reset } = incremark
+
+  async function simulateStream() {
+    reset()
+    
+    const text = '# Hello\n\nThis is **Incremark**!'
+    const chunks = text.match(/.{1,5}/g) || []
+    
+    for (const chunk of chunks) {
+      append(chunk)
+      await new Promise(r => setTimeout(r, 50))
+    }
+    
+    finalize()
+  }
+</script>
+
+<button on:click={simulateStream}>开始</button>
+<!-- 推荐：传入 incremark 对象 -->
+<Incremark {incremark} />
 ```
 
 ## 核心 API
@@ -192,4 +228,5 @@ import { darkTheme } from '@incremark/theme'
 - [核心概念](./concepts) - 深入理解增量解析原理
 - [Vue 集成](./vue) - Vue 完整指南
 - [React 集成](./react) - React 完整指南
+- [Svelte 集成](./svelte) - Svelte 完整指南
 

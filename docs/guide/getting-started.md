@@ -26,6 +26,12 @@ For React:
 pnpm add @incremark/core @incremark/react @incremark/theme
 ```
 
+For Svelte:
+
+```bash
+pnpm add @incremark/core @incremark/svelte @incremark/theme
+```
+
 > **Note**: `@incremark/theme` is optional but recommended for styling.
 
 ## Vue Integration
@@ -96,6 +102,36 @@ function App() {
     </>
   )
 }
+```
+
+## Svelte Integration
+
+```svelte
+<script lang="ts">
+  import { useIncremark, Incremark } from '@incremark/svelte'
+  import '@incremark/svelte/style.css'
+
+  const incremark = useIncremark({ gfm: true })
+  const { blocks, append, finalize, reset } = incremark
+
+  async function simulateStream() {
+    reset()
+    
+    const text = '# Hello\n\nThis is **Incremark**!'
+    const chunks = text.match(/.{1,5}/g) || []
+    
+    for (const chunk of chunks) {
+      append(chunk)
+      await new Promise(r => setTimeout(r, 50))
+    }
+    
+    finalize()
+  }
+</script>
+
+<button on:click={simulateStream}>Start</button>
+<!-- Recommended: Pass incremark object -->
+<Incremark {incremark} />
 ```
 
 ## Core API
@@ -192,3 +228,4 @@ import { darkTheme } from '@incremark/theme'
 - [Core Concepts](./concepts) - Deep dive into incremental parsing
 - [Vue Integration](./vue) - Complete Vue guide
 - [React Integration](./react) - Complete React guide
+- [Svelte Integration](./svelte) - Complete Svelte guide

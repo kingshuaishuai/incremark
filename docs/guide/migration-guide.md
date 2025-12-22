@@ -24,6 +24,9 @@ pnpm add @incremark/core @incremark/react @incremark/theme
 
 # Vue
 pnpm add @incremark/core @incremark/vue @incremark/theme
+
+# Svelte
+pnpm add @incremark/core @incremark/svelte @incremark/theme
 ```
 
 ### Style Import Changes

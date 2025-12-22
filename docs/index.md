@@ -19,6 +19,9 @@ hero:
       text: React Demo
       link: https://react.incremark.com/
     - theme: alt
+      text: Svelte Demo
+      link: https://svelte.incremark.com/
+    - theme: alt
       text: GitHub
       link: https://github.com/kingshuaishuai/incremark
 
@@ -34,7 +37,7 @@ features:
     details: Intelligently identifies Markdown block boundaries, supports code blocks, lists, quotes and complex nested structures
   - icon: 🔌
     title: Framework Agnostic
-    details: Core library decoupled from frameworks, provides official Vue and React integrations, easily extensible
+    details: Core library decoupled from frameworks, provides official Vue, React, and Svelte integrations, easily extensible
   - icon: 📊
     title: DevTools
     details: Built-in developer tools to visualize parsing state, block structure and performance metrics
@@ -62,6 +65,9 @@ pnpm add @incremark/core @incremark/vue
 
 # Or use React
 pnpm add @incremark/core @incremark/react
+
+# Or use Svelte
+pnpm add @incremark/core @incremark/svelte
 ```
 
 ```vue
