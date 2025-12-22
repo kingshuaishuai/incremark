@@ -319,9 +319,6 @@ importers:
       '@types/mdast':
         specifier: ^4.0.0
         version: 4.0.4
-      esbuild-svelte:
-        specifier: ^0.9.0
-        version: 0.9.4(esbuild@0.27.1)(svelte@5.46.0)
       svelte:
         specifier: ^5.0.0
         version: 5.46.0
@@ -1947,13 +1944,6 @@ packages:
     engines: {node: '>=12'}
     cpu: [x64]
     os: [sunos]
-
-  esbuild-svelte@0.9.4:
-    resolution: {integrity: sha512-v/a0GjkKN06nal2QLluxjk2GXsei3fdtjIuHRa6pVnri5rQBZ6pj4a2WwjLfRojgRsLwDHl4xSeZ1BeUHsqQrw==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      esbuild: '>=0.17.0'
-      svelte: '>=4.2.1 <6'
 
   esbuild-windows-32@0.14.54:
     resolution: {integrity: sha512-T+rdZW19ql9MjS7pixmZYVObd9G7kcaZo+sETqNH4RCkuuYSuv9AGHUVnPoP9hhuE1WM1ZimHz1CIBHBboLU7w==}
@@ -4469,12 +4459,6 @@ snapshots:
 
   esbuild-sunos-64@0.14.54:
     optional: true
-
-  esbuild-svelte@0.9.4(esbuild@0.27.1)(svelte@5.46.0):
-    dependencies:
-      '@jridgewell/trace-mapping': 0.3.31
-      esbuild: 0.27.1
-      svelte: 5.46.0
 
   esbuild-windows-32@0.14.54:
     optional: true
