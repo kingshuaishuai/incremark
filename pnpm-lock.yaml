@@ -289,6 +289,9 @@ importers:
         specifier: ^3.20.0
         version: 3.20.0
     devDependencies:
+      '@types/mdast':
+        specifier: ^4.0.0
+        version: 4.0.4
       '@vue/compiler-sfc':
         specifier: ^3.4.0
         version: 3.5.25
