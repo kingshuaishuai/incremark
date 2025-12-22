@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd ../.. && pnpm build && cd examples/svelte && pnpm build",
+  "outputDirectory": "dist",
+  "installCommand": "cd ../.. && pnpm install"
+}
+
