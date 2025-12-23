@@ -1,6 +1,6 @@
 {
   "name": "@incremark/core",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "增量式 Markdown 解析器核心库",
   "type": "module",
   "main": "./dist/index.js",

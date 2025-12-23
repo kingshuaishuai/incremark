@@ -1,6 +1,6 @@
 {
   "name": "@incremark/shared",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Incremark 共享工具包 - Vue 和 React 共享的逻辑",
   "type": "module",
   "main": "./dist/index.js",
