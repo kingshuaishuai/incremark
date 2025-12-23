@@ -58,6 +58,7 @@ ehthumbs.db
 
 .claude
 
+**/*/.svelte-kit
 # local temp files
 epx*
 temp-docs*

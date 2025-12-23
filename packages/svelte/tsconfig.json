@@ -1,12 +1,16 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {},
     "outDir": "./dist",
+    "rootDir": "./src",
     "declaration": true,
     "declarationMap": true,
     "noEmit": false,
     "jsx": "preserve",
-    "jsxImportSource": "svelte"
+    "jsxImportSource": "svelte",
+    "skipLibCheck": true
   },
   "include": ["src/**/*", "src/svelte-runes.d.ts"],
   "exclude": ["node_modules", "dist"]

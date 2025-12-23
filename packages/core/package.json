@@ -23,7 +23,7 @@
   },
   "files": [
     "dist",
-    "src"
+    "src/transformer/styles.css"
   ],
   "scripts": {
     "build": "tsup",
