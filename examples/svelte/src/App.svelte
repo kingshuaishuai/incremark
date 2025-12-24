@@ -6,7 +6,6 @@
 <script lang="ts">
   import { useLocale } from './composables'
   import { IncremarkDemo } from './components'
-  import type { Messages } from './locales'
 
   // ============ 国际化 ============
   const { locale, t, sampleMarkdown, toggleLocale } = useLocale()
@@ -33,17 +32,17 @@
       </label>
     </div>
   </header>
-
-  <IncremarkDemo 
-    key={incremarkKey}
-    {htmlEnabled} 
-    sampleMarkdown={$sampleMarkdown} 
-    t={$t}
-  />
+  {#key incremarkKey}
+    <IncremarkDemo 
+      {htmlEnabled} 
+      sampleMarkdown={$sampleMarkdown} 
+      t={$t}
+    />
+  {/key}
 </div>
 
 <style>
-  @import './styles.css';
+  @import '../../shared/styles.css';
 
   .header-controls {
     display: flex;

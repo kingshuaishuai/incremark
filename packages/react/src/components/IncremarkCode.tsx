@@ -9,13 +9,19 @@ export interface IncremarkCodeProps {
   disableHighlight?: boolean
   /** Mermaid 渲染延迟（毫秒），用于流式输入时防抖 */
   mermaidDelay?: number
+  /** 自定义代码块组件映射，key 为代码语言名称 */
+  customCodeBlocks?: Record<string, React.ComponentType<{ codeStr: string; lang?: string }>>
+  /** 块状态，用于判断是否使用自定义组件 */
+  blockStatus?: 'pending' | 'stable' | 'completed'
 }
 
 export const IncremarkCode: React.FC<IncremarkCodeProps> = ({
   node,
   theme = 'github-dark',
   disableHighlight = false,
-  mermaidDelay = 500
+  mermaidDelay = 500,
+  customCodeBlocks,
+  blockStatus = 'completed'
 }) => {
   const [copied, setCopied] = useState(false)
   const [highlightedHtml, setHighlightedHtml] = useState('')
@@ -33,6 +39,18 @@ export const IncremarkCode: React.FC<IncremarkCodeProps> = ({
   const language = node.lang || 'text'
   const code = node.value
   const isMermaid = language === 'mermaid'
+
+  // 检查是否有自定义代码块组件
+  const CustomCodeBlock = React.useMemo(() => {
+    // 如果代码块还在 pending 状态，不使用自定义组件
+    if (blockStatus === 'pending') {
+      return null
+    }
+    return customCodeBlocks?.[language] || null
+  }, [customCodeBlocks, language, blockStatus])
+
+  // 是否使用自定义组件
+  const useCustomComponent = !!CustomCodeBlock
   
   const toggleMermaidView = useCallback(() => {
     setMermaidViewMode(prev => prev === 'preview' ? 'source' : 'preview')
@@ -153,6 +171,11 @@ export const IncremarkCode: React.FC<IncremarkCodeProps> = ({
       }
     }
   }, [])
+  
+  // 自定义代码块组件
+  if (useCustomComponent && CustomCodeBlock) {
+    return <CustomCodeBlock codeStr={code} lang={language} />
+  }
   
   if (isMermaid) {
     return (

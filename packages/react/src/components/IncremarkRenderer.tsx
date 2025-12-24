@@ -32,10 +32,14 @@ import { IncremarkThematicBreak } from './IncremarkThematicBreak'
 import { IncremarkMath } from './IncremarkMath'
 import { IncremarkHtmlElement, type HtmlElementNode } from './IncremarkHtmlElement'
 import { IncremarkDefault } from './IncremarkDefault'
+import { IncremarkContainer, type ContainerNode } from './IncremarkContainer'
 
 export interface IncremarkRendererProps {
-  node: RootContent
+  node: RootContent | ContainerNode
   components?: Partial<Record<string, React.ComponentType<{ node: RootContent }>>>
+  customContainers?: Record<string, React.ComponentType<{ name: string; options?: Record<string, any>; children?: React.ReactNode }>>
+  customCodeBlocks?: Record<string, React.ComponentType<{ codeStr: string; lang?: string }>>
+  blockStatus?: 'pending' | 'stable' | 'completed'
 }
 
 // 扩展的文本节点（支持 chunks）
@@ -163,9 +167,24 @@ const defaultComponents: Record<string, NodeComponent> = {
 }
 
 /**
+ * 检查是否是容器节点
+ */
+function isContainerNode(node: RootContent | ContainerNode): node is ContainerNode {
+  return (node as any).type === 'containerDirective' || 
+         (node as any).type === 'leafDirective' || 
+         (node as any).type === 'textDirective'
+}
+
+/**
  * 渲染单个 AST 节点
  */
-export const IncremarkRenderer: React.FC<IncremarkRendererProps> = ({ node, components = {} }) => {
+export const IncremarkRenderer: React.FC<IncremarkRendererProps> = ({ 
+  node, 
+  components = {},
+  customContainers,
+  customCodeBlocks,
+  blockStatus
+}) => {
   // footnoteDefinition 节点：不渲染（由 IncremarkFootnotes 组件统一处理）
   if (node.type === 'footnoteDefinition') {
     return null
@@ -177,6 +196,27 @@ export const IncremarkRenderer: React.FC<IncremarkRendererProps> = ({ node, comp
       <pre className="incremark-html-code">
         <code>{(node as HTML).value}</code>
       </pre>
+    )
+  }
+
+  // 容器节点：使用容器组件，传递 customContainers
+  if (isContainerNode(node)) {
+    return (
+      <IncremarkContainer 
+        node={node} 
+        customContainers={customContainers}
+      />
+    )
+  }
+
+  // 代码节点：特殊处理，传递 customCodeBlocks 和 blockStatus
+  if (node.type === 'code') {
+    return (
+      <IncremarkCode 
+        node={node as Code} 
+        customCodeBlocks={customCodeBlocks}
+        blockStatus={blockStatus}
+      />
     )
   }
 

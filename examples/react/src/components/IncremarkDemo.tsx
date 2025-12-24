@@ -10,7 +10,15 @@ import {
 } from '@incremark/react'
 
 import { useBenchmark } from '../hooks'
-import { BenchmarkPanel, CustomInputPanel } from './index'
+import { 
+  BenchmarkPanel, 
+  CustomInputPanel,
+  CustomHeading,
+  CustomWarningContainer,
+  CustomInfoContainer,
+  CustomTipContainer,
+  CustomEchartCodeBlock
+} from './index'
 import type { Messages } from '../locales'
 
 interface IncremarkDemoProps {
@@ -34,6 +42,7 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
   // ============ Incremark（集成打字机） ============
   const incremark = useIncremark({ 
     gfm: true,
+    containers: true,
     htmlTree: htmlEnabled,
     typewriter: {
       enabled: false,
@@ -62,6 +71,10 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
   const scrollContainerRef = useRef<AutoScrollContainerRef>(null)
   const [customInputMode, setCustomInputMode] = useState(false)
   const [customMarkdown, setCustomMarkdown] = useState('')
+
+  // ============ 自定义组件 ============
+  const [useCustomComponents, setUseCustomComponents] = useState(false)
+  const customComponents = { heading: CustomHeading }
 
   const currentMarkdown = useMemo(() =>
     customInputMode && customMarkdown.trim() ? customMarkdown : sampleMarkdown,
@@ -132,16 +145,16 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
   return (
     <div className="demo-content">
       <div className="controls">
-        <button className="primary" onClick={simulateStream} disabled={isStreaming || benchmarkRunning}>
+        <button onClick={simulateStream} disabled={isStreaming || benchmarkRunning}>
           {isStreaming ? t.streaming : t.simulateAI}
         </button>
-        <button className="secondary" onClick={renderAll} disabled={isStreaming || benchmarkRunning}>
-          {t.renderOnce}
-        </button>
-        <button className="secondary" onClick={reset} disabled={isStreaming || benchmarkRunning}>
-          {t.reset}
-        </button>
+        <button onClick={renderAll} disabled={isStreaming || benchmarkRunning}>{t.renderOnce}</button>
+        <button onClick={reset} disabled={isStreaming || benchmarkRunning}>{t.reset}</button>
         
+        <label className="checkbox">
+          <input type="checkbox" checked={useCustomComponents} onChange={(e) => setUseCustomComponents(e.target.checked)} />
+          {t.customComponents}
+        </label>
         <label className="checkbox benchmark-toggle">
           <input type="checkbox" checked={benchmarkMode} onChange={(e) => setBenchmarkMode(e.target.checked)} />
           {t.benchmarkMode}
@@ -195,13 +208,13 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
             )}
           </>
         )}
-      </div>
-
-      <div className="stats">
-        📝 {markdown.length} {t.chars} |
-        ✅ {completedBlocks.length} {t.blocks} |
-        ⏳ {pendingBlocks.length} {t.pending}
-        {typewriter.enabled && typewriter.isProcessing && ` | ⌨️ ${typewriter.isPaused ? t.paused : t.typing}`}
+        
+        <span className="stats">
+          📝 {markdown.length} {t.chars} |
+          ✅ {completedBlocks.length} {t.blocks} |
+          ⏳ {pendingBlocks.length} {t.pending}
+          {typewriter.enabled && typewriter.isProcessing && ` | ⌨️ ${typewriter.isPaused ? t.paused : t.typing}`}
+        </span>
       </div>
 
       {benchmarkMode && (
@@ -223,11 +236,20 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
         />
       )}
 
-      <main className={`content ${typewriter.enabled ? `effect-${typewriterEffect}` : ''}`}>
+      <main className={typewriter.enabled ? `content effect-${typewriterEffect}` : 'content'}>
         <ThemeProvider theme={currentTheme}>
           <AutoScrollContainer ref={scrollContainerRef} enabled={autoScrollEnabled} className="scroll-container">
             <Incremark
               incremark={incremark}
+              components={useCustomComponents ? customComponents : {}}
+              customContainers={{
+                warning: CustomWarningContainer,
+                info: CustomInfoContainer,
+                tip: CustomTipContainer,
+              }}
+              customCodeBlocks={{
+                echarts: CustomEchartCodeBlock,
+              }}
               showBlockStatus={true}
             />
           </AutoScrollContainer>

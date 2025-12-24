@@ -19,13 +19,19 @@
     disableHighlight?: boolean
     /** Mermaid 渲染延迟（毫秒），用于流式输入时防抖 */
     mermaidDelay?: number
+    /** 自定义代码块组件映射，key 为代码语言名称 */
+    customCodeBlocks?: Record<string, any>
+    /** 块状态，用于判断是否使用自定义组件 */
+    blockStatus?: 'pending' | 'stable' | 'completed'
   }
 
   let {
     node,
     theme = 'github-dark',
     disableHighlight = false,
-    mermaidDelay = 500
+    mermaidDelay = 500,
+    customCodeBlocks,
+    blockStatus = 'completed'
   }: Props = $props()
 
   // 状态
@@ -54,6 +60,18 @@
   const language = $derived(node.lang || 'text')
   const code = $derived(node.value)
   const isMermaid = $derived(language === 'mermaid')
+
+  // 检查是否有自定义代码块组件
+  const CustomCodeBlock = $derived.by(() => {
+    // 如果代码块还在 pending 状态，不使用自定义组件
+    if (blockStatus === 'pending') {
+      return null
+    }
+    return customCodeBlocks?.[language] || null
+  })
+
+  // 是否使用自定义组件
+  const useCustomComponent = $derived(!!CustomCodeBlock)
 
   /**
    * 切换 Mermaid 视图模式
@@ -210,8 +228,15 @@
   })
 </script>
 
+<!-- 自定义代码块组件 -->
+{#if useCustomComponent && CustomCodeBlock}
+  <svelte:component 
+    this={CustomCodeBlock} 
+    codeStr={code} 
+    lang={language}
+  />
 <!-- Mermaid 图表 -->
-{#if isMermaid}
+{:else if isMermaid}
   <div class="incremark-mermaid">
     <div class="mermaid-header">
       <span class="language">MERMAID</span>

@@ -96,10 +96,10 @@ describe('Footnote Parsing', () => {
   describe('Incremental Parsing', () => {
     it('should handle footnote reference in pending block', () => {
       const parser = createIncremarkParser({ gfm: true })
-      
-      // 第一次追加：只有引用
-      const update1 = parser.append('这是一个脚注[^1]。\n\n')
-      
+
+      // 第一次追加：只有引用（没有空行，保持在 pending 状态）
+      const update1 = parser.append('这是一个脚注[^1]。')
+
       // 检查 pending blocks 中是否有脚注引用
       const pendingParagraph = update1.pending[0]?.node
       const hasPendingRef = pendingParagraph?.children?.some(
@@ -107,8 +107,8 @@ describe('Footnote Parsing', () => {
       )
       expect(hasPendingRef).toBe(true)
 
-      // 第二次追加：添加定义
-      const update2 = parser.append('[^1]: 脚注内容。')
+      // 第二次追加：添加换行和定义
+      const update2 = parser.append('\n\n[^1]: 脚注内容。')
       parser.finalize()
 
       // 检查最终 AST

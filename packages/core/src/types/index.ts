@@ -152,6 +152,14 @@ export interface BlockContext {
   containerName?: string
   /** 容器嵌套深度（支持嵌套容器） */
   containerDepth: number
+  /** 当前是否在列表中 */
+  inList: boolean
+  /** 当前列表是否是有序列表 */
+  listOrdered?: boolean
+  /** 当前列表的基础缩进 */
+  listIndent?: number
+  /** 遇到空行后，列表可能结束（等待下一行确认） */
+  listMayEnd?: boolean
 }
 
 /**

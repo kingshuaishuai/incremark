@@ -13,8 +13,8 @@ import IncremarkBlockquote from './IncremarkBlockquote.vue'
 import IncremarkThematicBreak from './IncremarkThematicBreak.vue'
 import IncremarkMath from './IncremarkMath.vue'
 import IncremarkHtmlElement from './IncremarkHtmlElement.vue'
-import IncremarkDefault from './IncremarkDefault.vue'
 import IncremarkFootnotes from './IncremarkFootnotes.vue'
+import IncremarkRenderer from './IncremarkRenderer.vue'
 
 // 组件映射类型
 export type ComponentMap = Partial<Record<string, Component>>
@@ -38,6 +38,10 @@ const props = withDefaults(
     blocks?: BlockWithStableId[]
     /** 自定义组件映射，key 为节点类型 */
     components?: ComponentMap
+    /** 自定义容器组件映射，key 为容器名称（如 'warning', 'info'） */
+    customContainers?: Record<string, Component>
+    /** 自定义代码块组件映射，key 为代码语言名称（如 'echart', 'mermaid'） */
+    customCodeBlocks?: Record<string, Component>
     /** 待处理块的样式类名 */
     pendingClass?: string
     /** 已完成块的样式类名 */
@@ -50,21 +54,17 @@ const props = withDefaults(
   {
     blocks: () => [],
     components: () => ({}),
+    customContainers: () => ({}),
+    customCodeBlocks: () => ({}),
     pendingClass: 'incremark-pending',
     completedClass: 'incremark-completed',
     showBlockStatus: false
   }
 )
 
-// 从 context 获取 footnoteReferenceOrder（如果有的话）
-let footnoteReferenceOrder
-try {
-  const context = useDefinationsContext()
-  footnoteReferenceOrder = context.footnoteReferenceOrder
-} catch {
-  // 如果没有 context，使用空数组
-  footnoteReferenceOrder = computed(() => [])
-}
+const {
+  footnoteReferenceOrder
+} = useDefinationsContext();
 
 // 计算实际使用的 blocks 和 isFinalized
 const actualBlocks = computed<BlockWithStableId[]>(() => props.incremark?.blocks.value || props.blocks || [])
@@ -97,9 +97,6 @@ const mergedComponents = computed(() => ({
   ...props.components
 }))
 
-function getComponent(type: string): Component {
-  return mergedComponents.value[type] || props.components?.default || IncremarkDefault
-}
 </script>
 
 <template>
@@ -118,14 +115,20 @@ function getComponent(type: string): Component {
       >
         <!-- HTML 节点：渲染为代码块显示源代码 -->
         <pre v-if="isHtmlNode(block.node)" class="incremark-html-code"><code>{{ (block.node as HTML).value }}</code></pre>
-        <!-- 其他节点：使用对应组件 -->
-        <component v-else :is="getComponent(block.node.type)" :node="block.node" />
+        <!-- 其他节点：使用对应组件，传递 customContainers 和 customCodeBlocks -->
+        <IncremarkRenderer
+          v-else
+          :node="block.node"
+          :block-status="block.status"
+          :custom-containers="customContainers"
+          :custom-code-blocks="customCodeBlocks"
+        />
       </div>
     </template>
 
     <!-- 脚注列表（仅在 finalize 后显示） -->
     <IncremarkFootnotes
-      v-if="actualIsFinalized && (footnoteReferenceOrder as any).value?.length > 0"
+      v-if="actualIsFinalized && footnoteReferenceOrder.length > 0"
     />
   </div>
 </template>

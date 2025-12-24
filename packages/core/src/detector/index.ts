@@ -172,8 +172,11 @@ export function detectContainer(line: string, config?: ContainerConfig): Contain
   let pattern = containerPatternCache.get(cacheKey)
   if (!pattern) {
     const escapedMarker = marker.replace(RE_ESCAPE_SPECIAL, '\\$&')
+    // 支持两种格式:
+    // 1. ::: name attr   （有空格分隔）
+    // 2. :::name{...}    （directive 语法，无空格）
     pattern = new RegExp(
-      `^(\\s*)(${escapedMarker}{${minLength},})(?:\\s+(\\w[\\w-]*))?(?:\\s+(.*))?\\s*$`
+      `^(\\s*)(${escapedMarker}{${minLength},})(?:\\s*(\\w[\\w-]*))?(?:\\{[^}]*\\})?(?:\\s+(.*))?\\s*$`
     )
     containerPatternCache.set(cacheKey, pattern)
   }
@@ -260,8 +263,26 @@ export function createInitialContext(): BlockContext {
     listDepth: 0,
     blockquoteDepth: 0,
     inContainer: false,
-    containerDepth: 0
+    containerDepth: 0,
+    inList: false
   }
+}
+
+/**
+ * 检测是否是列表项的延续内容（缩进内容或空行）
+ * @param line 当前行
+ * @param listIndent 列表的基础缩进
+ */
+function isListContinuation(line: string, listIndent: number): boolean {
+  // 空行可能是列表内部的段落分隔
+  if (isEmptyLine(line)) {
+    return true
+  }
+
+  // 检查是否有足够的缩进（列表内容至少需要缩进到列表标记之后）
+  // 通常列表标记后至少需要 2 个字符的缩进（如 "1. " 或 "- "）
+  const contentIndent = line.match(/^(\s*)/)?.[1].length ?? 0
+  return contentIndent > listIndent
 }
 
 /**
@@ -298,6 +319,7 @@ export function updateContext(
   // 容器处理
   if (containerCfg !== undefined) {
     if (context.inContainer) {
+      // 检查是否是容器结束
       if (detectContainerEnd(line, context, containerCfg)) {
         newContext.containerDepth = context.containerDepth - 1
         if (newContext.containerDepth === 0) {
@@ -308,12 +330,19 @@ export function updateContext(
         return newContext
       }
 
+      // 检查是否是嵌套容器开始
       const nested = detectContainer(line, containerCfg)
       if (nested && !nested.isEnd) {
         newContext.containerDepth = context.containerDepth + 1
         return newContext
       }
+
+      // ⚠️ 关键：在容器内，无论是什么内容（空行、列表、段落等），都保持 inContainer = true
+      // 只有容器结束标记才能改变容器状态
+      // 这里不需要做任何操作，因为 newContext 已经复制了 context，inContainer 已经是 true
+      return newContext
     } else {
+      // 不在容器内，检查是否是容器开始
       const container = detectContainer(line, containerCfg)
       if (container && !container.isEnd) {
         newContext.inContainer = true
@@ -322,6 +351,72 @@ export function updateContext(
         newContext.containerDepth = 1
         return newContext
       }
+    }
+  }
+
+  // 列表处理
+  const listItem = isListItemStart(line)
+
+  if (context.inList) {
+    // 已经在列表中
+    if (context.listMayEnd) {
+      // 上一行是空行，需要确认列表是否结束
+      if (listItem) {
+        // 遇到新的列表项
+        // 检查是否是同类型列表的延续
+        if (listItem.ordered === context.listOrdered && listItem.indent === context.listIndent) {
+          // 同类型同级别列表项，列表继续
+          newContext.listMayEnd = false
+          return newContext
+        }
+        // 不同类型或不同级别，列表结束，新列表开始
+        newContext.inList = true
+        newContext.listOrdered = listItem.ordered
+        newContext.listIndent = listItem.indent
+        newContext.listMayEnd = false
+        return newContext
+      } else if (isListContinuation(line, context.listIndent ?? 0)) {
+        // 缩进内容或空行，列表继续
+        newContext.listMayEnd = isEmptyLine(line)
+        return newContext
+      } else {
+        // 非列表内容，列表结束
+        newContext.inList = false
+        newContext.listOrdered = undefined
+        newContext.listIndent = undefined
+        newContext.listMayEnd = false
+        return newContext
+      }
+    } else {
+      // 上一行不是空行
+      if (listItem) {
+        // 新列表项（可能是同级或嵌套）
+        return newContext
+      } else if (isEmptyLine(line)) {
+        // 遇到空行，列表可能结束
+        newContext.listMayEnd = true
+        return newContext
+      } else if (isListContinuation(line, context.listIndent ?? 0)) {
+        // 缩进内容，列表继续
+        return newContext
+      } else {
+        // 非缩进非列表内容，列表结束
+        newContext.inList = false
+        newContext.listOrdered = undefined
+        newContext.listIndent = undefined
+        newContext.listMayEnd = false
+        return newContext
+      }
+    }
+  } else {
+    // 不在列表中
+    if (listItem) {
+      // 列表开始
+      newContext.inList = true
+      newContext.listOrdered = listItem.ordered
+      newContext.listIndent = listItem.indent
+      newContext.listMayEnd = false
+      return newContext
     }
   }
 

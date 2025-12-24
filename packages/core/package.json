@@ -34,9 +34,11 @@
   },
   "dependencies": {
     "@types/mdast": "^4.0.0",
+    "mdast-util-directive": "^3.0.0",
     "mdast-util-from-markdown": "^2.0.0",
     "mdast-util-gfm": "^3.0.0",
     "mdast-util-gfm-footnote": "^2.1.0",
+    "micromark-extension-directive": "^4.0.0",
     "micromark-extension-gfm": "^3.0.0",
     "micromark-extension-gfm-footnote": "^2.1.0",
     "micromark-factory-destination": "^2.0.0",

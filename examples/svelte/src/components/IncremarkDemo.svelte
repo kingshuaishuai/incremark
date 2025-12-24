@@ -18,7 +18,15 @@
     type DesignTokens 
   } from '@incremark/svelte'
   import { useBenchmark } from '../composables'
-  import { BenchmarkPanel, CustomInputPanel, CustomHeading } from './index'
+  import { 
+    BenchmarkPanel, 
+    CustomInputPanel, 
+    CustomHeading,
+    CustomWarningContainer,
+    CustomInfoContainer,
+    CustomTipContainer,
+    CustomEchartCodeBlock
+  } from './index'
   import type { Messages } from '../locales'
 
   /**
@@ -59,6 +67,7 @@
     const initialHtmlEnabled = htmlEnabled
     return useIncremark({
       gfm: true,
+      containers: true,
       htmlTree: initialHtmlEnabled,
       extensions: [math()],
       mdastExtensions: [mathFromMarkdown()],
@@ -139,7 +148,7 @@
 
   // ============ 自动滚动 ============
   let autoScrollEnabled = $state(true)
-  let scrollContainerRef: InstanceType<typeof AutoScrollContainer> | null = null
+  let scrollContainerRef: ReturnType<typeof AutoScrollContainer> | undefined = $state();
 
   // ============ 自定义输入 ============
   let customInputMode = $state(false)
@@ -159,6 +168,18 @@
   // ============ 自定义组件 ============
   let useCustomComponents = $state(false)
   const customComponents = { heading: CustomHeading }
+
+  // ============ 自定义容器 ============
+  const customContainers = {
+    warning: CustomWarningContainer,
+    info: CustomInfoContainer,
+    tip: CustomTipContainer,
+  }
+
+  // ============ 自定义代码块 ============
+  const customCodeBlocks = {
+    echarts: CustomEchartCodeBlock,
+  }
 
   // ============ 主题系统 ============
   let themeMode = $state<'default' | 'dark' | 'custom'>('default')
@@ -315,7 +336,9 @@
         <Incremark
           {incremark}
           components={useCustomComponents ? customComponents : {}}
-          show-block-status={true}
+          {customContainers}
+          {customCodeBlocks}
+          showBlockStatus={true}
         />
       </AutoScrollContainer>
     </ThemeProvider>

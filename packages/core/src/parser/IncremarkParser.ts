@@ -30,6 +30,8 @@ import type {
 import { transformHtmlNodes, type HtmlTreeExtensionOptions } from '../extensions/html-extension'
 import { micromarkReferenceExtension } from '../extensions/micromark-reference-extension'
 import { gfmFootnoteIncremental } from '../extensions/micromark-gfm-footnote-incremental'
+import { directive } from 'micromark-extension-directive'
+import { directiveFromMarkdown } from 'mdast-util-directive'
 import type { HTML, Paragraph, Text, Parent as MdastParent, Definition, FootnoteDefinition } from 'mdast'
 import type { DefinitionMap, FootnoteDefinitionMap } from '../types'
 
@@ -43,6 +45,7 @@ import {
   isBlockquoteStart,
   isListItemStart,
   detectContainer,
+  detectContainerEnd,
   isFootnoteDefinitionStart,
   isFootnoteContinuation
 } from '../detector'
@@ -192,6 +195,12 @@ export class IncremarkParser {
     if (this.options.gfm) {
       extensions.push(gfm())
       mdastExtensions.push(...gfmFromMarkdown(), gfmFootnoteFromMarkdown())
+    }
+
+    // 如果启用了容器支持，自动添加 directive 扩展
+    if (this.containerConfig !== undefined) {
+      extensions.push(directive())
+      mdastExtensions.push(directiveFromMarkdown())
     }
 
     // 如果用户传入了自定义扩展，添加它们
@@ -387,11 +396,15 @@ export class IncremarkParser {
         continue
       }
 
+      // ⚠️ 关键：如果当前在容器内，跳过所有稳定性检查
+      // 容器内的所有内容（包括空行、列表等）都应该被视为容器的一部分
+      // 只有容器结束标记才能作为稳定边界
       if (tempContext.inContainer) {
         continue
       }
 
-      const stablePoint = this.checkStability(i)
+      // 传入上下文信息，让 checkStability 能够判断是否在容器内
+      const stablePoint = this.checkStability(i, tempContext)
       if (stablePoint >= 0) {
         stableLine = stablePoint
         stableContext = { ...tempContext }
@@ -401,7 +414,7 @@ export class IncremarkParser {
     return { line: stableLine, contextAtLine: stableContext }
   }
 
-  private checkStability(lineIndex: number): number {
+  private checkStability(lineIndex: number, context: BlockContext): number {
     // 第一行永远不稳定
     if (lineIndex === 0) {
       return -1
@@ -409,6 +422,34 @@ export class IncremarkParser {
 
     const line = this.lines[lineIndex]
     const prevLine = this.lines[lineIndex - 1]
+
+    // ⚠️ 关键修改：如果当前上下文在容器内，且当前行不是容器结束，则不判断为稳定边界
+    // 这样可以确保容器内的所有内容（包括空行、列表等）都被视为容器的一部分
+    if (context.inContainer) {
+      // 检查当前行是否是容器结束
+      if (this.containerConfig !== undefined) {
+        const containerEnd = detectContainerEnd(line, context, this.containerConfig)
+        if (containerEnd) {
+          // 容器结束，返回前一行作为稳定边界
+          return lineIndex - 1
+        }
+      }
+      // 容器内且不是容器结束，不判断为稳定边界
+      return -1
+    }
+
+    // ⚠️ 如果当前在列表中，需要特殊处理
+    // 列表内的空行不应该作为稳定边界，因为列表项之间可以有空行
+    if (context.inList) {
+      // 列表还没有确认结束（listMayEnd 为 false 或 undefined）
+      // 不应该在列表中间创建稳定边界
+      if (!context.listMayEnd) {
+        return -1
+      }
+      // 如果 listMayEnd 为 true，说明上一行是空行
+      // 但当前行需要确认是否是列表延续
+      // 这个判断交给后续逻辑处理
+    }
 
     // 前一行是独立块（标题、分割线），该块已完成
     if (isHeading(prevLine) || isThematicBreak(prevLine)) {
@@ -421,7 +462,7 @@ export class IncremarkParser {
     }
 
     // ============ 脚注定义的特殊处理 ============
-    
+
     // 情况 1: 前一行是脚注定义开始
     if (isFootnoteDefinitionStart(prevLine)) {
       // 当前行是空行或缩进行，脚注可能继续（不稳定）
@@ -435,7 +476,7 @@ export class IncremarkParser {
       // 当前行是非缩进的新块，前一个脚注完成
       // 这种情况会在后续的判断中处理
     }
-    
+
     // 情况 2: 前一行是缩进行，可能是脚注延续
     if (!isEmptyLine(prevLine) && isFootnoteContinuation(prevLine)) {
       // 向上查找最近的脚注定义
@@ -478,7 +519,8 @@ export class IncremarkParser {
       }
 
       // 新列表开始（排除连续列表项）
-      if (isListItemStart(line) && !isListItemStart(prevLine)) {
+      // ⚠️ 修改：只有在不在列表中时才触发这个逻辑
+      if (!context.inList && isListItemStart(line) && !isListItemStart(prevLine)) {
         return lineIndex - 1
       }
 
@@ -495,7 +537,8 @@ export class IncremarkParser {
     }
 
     // 空行标志段落结束
-    if (isEmptyLine(line) && !isEmptyLine(prevLine)) {
+    // ⚠️ 修改：如果在列表中，空行不作为稳定边界
+    if (isEmptyLine(line) && !isEmptyLine(prevLine) && !context.inList) {
       return lineIndex
     }
 

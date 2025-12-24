@@ -48,7 +48,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   }, [theme])
 
   return (
-    <div ref={containerRef} className={className}>
+    <div ref={containerRef} className={`incremark-theme-provider ${className}`.trim()}>
       {children}
     </div>
   )

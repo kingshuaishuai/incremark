@@ -17,7 +17,7 @@ import type { FootnoteDefinition, RootContent } from 'mdast'
 import { useDefinationsContext } from '../composables/useDefinationsContext'
 import IncremarkRenderer from './IncremarkRenderer.vue'
 
-const { definations, footnoteDefinitions, footnoteReferenceOrder } = useDefinationsContext()
+const { footnoteDefinitions, footnoteReferenceOrder } = useDefinationsContext()
 
 /**
  * 按引用顺序排列的脚注列表

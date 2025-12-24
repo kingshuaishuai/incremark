@@ -259,7 +259,7 @@ button.secondary:hover:not(:disabled),
   background: white;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  height: 400px;
+  height: 500px;
   overflow: hidden;
 }
 
@@ -465,6 +465,155 @@ button.secondary:hover:not(:disabled),
 @keyframes incremark-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* ============ 自定义容器样式 ============ */
+.custom-warning-container {
+  margin: 1em 0;
+  padding: 1em;
+  border-radius: 6px;
+  border-left: 4px solid #f59e0b;
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.custom-warning-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-bottom: 0.75em;
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+.custom-warning-icon {
+  font-size: 1.2em;
+  line-height: 1;
+}
+
+.custom-warning-title {
+  color: inherit;
+}
+
+.custom-warning-content {
+  color: inherit;
+}
+
+.custom-info-container {
+  margin: 1em 0;
+  padding: 1em;
+  border-radius: 6px;
+  border-left: 4px solid #3b82f6;
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.custom-info-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-bottom: 0.75em;
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+.custom-info-icon {
+  font-size: 1.2em;
+  line-height: 1;
+}
+
+.custom-info-title {
+  color: inherit;
+}
+
+.custom-info-content {
+  color: inherit;
+}
+
+.custom-tip-container {
+  margin: 1em 0;
+  padding: 1em;
+  border-radius: 6px;
+  border-left: 4px solid #10b981;
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.custom-tip-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-bottom: 0.75em;
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+.custom-tip-icon {
+  font-size: 1.2em;
+  line-height: 1;
+}
+
+.custom-tip-title {
+  color: inherit;
+}
+
+.custom-tip-content {
+  color: inherit;
+}
+
+/* ============ 自定义代码块样式 ============ */
+.custom-echart-code-block {
+  margin: 1em 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.echart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.echart-header .language {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.echart-content {
+  height: 300px;
+  padding: 1rem;
+  background-color: #fff;
+}
+
+.echart-loading,
+.echart-error {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.echart-error {
+  color: #ef4444;
+}
+
+.echart-chart {
+  min-height: 400px;
+}
+
+/* ============ 自定义标题样式 ============ */
+.custom-heading {
+  color: #7c3aed;
+  border-bottom: 2px solid #7c3aed;
+  padding-bottom: 0.5rem;
+  margin: 0.5em 0;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
 /* ============ 响应式 ============ */

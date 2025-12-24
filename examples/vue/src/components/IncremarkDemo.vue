@@ -7,7 +7,7 @@ import { math } from 'micromark-extension-math'
 import { mathFromMarkdown } from 'mdast-util-math'
 
 import { useBenchmark } from '../composables'
-import { BenchmarkPanel, CustomInputPanel, CustomHeading } from './index'
+import { BenchmarkPanel, CustomInputPanel, CustomHeading, CustomWarningContainer, CustomInfoContainer, CustomTipContainer, CustomEchartCodeBlock } from './index'
 import type { Messages } from '../locales'
 
 const props = defineProps<{
@@ -26,6 +26,7 @@ const typewriterEffect = ref<'none' | 'fade-in' | 'typing'>('typing')
 const incremark = useIncremark({
   gfm: true,
   htmlTree: props.htmlEnabled,
+  containers: true, // 启用容器边界检测
   extensions: [math()],
   mdastExtensions: [mathFromMarkdown()],
   typewriter: {
@@ -102,6 +103,18 @@ function handleRunBenchmark() {
 // ============ 自定义组件 ============
 const useCustomComponents = ref(false)
 const customComponents = { heading: CustomHeading }
+
+// ============ 自定义容器 ============
+const customContainers = {
+  warning: CustomWarningContainer,
+  info: CustomInfoContainer,
+  tip: CustomTipContainer,
+}
+
+// ============ 自定义代码块 ============
+const customCodeBlocks = {
+  echarts: CustomEchartCodeBlock,
+}
 
 // ============ 主题系统 ============
 const themeMode = ref<'default' | 'dark' | 'custom'>('default')
@@ -237,6 +250,8 @@ defineExpose({
           <Incremark
             :incremark="incremark"
             :components="useCustomComponents ? customComponents : {}"
+            :custom-containers="customContainers"
+            :custom-code-blocks="customCodeBlocks"
             :show-block-status="true"
           />
         </AutoScrollContainer>

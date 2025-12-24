@@ -9,19 +9,10 @@
   import { getDefinitionsContext } from '../context/definitionsContext'
   import IncremarkRenderer from './IncremarkRenderer.svelte'
 
-  // 从 context 获取数据
-  let definations: Readable<Record<string, any>> | null = null
-  let footnoteDefinitions: Readable<Record<string, FootnoteDefinition>> | null = null
-  let footnoteReferenceOrder: Readable<string[]> | null = null
 
-  try {
-    const context = getDefinitionsContext()
-    definations = context.definations
-    footnoteDefinitions = context.footnoteDefinitions
-    footnoteReferenceOrder = context.footnoteReferenceOrder
-  } catch {
-    // Context 不存在
-  }
+  const context = getDefinitionsContext()
+  const footnoteDefinitions = $derived(context?.footnoteDefinitions ?? {});
+  const footnoteReferenceOrder = $derived(context?.footnoteReferenceOrder ?? []);
 
   /**
    * 按引用顺序排列的脚注列表

@@ -5,11 +5,12 @@
 
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte'
+  import type { HTMLAttributes } from 'svelte/elements';
 
   /**
    * 组件 Props
    */
-  interface Props {
+  interface Props extends HTMLAttributes<HTMLDivElement>{
     /** 是否启用自动滚动 */
     enabled?: boolean
     /** 触发自动滚动的底部阈值（像素） */

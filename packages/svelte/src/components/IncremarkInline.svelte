@@ -4,7 +4,6 @@
 -->
 
 <script lang="ts">
-  import type { Readable } from 'svelte/store'
   import type { PhrasingContent, ImageReference, LinkReference } from 'mdast'
   import type { TextChunk } from '@incremark/core'
   import {
@@ -72,25 +71,9 @@
 
   // 获取 definitions context（可能不存在）
   // 使用 $derived 来确保响应式
-  const definations = $derived.by(() => {
-    try {
-      const context = getDefinitionsContext()
-      return context.definations
-    } catch {
-      // Context 不存在，返回 null
-      return null
-    }
-  })
-  
-  const footnoteDefinitions = $derived.by(() => {
-    try {
-      const context = getDefinitionsContext()
-      return context.footnoteDefinitions
-    } catch {
-      // Context 不存在，返回 null
-      return null
-    }
-  })
+  const context = getDefinitionsContext()
+  const definations = $derived(context?.definations ?? {});
+
 
   /**
    * 获取节点的 chunks（类型安全）
@@ -173,7 +156,7 @@
 
   <!-- 引用式图片（imageReference） -->
   {#if isImageReference(node)}
-    {#if definations && $definations[node.identifier]}
+    {#if $definations && $definations[node.identifier]}
       <img
         class="incremark-image incremark-reference-image"
         src={$definations[node.identifier].url}
@@ -191,7 +174,7 @@
 
   <!-- 引用式链接（linkReference） -->
   {#if isLinkReference(node)}
-    {#if definations && $definations[node.identifier]}
+    {#if $definations && $definations[node.identifier]}
       <a
         class="incremark-link incremark-reference-link"
         href={$definations[node.identifier].url}

@@ -13,14 +13,5 @@ defineProps<{
   </component>
 </template>
 
-<style scoped>
-.custom-heading {
-  color: #7c3aed;
-  border-bottom: 2px solid #7c3aed;
-  padding-bottom: 0.5rem;
-  margin: 0.5em 0;
-  font-weight: 600;
-  line-height: 1.3;
-}
-</style>
+<!-- 样式已移动到共享的 styles.css -->
 

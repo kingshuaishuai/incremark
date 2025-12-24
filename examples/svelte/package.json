@@ -10,21 +10,22 @@
   },
   "dependencies": {
     "@incremark/core": "workspace:*",
-    "@incremark/svelte": "workspace:*",
     "@incremark/devtools": "workspace:*",
+    "@incremark/svelte": "workspace:*",
     "@incremark/theme": "workspace:*",
-    "shiki": "^3.20.0",
-    "mermaid": "^11.4.0",
+    "echarts": "^6.0.0",
     "katex": "^0.16.0",
-    "micromark-extension-math": "^3.0.0",
     "mdast-util-math": "^3.0.0",
+    "mermaid": "^11.4.0",
+    "micromark-extension-math": "^3.0.0",
+    "shiki": "^3.20.0",
     "svelte": "^5.0.0"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "@tsconfig/svelte": "^5.0.0",
+    "@types/mdast": "^4.0.0",
     "typescript": "^5.3.0",
     "vite": "^5.0.0"
   }
 }
-

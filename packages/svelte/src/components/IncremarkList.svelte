@@ -1,11 +1,12 @@
 <!--
   @file IncremarkList.svelte - 列表组件
-  @description 渲染 Markdown 列表（有序列表和无序列表），支持任务列表
+  @description 渲染 Markdown 列表（有序列表和无序列表），支持任务列表和嵌套列表
 -->
 
 <script lang="ts">
-  import type { List, ListItem, PhrasingContent } from 'mdast'
+  import type { List, ListItem, PhrasingContent, BlockContent } from 'mdast'
   import IncremarkInline from './IncremarkInline.svelte'
+  import IncremarkList from './IncremarkList.svelte';
 
   /**
    * 组件 Props
@@ -30,12 +31,12 @@
   )
 
   /**
-   * 获取列表项内容
-   * 
+   * 获取列表项的内联内容（来自第一个 paragraph）
+   *
    * @param item - 列表项节点
    * @returns 行内内容数组
    */
-  function getItemContent(item: ListItem): PhrasingContent[] {
+  function getItemInlineContent(item: ListItem): PhrasingContent[] {
     const firstChild = item.children[0]
     if (firstChild?.type === 'paragraph') {
       return firstChild.children as PhrasingContent[]
@@ -44,8 +45,25 @@
   }
 
   /**
+   * 获取列表项的块级子节点（嵌套列表、代码块等）
+   * 排除第一个 paragraph，因为它已经被 getItemInlineContent 处理
+   *
+   * @param item - 列表项节点
+   * @returns 块级子节点数组
+   */
+  function getItemBlockChildren(item: ListItem): BlockContent[] {
+    return item.children.filter((child, index) => {
+      // 第一个 paragraph 已经被处理为内联内容
+      if (index === 0 && child.type === 'paragraph') {
+        return false
+      }
+      return true
+    }) as BlockContent[]
+  }
+
+  /**
    * 判断列表项是否是任务项
-   * 
+   *
    * @param item - 列表项节点
    * @returns 是否是任务项
    */
@@ -54,30 +72,37 @@
   }
 </script>
 
-<svelte:element 
-  this={tag} 
+<svelte:element
+  this={tag}
   class="incremark-list"
   class:task-list={isTaskList}
 >
   {#each node.children as item, index (index)}
-    <li 
+    <li
       class="incremark-list-item"
       class:task-item={isTaskItem(item)}
     >
       {#if isTaskItem(item)}
         <label class="task-label">
-          <input 
-            type="checkbox" 
-            checked={item.checked} 
-            disabled 
+          <input
+            type="checkbox"
+            checked={item.checked}
+            disabled
             class="checkbox"
           />
           <span class="task-content">
-            <IncremarkInline nodes={getItemContent(item)} />
+            <IncremarkInline nodes={getItemInlineContent(item)} />
           </span>
         </label>
       {:else}
-        <IncremarkInline nodes={getItemContent(item)} />
+        <IncremarkInline nodes={getItemInlineContent(item)} />
+        <!-- 递归渲染嵌套列表和其他块级内容 -->
+        {#each getItemBlockChildren(item) as child, childIndex (childIndex)}
+          {#if child.type === 'list'}
+            <IncremarkList node={child} />
+          {/if}
+          <!-- 其他块级内容可以在这里扩展 -->
+        {/each}
       {/if}
     </li>
   {/each}

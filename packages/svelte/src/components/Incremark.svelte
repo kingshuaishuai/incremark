@@ -4,8 +4,9 @@
 -->
 
 <script lang="ts">
+  import type { Component } from 'svelte'
   import type { Readable } from 'svelte/store'
-  import type { ParsedBlock, RootContent } from '@incremark/core'
+  import type { RootContent } from '@incremark/core'
   import type { HTML } from 'mdast'
   
   import { getDefinitionsContext } from '../context/definitionsContext'
@@ -24,6 +25,7 @@
   import IncremarkHtmlElement from './IncremarkHtmlElement.svelte'
   import IncremarkDefault from './IncremarkDefault.svelte'
   import IncremarkFootnotes from './IncremarkFootnotes.svelte'
+  import IncremarkRenderer from './IncremarkRenderer.svelte'
 
   /**
    * 检查是否是 html 节点
@@ -40,6 +42,10 @@
     blocks?: BlockWithStableId[] | Readable<BlockWithStableId[]>
     /** 自定义组件映射，key 为节点类型 */
     components?: ComponentMap
+    /** 自定义容器组件映射，key 为容器名称（如 'warning', 'info'） */
+    customContainers?: Record<string, Component<any>>
+    /** 自定义代码块组件映射，key 为代码语言名称（如 'echart', 'mermaid'） */
+    customCodeBlocks?: Record<string, Component<any>>
     /** 待处理块的样式类名 */
     pendingClass?: string
     /** 已完成块的样式类名 */
@@ -53,6 +59,8 @@
   let {
     blocks = [],
     components = {},
+    customContainers = {},
+    customCodeBlocks = {},
     pendingClass = 'incremark-pending',
     completedClass = 'incremark-completed',
     showBlockStatus = false,
@@ -102,13 +110,6 @@
     ...components
   })
 
-  /**
-   * 获取组件
-   */
-  function getComponent(type: string): any {
-    return mergedComponents[type] || components?.default || IncremarkDefault
-  }
-
   // 处理 blocks（可能是 store 或数组）
   const blocksArray = $derived.by(() => {
     if (incremark) {
@@ -132,16 +133,13 @@
         <div
           class="incremark-block {block.status === 'completed' ? completedClass : pendingClass} {showBlockStatus ? 'incremark-show-status' : ''} {(block as BlockWithStableId).isLastPending ? 'incremark-last-pending' : ''}"
         >
-          <!-- HTML 节点：渲染为代码块显示源代码 -->
-          {#if isHtmlNode(block.node)}
-            <pre class="incremark-html-code"><code>{block.node.value}</code></pre>
-          {:else}
-            <!-- 其他节点：使用对应组件 -->
-            {@const Component = getComponent(block.node.type)}
-            {#if Component}
-              <Component node={block.node} />
-            {/if}
-          {/if}
+          <!-- 使用 IncremarkRenderer，传递 customContainers 和 customCodeBlocks -->
+          <IncremarkRenderer 
+            node={block.node} 
+            customContainers={customContainers}
+            customCodeBlocks={customCodeBlocks}
+            blockStatus={block.status}
+          />
         </div>
       {/if}
     {/each}
@@ -152,16 +150,13 @@
         <div
           class="incremark-block {block.status === 'completed' ? completedClass : pendingClass} {showBlockStatus ? 'incremark-show-status' : ''} {block.isLastPending ? 'incremark-last-pending' : ''}"
         >
-          <!-- HTML 节点：渲染为代码块显示源代码 -->
-          {#if isHtmlNode(block.node)}
-            <pre class="incremark-html-code"><code>{block.node.value}</code></pre>
-          {:else}
-            <!-- 其他节点：使用对应组件 -->
-            {@const Component = getComponent(block.node.type)}
-            {#if Component}
-              <Component node={block.node} />
-            {/if}
-          {/if}
+          <!-- 使用 IncremarkRenderer，传递 customContainers 和 customCodeBlocks -->
+          <IncremarkRenderer 
+            node={block.node} 
+            customContainers={customContainers}
+            customCodeBlocks={customCodeBlocks}
+            blockStatus={block.status}
+          />
         </div>
       {/if}
     {/each}

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Code } from 'mdast'
+import type { Component } from 'vue'
 import { computed, ref, watch, shallowRef, onUnmounted } from 'vue'
 
 const props = withDefaults(
@@ -11,11 +12,17 @@ const props = withDefaults(
     disableHighlight?: boolean
     /** Mermaid 渲染延迟（毫秒），用于流式输入时防抖 */
     mermaidDelay?: number
+    /** 自定义代码块组件映射，key 为代码语言名称 */
+    customCodeBlocks?: Record<string, Component>
+    /** 块状态，用于判断是否使用自定义组件 */
+    blockStatus?: 'pending' | 'stable' | 'completed'
   }>(),
   {
     theme: 'github-dark',
     disableHighlight: false,
-    mermaidDelay: 500
+    mermaidDelay: 500,
+    customCodeBlocks: () => ({}),
+    blockStatus: 'completed'
   }
 )
 
@@ -40,6 +47,18 @@ function toggleMermaidView() {
 const language = computed(() => props.node.lang || 'text')
 const code = computed(() => props.node.value)
 const isMermaid = computed(() => language.value === 'mermaid')
+
+// 检查是否有自定义代码块组件
+const CustomCodeBlock = computed(() => {
+  // 如果代码块还在 pending 状态，不使用自定义组件
+  if (props.blockStatus === 'pending') {
+    return null
+  }
+  return props.customCodeBlocks?.[language.value] || null
+})
+
+// 是否使用自定义组件
+const useCustomComponent = computed(() => !!CustomCodeBlock.value)
 
 // 缓存 highlighter
 const highlighterRef = shallowRef<any>(null)
@@ -182,8 +201,16 @@ async function copyCode() {
 </script>
 
 <template>
-  <!-- Mermaid 图表 -->
-  <div v-if="isMermaid" class="incremark-mermaid">
+  <!-- 自定义代码块组件 -->
+  <component
+    v-if="useCustomComponent && CustomCodeBlock"
+    :is="CustomCodeBlock"
+    :code-str="code"
+    :lang="language"
+  />
+
+  <!-- Mermaid 图表（如果没有自定义组件） -->
+  <div v-else-if="isMermaid" class="incremark-mermaid">
     <div class="mermaid-header">
       <span class="language">MERMAID</span>
       <div class="mermaid-actions">

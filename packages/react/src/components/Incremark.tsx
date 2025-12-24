@@ -15,6 +15,10 @@ export interface IncremarkProps {
   blocks?: BlockWithStableId[]
   /** 自定义组件映射 */
   components?: Partial<Record<string, React.ComponentType<{ node: any }>>>
+  /** 自定义容器组件映射，key 为容器名称（如 'warning', 'info'） */
+  customContainers?: Record<string, React.ComponentType<{ name: string; options?: Record<string, any>; children?: React.ReactNode }>>
+  /** 自定义代码块组件映射，key 为代码语言名称（如 'echart', 'mermaid'） */
+  customCodeBlocks?: Record<string, React.ComponentType<{ codeStr: string; lang?: string }>>
   /** 是否显示块状态（待处理块边框） */
   showBlockStatus?: boolean
   /** 自定义类名 */
@@ -41,6 +45,8 @@ export const Incremark: React.FC<IncremarkProps> = (props) => {
   const {
     blocks: propsBlocks,
     components,
+    customContainers,
+    customCodeBlocks,
     showBlockStatus = true,
     className = '',
     incremark
@@ -54,6 +60,8 @@ export const Incremark: React.FC<IncremarkProps> = (props) => {
         <IncremarkInternal
           blocks={blocks}
           components={components}
+          customContainers={customContainers}
+          customCodeBlocks={customCodeBlocks}
           showBlockStatus={showBlockStatus}
           className={className}
           isFinalized={isFinalized}
@@ -70,6 +78,8 @@ export const Incremark: React.FC<IncremarkProps> = (props) => {
     <IncremarkInternal
       blocks={blocks}
       components={components}
+      customContainers={customContainers}
+      customCodeBlocks={customCodeBlocks}
       showBlockStatus={showBlockStatus}
       className={className}
       isFinalized={isFinalized}
@@ -83,6 +93,8 @@ export const Incremark: React.FC<IncremarkProps> = (props) => {
 interface IncremarkInternalProps {
   blocks: BlockWithStableId[]
   components?: Partial<Record<string, React.ComponentType<{ node: any }>>>
+  customContainers?: Record<string, React.ComponentType<{ name: string; options?: Record<string, any>; children?: React.ReactNode }>>
+  customCodeBlocks?: Record<string, React.ComponentType<{ codeStr: string; lang?: string }>>
   showBlockStatus: boolean
   className: string
   isFinalized: boolean
@@ -91,6 +103,8 @@ interface IncremarkInternalProps {
 const IncremarkInternal: React.FC<IncremarkInternalProps> = ({
   blocks,
   components,
+  customContainers,
+  customCodeBlocks,
   showBlockStatus,
   className,
   isFinalized
@@ -114,7 +128,13 @@ const IncremarkInternal: React.FC<IncremarkInternalProps> = ({
 
         return (
           <div key={block.stableId} className={classes}>
-            <IncremarkRenderer node={block.node} components={components} />
+            <IncremarkRenderer 
+              node={block.node} 
+              components={components}
+              customContainers={customContainers}
+              customCodeBlocks={customCodeBlocks}
+              blockStatus={block.status}
+            />
           </div>
         )
       })}

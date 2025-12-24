@@ -1,0 +1,25 @@
+/**
+ * Container 组件样式
+ * 用于渲染自定义容器节点（如 :::warning, :::info, :::tip 等）
+ */
+
+@import '../variables.less';
+
+.incremark-container {
+  margin: @spacing-lg 0;
+  padding: @spacing-md;
+  border-radius: @border-radius-md;
+  border-left: 4px solid @color-border-default;
+  background-color: @color-background-elevated;
+}
+
+.incremark-container-content {
+  .incremark-paragraph {
+    margin: 0;
+  }
+
+  .incremark-paragraph + .incremark-paragraph {
+    margin-top: @spacing-sm;
+  }
+}
+
