@@ -107,6 +107,12 @@ export interface ParserOptions {
   /** 启用 GFM 扩展（表格、任务列表等） */
   gfm?: boolean
   /**
+   * 启用数学公式支持（$..$ 行内公式和 $$...$$ 块级公式）
+   * - false/undefined: 禁用（默认）
+   * - true: 启用数学公式解析
+   */
+  math?: boolean
+  /**
    * 启用 ::: 容器语法支持（用于边界检测）
    * - false: 禁用（默认）
    * - true: 使用默认配置启用

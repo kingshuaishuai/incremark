@@ -216,8 +216,10 @@ export function sliceAst(
 
 /**
  * 增量追加：将新增的字符范围追加到现有的 displayNode
- * 这是真正的增量追加实现，只处理新增部分，不重复遍历已稳定的节点
- * 
+ *
+ * 注意：由于使用 skipChars 优化会丢失结构位置信息（例如无法区分是同一个列表项的追加
+ * 还是新列表项的开始），我们改为完整截断然后智能合并的方式。
+ *
  * @param baseNode 已截断的基础节点（稳定的部分）
  * @param sourceNode 原始完整节点
  * @param startChars 起始字符位置（已处理的字符数）
@@ -237,94 +239,89 @@ export function appendToAst(
     return baseNode
   }
 
-  // 从 sourceNode 中提取新增的字符范围（跳过已处理的部分）
-  const newChars = endChars - startChars
-  const newPart = sliceAst(sourceNode, endChars, accumulatedChunks, startChars)
-  
-  // 如果提取失败，返回 baseNode
-  if (!newPart) {
+  // 完整截断到 endChars，保留完整的结构信息
+  const fullSlice = sliceAst(sourceNode, endChars, accumulatedChunks)
+
+  // 如果截断失败，返回 baseNode
+  if (!fullSlice) {
     return baseNode
   }
 
-  // 将新增部分合并到 baseNode
-  return mergeAstNodes(baseNode, newPart)
+  // 智能合并：利用 baseNode 中已有的稳定节点
+  return smartMergeAst(baseNode, fullSlice)
 }
 
 /**
- * 合并两个 AST 节点
- * 将 newPart 追加到 baseNode 的最后一个可追加节点中
+ * 智能合并 AST 节点
+ *
+ * fullSlice 是完整截断的结果（包含所有结构信息），baseNode 是之前缓存的结果。
+ * 我们利用 baseNode 中已有的稳定节点，只更新变化的部分。
+ *
+ * 对于容器节点：复用前面稳定的子节点，只处理最后一个（可能变化的）子节点
+ * 对于文本节点：直接使用 fullSlice（因为文本节点总是会变化）
  */
-function mergeAstNodes(baseNode: RootContent, newPart: RootContent): RootContent {
-  // 如果两个节点类型不同，无法合并，返回 baseNode
-  if (baseNode.type !== newPart.type) {
-    return baseNode
+function smartMergeAst(baseNode: RootContent, fullSlice: RootContent): RootContent {
+  // 类型不同，直接返回 fullSlice
+  if (baseNode.type !== fullSlice.type) {
+    return fullSlice
   }
 
   const base = baseNode as AstNode
-  const part = newPart as AstNode
+  const full = fullSlice as AstNode
 
-  // 如果是文本节点，合并文本和 chunks
-  if (base.value && typeof base.value === 'string' && part.value && typeof part.value === 'string') {
-    const baseChunks = (base as TextNodeWithChunks).chunks || []
-    const partChunks = (part as TextNodeWithChunks).chunks || []
-    
-    // 合并所有 chunks：累积所有读取的 chunks
-    // chunks 数组包含每次读取的新文本片段，它们 join 到一起就是 value
-    const mergedChunks = [...baseChunks, ...partChunks]
-    
-    // 根据设计：value = stableText + chunks[0].text + chunks[1].text + ... + chunks[n].text
-    // base.value = baseStableText + baseChunks[0].text + ... + baseChunks[n].text
-    // part.value = partStableText + partChunks[0].text + ... + partChunks[m].text
-    // 合并后：value = base.value + part.value（完整文本）
-    const mergedValue = base.value + part.value
-    
-    // stableLength 是稳定部分的长度（不需要动画的部分）
-    // base 的稳定部分保持不变，base 的 chunks 和 part 的 chunks 都需要动画
-    const baseStableLength = (base as TextNodeWithChunks).stableLength ?? 0
-    
-    // 验证：mergedValue 应该等于 baseStableText + 所有 chunks 的文本
-    // baseStableText = base.value.slice(0, baseStableLength)
-    // 所有 chunks 的文本 = baseChunks + partChunks 的文本
-    const result = {
-      ...base,
-      value: mergedValue,
-      stableLength: mergedChunks.length > 0 ? baseStableLength : undefined,
-      chunks: mergedChunks.length > 0 ? mergedChunks : undefined
-    } as TextNodeWithChunks
-    
-    return result as RootContent
+  // 文本节点：直接使用 fullSlice（chunks 信息在 fullSlice 中）
+  if (full.value !== undefined) {
+    return fullSlice
   }
 
-  // 如果是容器节点，合并 children
-  if (base.children && Array.isArray(base.children) && part.children && Array.isArray(part.children)) {
-    // 如果 base 的最后一个子节点和 part 的第一个子节点类型相同，尝试合并
-    if (base.children.length > 0 && part.children.length > 0) {
-      const lastBaseChild = base.children[base.children.length - 1]
-      const firstPartChild = part.children[0]
-      
-      if (lastBaseChild.type === firstPartChild.type) {
-        // 尝试合并最后一个和第一个子节点
-        const merged = mergeAstNodes(lastBaseChild as RootContent, firstPartChild as RootContent)
-        return {
-          ...base,
-          children: [
-            ...base.children.slice(0, -1),
-            merged as AstNode,
-            ...part.children.slice(1)
-          ]
-        } as RootContent
-      }
+  // 容器节点：智能合并 children
+  if (base.children && Array.isArray(base.children) && full.children && Array.isArray(full.children)) {
+    // 如果 fullSlice 的 children 更少（不应该发生），直接返回 fullSlice
+    if (full.children.length < base.children.length) {
+      return fullSlice
     }
 
-    // 否则直接追加所有子节点
+    // 如果 children 数量相同，只有最后一个 child 可能变化
+    if (full.children.length === base.children.length) {
+      if (base.children.length === 0) {
+        return fullSlice
+      }
+      // 复用前面的稳定节点，只递归处理最后一个
+      const lastIndex = base.children.length - 1
+      const mergedLast = smartMergeAst(
+        base.children[lastIndex] as RootContent,
+        full.children[lastIndex] as RootContent
+      )
+      return {
+        ...full,
+        children: [
+          ...base.children.slice(0, lastIndex),
+          mergedLast as AstNode
+        ]
+      } as RootContent
+    }
+
+    // fullSlice 的 children 更多，说明有新的 child 被添加
+    // 复用 base 的前 (base.children.length - 1) 个节点
+    // 递归处理 base 的最后一个和 full 对应位置的节点
+    // 然后追加 full 的新节点
+    const baseLastIndex = base.children.length - 1
+    const mergedLast = smartMergeAst(
+      base.children[baseLastIndex] as RootContent,
+      full.children[baseLastIndex] as RootContent
+    )
     return {
-      ...base,
-      children: [...base.children, ...part.children]
+      ...full,
+      children: [
+        ...base.children.slice(0, baseLastIndex),
+        mergedLast as AstNode,
+        ...full.children.slice(base.children.length)
+      ]
     } as RootContent
   }
 
-  // 其他情况，返回 baseNode（无法合并）
-  return baseNode
+  // 其他情况，直接返回 fullSlice
+  return fullSlice
 }
 
 /**

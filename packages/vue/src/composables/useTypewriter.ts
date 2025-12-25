@@ -34,6 +34,8 @@ export interface UseTypewriterReturn {
   typewriter: TypewriterControls
   /** transformer 实例 */
   transformer: BlockTransformer<RootContent> | null
+  /** 所有动画是否已完成（队列为空且没有正在处理的 block） */
+  isAnimationComplete: Ref<boolean>
 }
 
 /**
@@ -55,6 +57,7 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
   const isTypewriterPaused = ref(false)
   const typewriterEffect = ref<AnimationEffect>(typewriterConfig?.effect ?? 'none')
   const typewriterCursor = ref(typewriterConfig?.cursor ?? '|')
+  const isAnimationComplete = ref(true) // 初始为 true（没有动画时视为完成）
 
   // 创建 transformer（如果有 typewriter 配置）
   let transformer: BlockTransformer<RootContent> | null = null
@@ -71,6 +74,14 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
         displayBlocksRef.value = blocks as DisplayBlock<RootContent>[]
         isTypewriterProcessing.value = transformer?.isProcessing() ?? false
         isTypewriterPaused.value = transformer?.isPausedState() ?? false
+        // 有 blocks 正在处理时，动画未完成
+        if (transformer?.isProcessing()) {
+          isAnimationComplete.value = false
+        }
+      },
+      onAllComplete: () => {
+        // 所有动画完成
+        isAnimationComplete.value = true
       }
     })
   }
@@ -200,6 +211,7 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
   return {
     blocks,
     typewriter: typewriterControls,
-    transformer
+    transformer,
+    isAnimationComplete
   }
 }

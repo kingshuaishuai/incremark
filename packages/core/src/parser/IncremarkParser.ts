@@ -12,6 +12,8 @@ import { fromMarkdown } from 'mdast-util-from-markdown'
 import { gfmFromMarkdown } from 'mdast-util-gfm'
 import { gfm } from 'micromark-extension-gfm'
 import { gfmFootnoteFromMarkdown } from 'mdast-util-gfm-footnote'
+import { math } from 'micromark-extension-math'
+import { mathFromMarkdown } from 'mdast-util-math'
 import type { Extension as MicromarkExtension } from 'micromark-util-types'
 import type { Extension as MdastExtension } from 'mdast-util-from-markdown'
 
@@ -197,6 +199,12 @@ export class IncremarkParser {
       mdastExtensions.push(...gfmFromMarkdown(), gfmFootnoteFromMarkdown())
     }
 
+    // 如果启用了数学公式支持，添加 math 扩展
+    if (this.options.math) {
+      extensions.push(math())
+      mdastExtensions.push(mathFromMarkdown())
+    }
+
     // 如果启用了容器支持，自动添加 directive 扩展
     if (this.containerConfig !== undefined) {
       extensions.push(directive())
@@ -236,7 +244,7 @@ export class IncremarkParser {
     return ast
   }
 
-  private updateDefinationsFromComplatedBlocks(blocks: ParsedBlock[]): void{
+  private updateDefinitionsFromCompletedBlocks(blocks: ParsedBlock[]): void {
     for (const block of blocks) {
       this.definitionMap = {
         ...this.definitionMap,
@@ -253,19 +261,19 @@ export class IncremarkParser {
   private findDefinition(block: ParsedBlock): DefinitionMap {
     const definitions: Definition[] = [];
 
-    function findDefination(node: RootContent) {
+    function findDefinitionRecursive(node: RootContent) {
       if (isDefinitionNode(node)) {
         definitions.push(node as Definition);
       }
-      
+
       if ('children' in node && Array.isArray(node.children)) {
         for (const child of node.children) {
-          findDefination(child as RootContent);
+          findDefinitionRecursive(child as RootContent);
         }
       }
     }
 
-    findDefination(block.node);
+    findDefinitionRecursive(block.node);
   
     return definitions.reduce<DefinitionMap>((acc, node) => {
       acc[node.identifier] = node;
@@ -645,7 +653,7 @@ export class IncremarkParser {
       update.completed = newBlocks
 
       // 更新 definitions 从新完成的 blocks
-      this.updateDefinationsFromComplatedBlocks(newBlocks)
+      this.updateDefinitionsFromCompletedBlocks(newBlocks)
 
       // 直接使用 findStableBoundary 计算好的上下文，避免重复遍历
       this.context = contextAtLine
@@ -741,7 +749,7 @@ export class IncremarkParser {
         update.completed = finalBlocks
 
         // 更新 definitions 从最终完成的 blocks
-        this.updateDefinationsFromComplatedBlocks(finalBlocks)
+        this.updateDefinitionsFromCompletedBlocks(finalBlocks)
       }
     }
 
@@ -770,7 +778,7 @@ export class IncremarkParser {
 
   /**
    * 强制中断解析，将所有待处理内容标记为完成
-   * 语义上等同于 finalize()，但名称更清晰
+   * @deprecated 请使用 finalize() 代替，功能完全相同
    */
   abort(): IncrementalUpdate {
     return this.finalize()

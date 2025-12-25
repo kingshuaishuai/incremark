@@ -49,6 +49,7 @@ export class BlockTransformer<T = unknown> {
     effect: AnimationEffect
     plugins: TransformerPlugin[]
     onChange: (displayBlocks: DisplayBlock<T>[]) => void
+    onAllComplete: (() => void) | null
     pauseOnHidden: boolean
   }
   private rafId: number | null = null
@@ -73,6 +74,7 @@ export class BlockTransformer<T = unknown> {
       effect: options.effect ?? 'none',
       plugins: options.plugins ?? [],
       onChange: options.onChange ?? (() => {}),
+      onAllComplete: options.onAllComplete ?? null,
       pauseOnHidden: options.pauseOnHidden ?? true
     }
 
@@ -108,19 +110,22 @@ export class BlockTransformer<T = unknown> {
     if (this.state.currentBlock) {
       const updated = blocks.find((b) => b.id === this.state.currentBlock!.id)
       if (updated && updated.node !== this.state.currentBlock.node) {
-        // 内容更新，清除缓存
-        this.clearCache()
-        
+        // 先获取旧的总字符数（在清除缓存之前）
         const oldTotal = this.cachedTotalChars ?? this.countChars(this.state.currentBlock.node)
         const newTotal = this.countChars(updated.node)
-        
+
         // 如果字符数减少了（AST 结构变化，如 **xxx 变成 **xxx**）
-        // 重新计算进度，保持相对位置
+        // 重新计算进度，保持相对位置，并清除 chunks
         if (newTotal < oldTotal || newTotal < this.state.currentProgress) {
           this.state.currentProgress = Math.min(this.state.currentProgress, newTotal)
+          // AST 结构变化，chunks 可能错位，需要清除
+          this.chunks = []
         }
-        
-        // 内容更新，更新引用
+
+        // 内容更新，清除缓存
+        this.clearCache()
+
+        // 更新引用
         this.state.currentBlock = updated
         // 如果之前暂停了（因为到达末尾），重新开始
         if (!this.rafId && !this.isPaused) {
@@ -140,12 +145,21 @@ export class BlockTransformer<T = unknown> {
       const oldTotal = this.cachedTotalChars ?? this.countChars(this.state.currentBlock.node)
       const newTotal = this.countChars(block.node)
 
+      // 内容变化，需要清除缓存（无论增加还是减少）
+      if (newTotal !== oldTotal) {
+        this.clearCache()
+      }
+
+      // 如果字符数减少了，调整进度并清除 chunks
+      if (newTotal < oldTotal || newTotal < this.state.currentProgress) {
+        this.state.currentProgress = Math.min(this.state.currentProgress, newTotal)
+        this.chunks = []
+      }
+
       this.state.currentBlock = block
 
       // 如果内容增加了且之前暂停了，继续
       if (newTotal > oldTotal && !this.rafId && !this.isPaused && this.state.currentProgress >= oldTotal) {
-        // 内容变化，清除缓存
-        this.clearCache()
         this.startIfNeeded()
       }
     }
@@ -173,6 +187,8 @@ export class BlockTransformer<T = unknown> {
     this.clearCache()
 
     this.emit()
+    // 跳过动画也视为完成
+    this.options.onAllComplete?.()
   }
 
   /**
@@ -493,6 +509,8 @@ export class BlockTransformer<T = unknown> {
       this.isRunning = false
       this.cancelRaf()
       this.emit()
+      // 所有动画完成，触发回调
+      this.options.onAllComplete?.()
     }
   }
 
@@ -618,10 +636,15 @@ export class BlockTransformer<T = unknown> {
 
   /**
    * 获取累积的 chunks（用于 fade-in 效果）
+   * stableChars 表示在 chunks 之前的稳定字符数
    */
   private getAccumulatedChunks(): AccumulatedChunks | undefined {
     if (this.options.effect === 'fade-in' && this.chunks.length > 0) {
-      return { stableChars: 0, chunks: this.chunks }
+      // 计算 chunks 之前的稳定字符数
+      // 当前进度 = stableChars + 所有 chunks 的长度
+      const chunksLength = this.chunks.reduce((sum, c) => sum + c.text.length, 0)
+      const stableChars = this.state.currentProgress - chunksLength
+      return { stableChars: Math.max(0, stableChars), chunks: this.chunks }
     }
     return undefined
   }

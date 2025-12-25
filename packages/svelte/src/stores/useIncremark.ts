@@ -86,6 +86,13 @@ export interface UseIncremarkReturn {
   isLoading: Writable<boolean>
   /** 是否已完成（finalize） */
   isFinalized: Writable<boolean>
+  /**
+   * 内容是否完全显示完成
+   * - 无打字机：等于 isFinalized
+   * - 有打字机：isFinalized + 动画播放完成
+   * 适用于控制 footnote 等需要在内容完全显示后才出现的元素
+   */
+  isDisplayComplete: Readable<boolean>
   /** 脚注引用的出现顺序 */
   footnoteReferenceOrder: Writable<string[]>
   /** 追加内容 */
@@ -162,11 +169,19 @@ export function useIncremark(options: UseIncremarkOptions = {}): UseIncremarkRet
   const footnoteReferenceOrder = writable<string[]>([])
 
   // 使用 useTypewriter store 管理打字机效果
-  const { blocks, typewriter, transformer } = useTypewriter({
+  const { blocks, typewriter, transformer, isAnimationComplete } = useTypewriter({
     typewriter: options.typewriter,
     completedBlocks,
     pendingBlocks
   })
+
+  // 内容是否完全显示完成
+  // 如果没有启用打字机：解析完成即显示完成
+  // 如果启用打字机：解析完成 + 动画完成
+  const isDisplayComplete = derived(
+    [isFinalized, isAnimationComplete],
+    ([$isFinalized, $isAnimationComplete]) => $isFinalized && $isAnimationComplete
+  )
 
   // AST
   const ast = derived(
@@ -287,6 +302,7 @@ export function useIncremark(options: UseIncremarkOptions = {}): UseIncremarkRet
     blocks,
     isLoading,
     isFinalized,
+    isDisplayComplete,
     footnoteReferenceOrder,
     append,
     finalize,

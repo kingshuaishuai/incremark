@@ -66,11 +66,11 @@ const {
   footnoteReferenceOrder
 } = useDefinationsContext();
 
-// 计算实际使用的 blocks 和 isFinalized
+// 计算实际使用的 blocks 和 isDisplayComplete
 const actualBlocks = computed<BlockWithStableId[]>(() => props.incremark?.blocks.value || props.blocks || [])
-const actualIsFinalized = computed(() => {
+const actualIsDisplayComplete = computed(() => {
   if (props.incremark) {
-    return props.incremark.isFinalized.value
+    return props.incremark.isDisplayComplete.value
   }
   // 如果手动传入 blocks，自动判断是否所有 block 都是 completed
   const blocks = props.blocks || []
@@ -126,9 +126,9 @@ const mergedComponents = computed(() => ({
       </div>
     </template>
 
-    <!-- 脚注列表（仅在 finalize 后显示） -->
+    <!-- 脚注列表（仅在内容完全显示后显示） -->
     <IncremarkFootnotes
-      v-if="actualIsFinalized && footnoteReferenceOrder.length > 0"
+      v-if="actualIsDisplayComplete && footnoteReferenceOrder.length > 0"
     />
   </div>
 </template>

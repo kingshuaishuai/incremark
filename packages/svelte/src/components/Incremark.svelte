@@ -67,22 +67,13 @@
     incremark
   }: Props = $props()
 
-  // 从 context 获取 footnoteReferenceOrder（如果有的话）
-  // 使用 $derived 来确保响应式
-  const footnoteReferenceOrder = $derived.by(() => {
-    try {
-      const context = getDefinitionsContext()
-      return context.footnoteReferenceOrder
-    } catch {
-      // 如果没有 context，返回 null
-      return null
-    }
-  })
+  const context = getDefinitionsContext();
+  const footnoteReferenceOrder = $derived(context?.footnoteReferenceOrder ?? []);
 
-  // 计算 isFinalized（当不使用 incremark 时）
-  const actualIsFinalized = $derived.by(() => {
+  // 计算 isDisplayComplete（当不使用 incremark 时）
+  const actualIsDisplayComplete = $derived.by(() => {
     if (incremark) {
-      // 如果提供了 incremark，在模板中直接使用 $incremark.isFinalized
+      // 如果提供了 incremark，在模板中直接使用 $incremark.isDisplayComplete
       return false
     }
     // 如果手动传入 blocks，自动判断是否所有 block 都是 completed
@@ -121,7 +112,7 @@
 
   // 提取 incremark 的 stores（如果存在）
   const incremarkBlocks = $derived.by(() => incremark?.blocks)
-  const incremarkIsFinalized = $derived.by(() => incremark?.isFinalized)
+  const incremarkIsDisplayComplete = $derived.by(() => incremark?.isDisplayComplete)
 </script>
 
 <div class="incremark">
@@ -162,13 +153,13 @@
     {/each}
   {/if}
 
-  <!-- 脚注列表（仅在 finalize 后显示） -->
-  {#if incremark && incremarkIsFinalized && footnoteReferenceOrder && $incremarkIsFinalized}
+  <!-- 脚注列表（仅在内容完全显示后显示） -->
+  {#if incremark && incremarkIsDisplayComplete && footnoteReferenceOrder && $incremarkIsDisplayComplete}
     {@const footnoteOrder = $footnoteReferenceOrder ?? []}
     {#if footnoteOrder.length > 0}
       <IncremarkFootnotes />
     {/if}
-  {:else if !incremark && actualIsFinalized && footnoteReferenceOrder}
+  {:else if !incremark && actualIsDisplayComplete && footnoteReferenceOrder}
     {@const footnoteOrder = $footnoteReferenceOrder ?? []}
     {#if footnoteOrder.length > 0}
       <IncremarkFootnotes />

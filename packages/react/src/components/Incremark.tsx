@@ -54,7 +54,7 @@ export const Incremark: React.FC<IncremarkProps> = (props) => {
 
   // 如果传入了 incremark 对象，自动提供 context
   if (incremark) {
-    const { blocks, isFinalized, _definitionsContextValue } = incremark
+    const { blocks, isDisplayComplete, _definitionsContextValue } = incremark
     return (
       <IncremarkContainerProvider definitions={_definitionsContextValue}>
         <IncremarkInternal
@@ -64,15 +64,15 @@ export const Incremark: React.FC<IncremarkProps> = (props) => {
           customCodeBlocks={customCodeBlocks}
           showBlockStatus={showBlockStatus}
           className={className}
-          isFinalized={isFinalized}
+          isDisplayComplete={isDisplayComplete}
         />
       </IncremarkContainerProvider>
     )
   }
 
-  // 否则使用传入的 props，自动判断 isFinalized
+  // 否则使用传入的 props，自动判断 isDisplayComplete
   const blocks = propsBlocks || []
-  const isFinalized = blocks.length > 0 && blocks.every(b => b.status === 'completed')
+  const isDisplayComplete = blocks.length > 0 && blocks.every(b => b.status === 'completed')
 
   return (
     <IncremarkInternal
@@ -82,7 +82,7 @@ export const Incremark: React.FC<IncremarkProps> = (props) => {
       customCodeBlocks={customCodeBlocks}
       showBlockStatus={showBlockStatus}
       className={className}
-      isFinalized={isFinalized}
+      isDisplayComplete={isDisplayComplete}
     />
   )
 }
@@ -97,7 +97,7 @@ interface IncremarkInternalProps {
   customCodeBlocks?: Record<string, React.ComponentType<{ codeStr: string; lang?: string }>>
   showBlockStatus: boolean
   className: string
-  isFinalized: boolean
+  isDisplayComplete: boolean
 }
 
 const IncremarkInternal: React.FC<IncremarkInternalProps> = ({
@@ -107,7 +107,7 @@ const IncremarkInternal: React.FC<IncremarkInternalProps> = ({
   customCodeBlocks,
   showBlockStatus,
   className,
-  isFinalized
+  isDisplayComplete
 }) => {
   return (
     <div className={`incremark ${className}`}>
@@ -139,8 +139,8 @@ const IncremarkInternal: React.FC<IncremarkInternalProps> = ({
         )
       })}
 
-      {/* 脚注列表（仅在 finalize 后显示） */}
-      {isFinalized && (
+      {/* 脚注列表（仅在内容完全显示后显示） */}
+      {isDisplayComplete && (
         <IncremarkFootnotes />
       )}
     </div>

@@ -34,6 +34,8 @@ export interface UseTypewriterReturn {
   typewriter: TypewriterControls
   /** transformer 实例 */
   transformer: BlockTransformer<RootContent> | null
+  /** 所有动画是否已完成（队列为空且没有正在处理的 block） */
+  isAnimationComplete: boolean
 }
 
 /**
@@ -64,6 +66,7 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
     typewriterConfig?.effect ?? 'none'
   )
   const [displayBlocks, setDisplayBlocks] = useState<DisplayBlock<RootContent>[]>([])
+  const [isAnimationComplete, setIsAnimationComplete] = useState(true) // 初始为 true（没有动画时视为完成）
 
   // 懒初始化 transformer（如果有 typewriter 配置）
   if (hasTypewriterConfig && !transformerRef.current) {
@@ -79,6 +82,14 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
         setDisplayBlocks(blocks as DisplayBlock<RootContent>[])
         setIsTypewriterProcessing(transformerRef.current?.isProcessing() ?? false)
         setIsTypewriterPaused(transformerRef.current?.isPausedState() ?? false)
+        // 有 blocks 正在处理时，动画未完成
+        if (transformerRef.current?.isProcessing()) {
+          setIsAnimationComplete(false)
+        }
+      },
+      onAllComplete: () => {
+        // 所有动画完成
+        setIsAnimationComplete(true)
       }
     })
   }
@@ -240,6 +251,7 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
   return {
     blocks,
     typewriter: typewriterControls,
-    transformer
+    transformer,
+    isAnimationComplete
   }
 }

@@ -114,11 +114,16 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
   const footnoteReferenceOrder = ref<string[]>([])
 
   // 使用 useTypewriter composable 管理打字机效果
-  const { blocks, typewriter, transformer } = useTypewriter({
+  const { blocks, typewriter, transformer, isAnimationComplete } = useTypewriter({
     typewriter: options.typewriter,
     completedBlocks,
     pendingBlocks
   })
+
+  // 内容是否完全显示完成
+  // 如果没有启用打字机：解析完成即显示完成
+  // 如果启用打字机：解析完成 + 动画完成
+  const isDisplayComplete = computed(() => isFinalized.value && isAnimationComplete.value)
 
   // AST
   const ast = computed<Root>(() => ({
@@ -218,6 +223,13 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
     isLoading,
     /** 是否已完成（finalize） */
     isFinalized,
+    /**
+     * 内容是否完全显示完成
+     * - 无打字机：等于 isFinalized
+     * - 有打字机：isFinalized + 动画播放完成
+     * 适用于控制 footnote 等需要在内容完全显示后才出现的元素
+     */
+    isDisplayComplete,
     /** 脚注引用的出现顺序 */
     footnoteReferenceOrder,
     /** 追加内容 */

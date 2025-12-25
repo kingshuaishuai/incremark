@@ -93,6 +93,11 @@ export interface TransformerOptions {
   /** 状态变化回调 */
   onChange?: (displayBlocks: DisplayBlock[]) => void
   /**
+   * 所有动画完成时的回调
+   * 当队列中没有更多 block 需要处理时触发
+   */
+  onAllComplete?: () => void
+  /**
    * 是否在页面不可见时自动暂停
    * 默认 true，节省资源
    */
