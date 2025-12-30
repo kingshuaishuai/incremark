@@ -37,7 +37,7 @@ export const IncremarkList: React.FC<IncremarkListProps> = ({ node }) => {
   const isTaskList = node.children?.some(item => item.checked !== null && item.checked !== undefined)
 
   return (
-    <Tag className={`incremark-list ${isTaskList ? 'task-list' : ''}`}>
+    <Tag className={`incremark-list ${isTaskList ? 'task-list' : ''}`} start={node.start || undefined}>
       {node.children?.map((item, index) => {
         const isTaskItem = item.checked !== null && item.checked !== undefined
         const inlineContent = getItemInlineContent(item)
@@ -76,4 +76,5 @@ export const IncremarkList: React.FC<IncremarkListProps> = ({ node }) => {
     </Tag>
   )
 }
+
 

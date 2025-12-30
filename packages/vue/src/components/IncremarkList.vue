@@ -49,7 +49,12 @@ function hasBlockChildren(item: ListItem): boolean {
 </script>
 
 <template>
-  <component :is="tag" class="incremark-list" :class="{ 'task-list': node.children.some(item => item.checked !== null && item.checked !== undefined) }">
+  <component 
+    :is="tag" 
+    class="incremark-list" 
+    :class="{ 'task-list': node.children.some(item => item.checked !== null && item.checked !== undefined) }"
+    :start="node.start || undefined"
+>
     <li
       v-for="(item, index) in node.children"
       :key="index"

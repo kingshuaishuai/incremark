@@ -76,6 +76,7 @@
   this={tag}
   class="incremark-list"
   class:task-list={isTaskList}
+  start={node.start || undefined}
 >
   {#each node.children as item, index (index)}
     <li
