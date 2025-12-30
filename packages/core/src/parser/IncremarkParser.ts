@@ -455,8 +455,19 @@ export class IncremarkParser {
         return -1
       }
       // 如果 listMayEnd 为 true，说明上一行是空行
-      // 但当前行需要确认是否是列表延续
-      // 这个判断交给后续逻辑处理
+      // 需要检查当前行是否是列表延续或新列表项
+      const listItem = isListItemStart(line)
+      
+      // 检查当前行是否有足够的缩进以作为列表内容
+      const contentIndent = line.match(/^(\s*)/)?.[1].length ?? 0
+      const isListContent = contentIndent > (context.listIndent ?? 0)
+      
+      // 只有当当前行是列表延续或新列表项时，列表才继续
+      // 否则，空行就是列表的稳定边界
+      if (!listItem && !isListContent && !isEmptyLine(line)) {
+        // 当前行不是列表内容且不是空行，列表在上一行的空行处结束
+        return lineIndex - 1
+      }
     }
 
     // 前一行是独立块（标题、分割线），该块已完成
@@ -486,22 +497,12 @@ export class IncremarkParser {
     }
 
     // 情况 2: 前一行是缩进行，可能是脚注延续
+    // 注意：这个逻辑已经在 updateContext() 中通过 inFootnote 标志处理
+    // 这里不需要重复判断，统一使用 updateContext() 的结果
     if (!isEmptyLine(prevLine) && isFootnoteContinuation(prevLine)) {
-      // 向上查找最近的脚注定义
-      const footnoteStartLine = this.findFootnoteStart(lineIndex - 1)
-      if (footnoteStartLine >= 0) {
-        // 确认属于脚注定义
-        // 当前行仍然是缩进或空行，脚注继续（不稳定）
-        if (isEmptyLine(line) || isFootnoteContinuation(line)) {
-          return -1
-        }
-        // 当前行是新脚注定义，前一个脚注完成
-        if (isFootnoteDefinitionStart(line)) {
-          return lineIndex - 1
-        }
-        // 当前行是非缩进的新块，前一个脚注完成
-        return lineIndex - 1
-      }
+      // 在脚注中的缩进行或空行，保持不稳定
+      // 实际的脚注边界判断由 updateContext() 中的 inFootnote 标志控制
+      return -1
     }
 
     // 前一行非空时，如果当前行是新块开始，则前一块已完成
@@ -553,46 +554,6 @@ export class IncremarkParser {
     return -1
   }
 
-  /**
-   * 从指定行向上查找脚注定义的起始行
-   * 
-   * @param fromLine 开始查找的行索引
-   * @returns 脚注起始行索引，如果不属于脚注返回 -1
-   * 
-   * @example
-   * // 假设 lines 为:
-   * // 0: "[^1]: 第一行"
-   * // 1: "    第二行"
-   * // 2: "    第三行"
-   * findFootnoteStart(2) // 返回 0
-   * findFootnoteStart(1) // 返回 0
-   */
-  private findFootnoteStart(fromLine: number): number {
-    // 限制向上查找的最大行数，避免性能问题
-    const maxLookback = 20
-    const startLine = Math.max(0, fromLine - maxLookback)
-    
-    for (let i = fromLine; i >= startLine; i--) {
-      const line = this.lines[i]
-      
-      // 遇到脚注定义起始行
-      if (isFootnoteDefinitionStart(line)) {
-        return i
-      }
-      
-      // 遇到空行，继续向上查找（可能是脚注内部的段落分隔）
-      if (isEmptyLine(line)) {
-        continue
-      }
-      
-      // 遇到非缩进的普通行，说明不属于脚注
-      if (!isFootnoteContinuation(line)) {
-        return -1
-      }
-    }
-    
-    return -1
-  }
 
   private nodesToBlocks(
     nodes: RootContent[],
