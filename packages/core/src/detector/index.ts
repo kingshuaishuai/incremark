@@ -279,6 +279,257 @@ export function isBlockBoundary(
 // ============ 上下文管理 ============
 
 /**
+ * 上下文更新器接口
+ */
+interface ContextUpdater {
+  /**
+   * 尝试更新上下文
+   * @param line 当前行
+   * @param context 当前上下文
+   * @returns 更新后的上下文，如果不处理返回 null
+   */
+  update(line: string, context: BlockContext, config?: ContainerConfig): BlockContext | null
+}
+
+/**
+ * 代码块上下文更新器
+ * 优先级：1（最高）
+ */
+class CodeContextUpdater implements ContextUpdater {
+  update(line: string, context: BlockContext): BlockContext | null {
+    const newContext = { ...context }
+
+    if (context.inFencedCode) {
+      if (detectFenceEnd(line, context)) {
+        newContext.inFencedCode = false
+        newContext.fenceChar = undefined
+        newContext.fenceLength = undefined
+        return newContext
+      }
+      return null // 在代码块内，不处理其他逻辑
+    }
+
+    const fence = detectFenceStart(line)
+    if (fence) {
+      newContext.inFencedCode = true
+      newContext.fenceChar = fence.char
+      newContext.fenceLength = fence.length
+      return newContext
+    }
+
+    return null
+  }
+}
+
+/**
+ * 容器上下文更新器
+ * 优先级：2
+ */
+class ContainerContextUpdater implements ContextUpdater {
+  update(line: string, context: BlockContext, config?: ContainerConfig): BlockContext | null {
+    if (config === undefined) {
+      return null
+    }
+
+    const newContext = { ...context }
+
+    if (context.inContainer) {
+      // 检查是否是容器结束
+      if (detectContainerEnd(line, context, config)) {
+        newContext.containerDepth = context.containerDepth - 1
+        if (newContext.containerDepth === 0) {
+          newContext.inContainer = false
+          newContext.containerMarkerLength = undefined
+          newContext.containerName = undefined
+        }
+        return newContext
+      }
+
+      // 检查是否是嵌套容器开始
+      const nested = detectContainer(line, config)
+      if (nested && !nested.isEnd) {
+        newContext.containerDepth = context.containerDepth + 1
+        return newContext
+      }
+
+      // ⚠️ 关键：在容器内，无论是什么内容（空行、列表、段落等），都保持 inContainer = true
+      // 只有容器结束标记才能改变容器状态
+      // 这里不需要做任何操作，因为 newContext 已经复制了 context，inContainer 已经是 true
+      return newContext
+    } else {
+      // 不在容器内，检查是否是容器开始
+      const container = detectContainer(line, config)
+      if (container && !container.isEnd) {
+        newContext.inContainer = true
+        newContext.containerMarkerLength = container.markerLength
+        newContext.containerName = container.name
+        newContext.containerDepth = 1
+        return newContext
+      }
+    }
+
+    return null
+  }
+}
+
+/**
+ * 脚注上下文更新器
+ * 优先级：3
+ */
+class FootnoteContextUpdater implements ContextUpdater {
+  update(line: string, context: BlockContext): BlockContext | null {
+    const newContext = { ...context }
+
+    // 脚注定义开始（不在脚注中）
+    if (!context.inFootnote && isFootnoteDefinitionStart(line)) {
+      const identifier = line.match(RE_FOOTNOTE_DEFINITION)?.[1]
+      newContext.inFootnote = true
+      newContext.footnoteIdentifier = identifier
+      return newContext
+    }
+
+    // 在脚注中
+    if (context.inFootnote) {
+      // 遇到新脚注定义：前一个脚注结束，新脚注开始
+      if (isFootnoteDefinitionStart(line)) {
+        const identifier = line.match(RE_FOOTNOTE_DEFINITION)?.[1]
+        newContext.footnoteIdentifier = identifier
+        return newContext
+      }
+
+      // 空行：保持脚注状态（支持脚注内部的多段落）
+      // 返回当前上下文，阻止责任链继续
+      if (isEmptyLine(line)) {
+        return { ...context }
+      }
+
+      // 列表项处理
+      const listItem = isListItemStart(line)
+      if (listItem) {
+        // 无缩进列表项：脚注结束
+        // 缩进列表项：脚注的延续内容（包含嵌套列表）
+        if (listItem.indent === 0) {
+          newContext.inFootnote = false
+          newContext.footnoteIdentifier = undefined
+        } else {
+          // 缩进列表项：脚注的延续内容，返回当前上下文阻止责任链
+          return { ...context }
+        }
+        return null // 让列表处理器处理无缩进情况
+      }
+
+      // 其他块结束脚注
+      if (isHeading(line) || detectFenceStart(line) || isBlockquoteStart(line)) {
+        newContext.inFootnote = false
+        newContext.footnoteIdentifier = undefined
+        return newContext
+      }
+
+      // 脚注延续：以4+空格开头
+      if (isFootnoteContinuation(line)) {
+        return { ...context }
+      }
+
+      // 其他内容（普通文本、表格等），脚注结束
+      newContext.inFootnote = false
+      newContext.footnoteIdentifier = undefined
+      return newContext
+    }
+
+    return null
+  }
+}
+
+/**
+ * 列表上下文更新器
+ * 优先级：4
+ */
+class ListContextUpdater implements ContextUpdater {
+  /**
+   * 检测是否是列表项的延续内容（缩进内容或空行）
+   */
+  private isListContinuation(line: string, listIndent: number): boolean {
+    // 空行可能是列表内部的段落分隔
+    if (isEmptyLine(line)) {
+      return true
+    }
+
+    // 检查是否有足够的缩进
+    const contentIndent = line.match(/^(\s*)/)?.[1].length ?? 0
+    return contentIndent > listIndent
+  }
+
+  update(line: string, context: BlockContext): BlockContext | null {
+    const newContext = { ...context }
+    const listItem = isListItemStart(line)
+
+    if (context.inList) {
+      // 已经在列表中
+      if (context.listMayEnd) {
+        // 上一行是空行，需要确认列表是否结束
+        if (listItem) {
+          // 遇到新的列表项
+          // 检查是否是同类型列表的延续
+          if (listItem.ordered === context.listOrdered && listItem.indent === context.listIndent) {
+            // 同类型同级别列表项，列表继续
+            newContext.listMayEnd = false
+            return newContext
+          }
+          // 不同类型或不同级别，列表结束，新列表开始
+          newContext.listOrdered = listItem.ordered
+          newContext.listIndent = listItem.indent
+          newContext.listMayEnd = false
+          return newContext
+        } else if (this.isListContinuation(line, context.listIndent ?? 0)) {
+          // 缩进内容或空行，列表继续
+          newContext.listMayEnd = isEmptyLine(line)
+          return newContext
+        } else {
+          // 非列表内容，列表结束
+          newContext.inList = false
+          newContext.listOrdered = undefined
+          newContext.listIndent = undefined
+          newContext.listMayEnd = false
+          return newContext
+        }
+      } else {
+        // 上一行不是空行
+        if (listItem) {
+          // 新列表项（可能是同级或嵌套）
+          return null
+        } else if (isEmptyLine(line)) {
+          // 遇到空行，列表可能结束
+          newContext.listMayEnd = true
+          return newContext
+        } else if (this.isListContinuation(line, context.listIndent ?? 0)) {
+          // 缩进内容，列表继续
+          return null
+        } else {
+          // 非缩进非列表内容，列表结束
+          newContext.inList = false
+          newContext.listOrdered = undefined
+          newContext.listIndent = undefined
+          newContext.listMayEnd = false
+          return newContext
+        }
+      }
+    } else {
+      // 不在列表中
+      if (listItem) {
+        // 列表开始
+        newContext.inList = true
+        newContext.listOrdered = listItem.ordered
+        newContext.listIndent = listItem.indent
+        newContext.listMayEnd = false
+        return newContext
+      }
+    }
+
+    return null
+  }
+}
+
+/**
  * 创建初始上下文
  */
 export function createInitialContext(): BlockContext {
@@ -295,256 +546,58 @@ export function createInitialContext(): BlockContext {
 }
 
 /**
- * 检测是否是列表项的延续内容（缩进内容或空行）
- * @param line 当前行
- * @param listIndent 列表的基础缩进
+ * 上下文管理器
+ * 使用责任链模式更新上下文
  */
-function isListContinuation(line: string, listIndent: number): boolean {
-  // 空行可能是列表内部的段落分隔
-  if (isEmptyLine(line)) {
-    return true
-  }
+class ContextManager {
+  private readonly updaters: ContextUpdater[] = [
+    new CodeContextUpdater(),
+    new ContainerContextUpdater(),
+    new FootnoteContextUpdater(),
+    new ListContextUpdater()
+  ]
 
-  // 检查是否有足够的缩进（列表内容至少需要缩进到列表标记之后）
-  // 通常列表标记后至少需要 2 个字符的缩进（如 "1. " 或 "- "）
-  const contentIndent = line.match(/^(\s*)/)?.[1].length ?? 0
-  return contentIndent > listIndent
-}
+  /**
+   * 更新上下文（处理一行后）
+   *
+   * @param line 当前行
+   * @param context 当前上下文
+   * @param containerConfig 容器配置
+   * @returns 更新后的上下文
+   */
+  update(line: string, context: BlockContext, containerConfig?: ContainerConfig | boolean): BlockContext {
+    // 规范化容器配置
+    const config = containerConfig === true ? {} : containerConfig === false ? undefined : containerConfig
 
-/**
- * 更新代码块上下文
- */
-function updateCodeContext(line: string, context: BlockContext): BlockContext | null {
-  const newContext = { ...context }
-
-  if (context.inFencedCode) {
-    if (detectFenceEnd(line, context)) {
-      newContext.inFencedCode = false
-      newContext.fenceChar = undefined
-      newContext.fenceLength = undefined
-      return newContext
+    // 依次调用上下文更新器
+    for (const updater of this.updaters) {
+      const result = updater.update(line, context, config)
+      if (result !== null) {
+        return result
+      }
     }
-    return null
-  }
 
-  const fence = detectFenceStart(line)
-  if (fence) {
-    newContext.inFencedCode = true
-    newContext.fenceChar = fence.char
-    newContext.fenceLength = fence.length
-    return newContext
+    // 没有任何更新器处理，返回原上下文
+    return { ...context }
   }
-
-  return null
 }
+
+// 上下文管理器单例
+const contextManager = new ContextManager()
 
 /**
  * 更新上下文（处理一行后）
+ *
+ * @param line 当前行
+ * @param context 当前上下文
+ * @param containerConfig 容器配置
+ * @returns 更新后的上下文
  */
 export function updateContext(
   line: string,
   context: BlockContext,
   containerConfig?: ContainerConfig | boolean
 ): BlockContext {
-  const newContext = { ...context }
-
-  const containerCfg =
-    containerConfig === true ? {} : containerConfig === false ? undefined : containerConfig
-
-  // 代码块优先级最高
-  if (context.inFencedCode) {
-    if (detectFenceEnd(line, context)) {
-      newContext.inFencedCode = false
-      newContext.fenceChar = undefined
-      newContext.fenceLength = undefined
-    }
-    return newContext
-  }
-
-  const fence = detectFenceStart(line)
-  if (fence) {
-    newContext.inFencedCode = true
-    newContext.fenceChar = fence.char
-    newContext.fenceLength = fence.length
-    return newContext
-  }
-
-  // 容器处理
-  if (containerCfg !== undefined) {
-    if (context.inContainer) {
-      // 检查是否是容器结束
-      if (detectContainerEnd(line, context, containerCfg)) {
-        newContext.containerDepth = context.containerDepth - 1
-        if (newContext.containerDepth === 0) {
-          newContext.inContainer = false
-          newContext.containerMarkerLength = undefined
-          newContext.containerName = undefined
-        }
-        return newContext
-      }
-
-      // 检查是否是嵌套容器开始
-      const nested = detectContainer(line, containerCfg)
-      if (nested && !nested.isEnd) {
-        newContext.containerDepth = context.containerDepth + 1
-        return newContext
-      }
-
-      // ⚠️ 关键：在容器内，无论是什么内容（空行、列表、段落等），都保持 inContainer = true
-      // 只有容器结束标记才能改变容器状态
-      // 这里不需要做任何操作，因为 newContext 已经复制了 context，inContainer 已经是 true
-      return newContext
-    } else {
-      // 不在容器内，检查是否是容器开始
-      const container = detectContainer(line, containerCfg)
-      if (container && !container.isEnd) {
-        newContext.inContainer = true
-        newContext.containerMarkerLength = container.markerLength
-        newContext.containerName = container.name
-        newContext.containerDepth = 1
-        return newContext
-      }
-    }
-  }
-
-  // 脚注处理
-  // 脚注定义会结束所有其他块（列表等），必须优先处理
-  
-  // 在脚注中，遇到新脚注定义：前一个脚注结束，新脚注开始
-  if (context.inFootnote && isFootnoteDefinitionStart(line)) {
-    const identifier = line.match(RE_FOOTNOTE_DEFINITION)?.[1]
-    newContext.footnoteIdentifier = identifier
-    return newContext
-  }
-  
-  // 不在脚注中，遇到脚注定义：脚注开始
-  if (!context.inFootnote && isFootnoteDefinitionStart(line)) {
-    const identifier = line.match(RE_FOOTNOTE_DEFINITION)?.[1]
-    newContext.inFootnote = true
-    newContext.footnoteIdentifier = identifier
-    return newContext
-  }
-
-  // 列表处理
-  const listItem = isListItemStart(line)
-
-  if (context.inList) {
-    // 已经在列表中
-    if (context.listMayEnd) {
-      // 上一行是空行，需要确认列表是否结束
-      if (listItem) {
-        // 遇到新的列表项
-        // 检查是否是同类型列表的延续
-        if (listItem.ordered === context.listOrdered && listItem.indent === context.listIndent) {
-          // 同类型同级别列表项，列表继续
-          newContext.listMayEnd = false
-          return newContext
-        }
-        // 不同类型或不同级别，列表结束，新列表开始
-        newContext.inList = true
-        newContext.listOrdered = listItem.ordered
-        newContext.listIndent = listItem.indent
-        newContext.listMayEnd = false
-        return newContext
-      } else if (isListContinuation(line, context.listIndent ?? 0)) {
-        // 缩进内容或空行，列表继续
-        newContext.listMayEnd = isEmptyLine(line)
-        return newContext
-      } else {
-        // 非列表内容，列表结束
-        newContext.inList = false
-        newContext.listOrdered = undefined
-        newContext.listIndent = undefined
-        newContext.listMayEnd = false
-        return newContext
-      }
-    } else {
-      // 上一行不是空行
-      if (listItem) {
-        // 新列表项（可能是同级或嵌套）
-        return newContext
-      } else if (isEmptyLine(line)) {
-        // 遇到空行，列表可能结束
-        newContext.listMayEnd = true
-        return newContext
-      } else if (isListContinuation(line, context.listIndent ?? 0)) {
-        // 缩进内容，列表继续
-        return newContext
-      } else {
-        // 非缩进非列表内容，列表结束
-        newContext.inList = false
-        newContext.listOrdered = undefined
-        newContext.listIndent = undefined
-        newContext.listMayEnd = false
-        return newContext
-      }
-    }
-  } else {
-    // 不在列表中
-    if (listItem) {
-      // 列表开始
-      newContext.inList = true
-      newContext.listOrdered = listItem.ordered
-      newContext.listIndent = listItem.indent
-      newContext.listMayEnd = false
-      return newContext
-    }
-  }
-
-  // 脚注处理
-  if (context.inFootnote) {
-    // 已经在脚注中
-    if (isEmptyLine(line)) {
-      // 空行可能结束脚注（但不立即结束，等待下一行判断）
-      // 保持 inFootnote = true，这样可以处理脚注内部的多段落
-      return newContext
-    } else if (isListItemStart(line)) {
-      // 列表项处理
-      const listItemInfo = isListItemStart(line)!
-      
-      // 如果是无缩进的列表项（如 `- xxx`），则脚注结束
-      // 如果是缩进的列表项（如 `    - xxx`），则是脚注的延续内容
-      if (listItemInfo.indent === 0) {
-        // 无缩进列表项：脚注结束，开始新列表
-        newContext.inFootnote = false
-        newContext.footnoteIdentifier = undefined
-        // 继续处理列表项的逻辑（不在 else 分支，会继续执行列表处理）
-      } else {
-        // 缩进列表项：视为脚注的延续内容（可能包含嵌套列表）
-        // 保持 inFootnote = true
-        return newContext
-      }
-    } else if (isHeading(line)) {
-      // 标题结束脚注
-      newContext.inFootnote = false
-      newContext.footnoteIdentifier = undefined
-      return newContext
-    } else if (detectFenceStart(line)) {
-      // 代码块结束脚注
-      newContext.inFootnote = false
-      newContext.footnoteIdentifier = undefined
-      return newContext
-    } else if (isBlockquoteStart(line)) {
-      // 引用块结束脚注
-      newContext.inFootnote = false
-      newContext.footnoteIdentifier = undefined
-      return newContext
-    } else if (isFootnoteContinuation(line)) {
-      // 真正的脚注延续：以4+空格开头且不是列表项等
-      return newContext
-    } else if (isFootnoteDefinitionStart(line)) {
-      // 新脚注开始，前一个脚注结束
-      const identifier = line.match(RE_FOOTNOTE_DEFINITION)?.[1]
-      newContext.footnoteIdentifier = identifier
-      return newContext
-    } else {
-      // 其他内容（普通文本、表格等），脚注结束
-      newContext.inFootnote = false
-      newContext.footnoteIdentifier = undefined
-      return newContext
-    }
-  }
-
-  return newContext
+  return contextManager.update(line, context, containerConfig)
 }
 

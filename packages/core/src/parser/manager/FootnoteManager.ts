@@ -6,13 +6,11 @@
  * - 收集脚注引用顺序
  * - 管理 Footnote Definition 映射表
  * - 提供访问 Footnote 的方法
- *
- * 此类是直接从 IncremarkParser 中提取的 Footnote 管理逻辑，未做任何优化。
  */
 
 import type { RootContent, FootnoteDefinition } from 'mdast'
 import type { FootnoteDefinitionMap, ParsedBlock } from '../../types'
-import { isFootnoteDefinitionNode } from '../../utils'
+import { collectAstNodes, isFootnoteDefinitionNode, traverseAst } from '../../utils'
 
 /**
  * Footnote 管理器
@@ -43,17 +41,10 @@ export class FootnoteManager {
    * @returns Footnote Definition 映射表
    */
   private findFootnoteDefinitions(block: ParsedBlock): FootnoteDefinitionMap {
-    const footnoteDefinitions: FootnoteDefinition[] = []
+    // 使用通用遍历工具收集 footnote definition 节点
+    const definitions = collectAstNodes(block.node, isFootnoteDefinitionNode)
 
-    function findFootnoteDefinition(node: RootContent) {
-      if (isFootnoteDefinitionNode(node)) {
-        footnoteDefinitions.push(node as FootnoteDefinition)
-      }
-    }
-
-    findFootnoteDefinition(block.node)
-
-    return footnoteDefinitions.reduce<FootnoteDefinitionMap>((acc, node) => {
+    return definitions.reduce<FootnoteDefinitionMap>((acc, node) => {
       acc[node.identifier] = node
       return acc
     }, {})
@@ -65,25 +56,18 @@ export class FootnoteManager {
    * @param nodes AST 节点列表
    */
   collectReferences(nodes: RootContent[]): void {
-    const visitNode = (node: any): void => {
-      if (!node) return
-
-      // 检查是否是脚注引用
-      if (node.type === 'footnoteReference') {
-        const identifier = node.identifier
-        // 去重：只记录第一次出现的位置
-        if (!this.referenceOrder.includes(identifier)) {
-          this.referenceOrder.push(identifier)
+    nodes.forEach((node) => {
+      traverseAst(node, (n) => {
+        // 检查是否是脚注引用
+        if (n.type === 'footnoteReference') {
+          const identifier = n.identifier
+          // 去重：只记录第一次出现的位置
+          if (!this.referenceOrder.includes(identifier)) {
+            this.referenceOrder.push(identifier)
+          }
         }
-      }
-
-      // 递归遍历子节点
-      if (node.children && Array.isArray(node.children)) {
-        node.children.forEach(visitNode)
-      }
-    }
-
-    nodes.forEach(visitNode)
+      })
+    })
   }
 
   /**

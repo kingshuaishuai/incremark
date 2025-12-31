@@ -14,7 +14,6 @@ import type {
   ParsedBlock,
   IncrementalUpdate,
   ParserOptions,
-  BlockStatus,
   BlockContext,
   ParserState,
   DefinitionMap,
@@ -23,7 +22,6 @@ import type {
 
 import {
   createInitialContext,
-  updateContext
 } from '../detector'
 import { BoundaryDetector } from './boundary'
 import { DefinitionManager } from './manager'

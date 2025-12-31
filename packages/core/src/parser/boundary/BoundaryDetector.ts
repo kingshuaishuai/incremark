@@ -43,13 +43,191 @@ export interface BoundaryDetectorConfig {
 }
 
 /**
+ * 稳定性检查接口
+ */
+interface StabilityChecker {
+  /**
+   * 检查是否为稳定边界
+   * @param lineIndex 行索引
+   * @param context 当前上下文
+   * @param lines 所有行
+   * @returns 稳定边界行号，如果不是稳定边界返回 -1
+   */
+  check(lineIndex: number, context: BlockContext, lines: string[]): number
+}
+
+/**
+ * 容器内边界检查器
+ */
+class ContainerBoundaryChecker implements StabilityChecker {
+  constructor(private containerConfig: ContainerConfig | undefined) {}
+
+  check(lineIndex: number, context: BlockContext, lines: string[]): number {
+    const line = lines[lineIndex]
+
+    if (!context.inContainer) {
+      return -1
+    }
+
+    // 检查当前行是否是容器结束
+    if (this.containerConfig !== undefined) {
+      const containerEnd = detectContainerEnd(line, context, this.containerConfig)
+      if (containerEnd) {
+        // 容器结束，返回前一行作为稳定边界
+        return lineIndex - 1
+      }
+    }
+
+    // 容器内且不是容器结束，不判断为稳定边界
+    return -1
+  }
+}
+
+/**
+ * 列表边界检查器
+ */
+class ListBoundaryChecker implements StabilityChecker {
+  check(lineIndex: number, context: BlockContext, lines: string[]): number {
+    if (!context.inList) {
+      return -1
+    }
+
+    // 列表还没有确认结束（listMayEnd 为 false 或 undefined）
+    // 不应该在列表中间创建稳定边界
+    if (!context.listMayEnd) {
+      return -1
+    }
+
+    const line = lines[lineIndex]
+
+    // 如果 listMayEnd 为 true，说明上一行是空行
+    // 需要检查当前行是否是列表延续或新列表项
+    const listItem = isListItemStart(line)
+
+    // 检查当前行是否有足够的缩进以作为列表内容
+    const contentIndent = line.match(/^(\s*)/)?.[1].length ?? 0
+    const isListContent = contentIndent > (context.listIndent ?? 0)
+
+    // 只有当当前行不是列表内容且不是空行时，列表才算结束
+    if (!listItem && !isListContent && !isEmptyLine(line)) {
+      // 当前行不是列表内容且不是空行，列表在上一行的空行处结束
+      return lineIndex - 1
+    }
+
+    return -1
+  }
+}
+
+/**
+ * 脚注边界检查器
+ */
+class FootnoteBoundaryChecker implements StabilityChecker {
+  check(lineIndex: number, context: BlockContext, lines: string[]): number {
+    const line = lines[lineIndex]
+    const prevLine = lines[lineIndex - 1]
+
+    // 情况 1: 前一行是脚注定义开始
+    if (isFootnoteDefinitionStart(prevLine)) {
+      // 当前行是空行或缩进行，脚注可能继续（不稳定）
+      if (isEmptyLine(line) || isFootnoteContinuation(line)) {
+        return -1
+      }
+      // 当前行是新脚注定义，前一个脚注完成
+      if (isFootnoteDefinitionStart(line)) {
+        return lineIndex - 1
+      }
+    }
+
+    // 情况 2: 前一行是缩进行，可能是脚注延续
+    // 注意：这个逻辑已经在 updateContext() 中通过 inFootnote 标志处理
+    // 这里不需要重复判断，统一使用 updateContext() 的结果
+    if (!isEmptyLine(prevLine) && isFootnoteContinuation(prevLine)) {
+      // 在脚注中的缩进行或空行，保持不稳定
+      // 实际的脚注边界判断由 updateContext() 中的 inFootnote 标志控制
+      return -1
+    }
+
+    // 前一行非空时，新脚注定义开始（排除连续脚注定义）
+    if (!isEmptyLine(prevLine) && isFootnoteDefinitionStart(line) && !isFootnoteDefinitionStart(prevLine)) {
+      return lineIndex - 1
+    }
+
+    return -1
+  }
+}
+
+/**
+ * 新块边界检查器
+ */
+class NewBlockBoundaryChecker implements StabilityChecker {
+  check(lineIndex: number, context: BlockContext, lines: string[]): number {
+    const line = lines[lineIndex]
+    const prevLine = lines[lineIndex - 1]
+
+    if (isEmptyLine(prevLine)) {
+      return -1
+    }
+
+    // 新标题开始
+    if (isHeading(line)) {
+      return lineIndex - 1
+    }
+
+    // 新代码块开始
+    if (detectFenceStart(line)) {
+      return lineIndex - 1
+    }
+
+    // 新引用块开始（排除连续引用）
+    if (isBlockquoteStart(line) && !isBlockquoteStart(prevLine)) {
+      return lineIndex - 1
+    }
+
+    // 新列表开始（排除连续列表项）
+    // ⚠️ 修改：只有在不在列表中时才触发这个逻辑
+    if (!context.inList && isListItemStart(line) && !isListItemStart(prevLine)) {
+      return lineIndex - 1
+    }
+
+    return -1
+  }
+}
+
+/**
+ * 空行边界检查器
+ */
+class EmptyLineBoundaryChecker implements StabilityChecker {
+  check(lineIndex: number, context: BlockContext, lines: string[]): number {
+    const line = lines[lineIndex]
+    const prevLine = lines[lineIndex - 1]
+
+    // 空行标志段落结束
+    // ⚠️ 修改：如果在列表中，空行不作为稳定边界
+    if (isEmptyLine(line) && !isEmptyLine(prevLine) && !context.inList) {
+      return lineIndex
+    }
+
+    return -1
+  }
+}
+
+/**
  * 边界检测器
  */
 export class BoundaryDetector {
   private readonly containerConfig: ContainerConfig | undefined
+  private readonly checkers: StabilityChecker[]
 
   constructor(config: BoundaryDetectorConfig = {}) {
     this.containerConfig = config.containers
+    // 初始化稳定性检查器链
+    this.checkers = [
+      new ContainerBoundaryChecker(this.containerConfig),
+      new ListBoundaryChecker(),
+      new FootnoteBoundaryChecker(),
+      new NewBlockBoundaryChecker(),
+      new EmptyLineBoundaryChecker()
+    ]
   }
 
   /**
@@ -105,7 +283,7 @@ export class BoundaryDetector {
         continue
       }
 
-      // 传入上下文信息，让 checkStability 能够判断是否在容器内
+      // 使用检查器链检查稳定性
       const stablePoint = this.checkStability(i, tempContext, lines)
       if (stablePoint >= 0) {
         stableLine = stablePoint
@@ -118,6 +296,7 @@ export class BoundaryDetector {
 
   /**
    * 检查指定行是否是稳定边界
+   * 使用责任链模式，依次调用各个检查器
    *
    * @param lineIndex 行索引
    * @param context 当前上下文
@@ -137,42 +316,28 @@ export class BoundaryDetector {
     const line = lines[lineIndex]
     const prevLine = lines[lineIndex - 1]
 
-    // ⚠️ 关键修改：如果当前上下文在容器内，且当前行不是容器结束，则不判断为稳定边界
-    // 这样可以确保容器内的所有内容（包括空行、列表等）都被视为容器的一部分
-    if (context.inContainer) {
-      // 检查当前行是否是容器结束
-      if (this.containerConfig !== undefined) {
-        const containerEnd = detectContainerEnd(line, context, this.containerConfig)
-        if (containerEnd) {
-          // 容器结束，返回前一行作为稳定边界
-          return lineIndex - 1
+    // ⚠️ 脚注特殊处理：在脚注中，空行是段落分隔，不是稳定边界
+    // 只有脚注定义开始才算脚注的稳定边界
+    if (context.inFootnote) {
+      // ⚠️ 关键修复：在脚注中，不应该检测到代码块作为稳定边界
+      // 因为脚注内容的缩进（4个空格）可能被误判为代码块 fence
+      // 检查前一行是否是脚注定义的开始（脚注单行内容的情况）
+      if (isFootnoteDefinitionStart(prevLine) && !isEmptyLine(line)) {
+        // ⚠️ 关键：如果当前行是脚注延续（缩进），则不应该作为稳定边界
+        // 因为这是脚注内容的一部分，而不是新块
+        if (isFootnoteContinuation(line)) {
+          return -1
         }
-      }
-      // 容器内且不是容器结束，不判断为稳定边界
-      return -1
-    }
-
-    // ⚠️ 如果当前在列表中，需要特殊处理
-    // 列表内的空行不应该作为稳定边界，因为列表项之间可以有空行
-    if (context.inList) {
-      // 列表还没有确认结束（listMayEnd 为 false 或 undefined）
-      // 不应该在列表中间创建稳定边界
-      if (!context.listMayEnd) {
-        return -1
-      }
-      // 如果 listMayEnd 为 true，说明上一行是空行
-      // 需要检查当前行是否是列表延续或新列表项
-      const listItem = isListItemStart(line)
-      
-      // 检查当前行是否有足够的缩进以作为列表内容
-      const contentIndent = line.match(/^(\s*)/)?.[1].length ?? 0
-      const isListContent = contentIndent > (context.listIndent ?? 0)
-
-      // 只有当当前行不是列表内容且不是空行时，列表才算结束
-      if (!listItem && !isListContent && !isEmptyLine(line)) {
-        // 当前行不是列表内容且不是空行，列表在上一行的空行处结束
         return lineIndex - 1
       }
+      // ⚠️ 另一个关键修复：如果前一行在脚注中（缩进或延续），
+      // 且当前行也是缩进或延续，则不应该作为稳定边界
+      // 这样可以避免脚注的多行内容被错误分割
+      if (isEmptyLine(prevLine) && (isEmptyLine(line) || isFootnoteContinuation(line))) {
+        return -1
+      }
+      // 其他情况（包括空行）都不作为脚注的稳定边界
+      return -1
     }
 
     // 前一行是独立块（标题、分割线），该块已完成
@@ -185,75 +350,12 @@ export class BoundaryDetector {
       return -1
     }
 
-    // ============ 脚注定义的特殊处理 ============
-
-    // 情况 1: 前一行是脚注定义开始
-    if (isFootnoteDefinitionStart(prevLine)) {
-      // 当前行是空行或缩进行，脚注可能继续（不稳定）
-      if (isEmptyLine(line) || isFootnoteContinuation(line)) {
-        return -1
+    // 依次调用检查器链，返回第一个匹配的稳定边界
+    for (const checker of this.checkers) {
+      const stablePoint = checker.check(lineIndex, context, lines)
+      if (stablePoint >= 0) {
+        return stablePoint
       }
-      // 当前行是新脚注定义，前一个脚注完成
-      if (isFootnoteDefinitionStart(line)) {
-        return lineIndex - 1
-      }
-      // 当前行是非缩进的新块，前一个脚注完成
-      // 这种情况会在后续的判断中处理
-    }
-
-    // 情况 2: 前一行是缩进行，可能是脚注延续
-    // 注意：这个逻辑已经在 updateContext() 中通过 inFootnote 标志处理
-    // 这里不需要重复判断，统一使用 updateContext() 的结果
-    if (!isEmptyLine(prevLine) && isFootnoteContinuation(prevLine)) {
-      // 在脚注中的缩进行或空行，保持不稳定
-      // 实际的脚注边界判断由 updateContext() 中的 inFootnote 标志控制
-      return -1
-    }
-
-    // 前一行非空时，如果当前行是新块开始，则前一块已完成
-    if (!isEmptyLine(prevLine)) {
-      // 新脚注定义开始（排除连续脚注定义）
-      if (isFootnoteDefinitionStart(line) && !isFootnoteDefinitionStart(prevLine)) {
-        return lineIndex - 1
-      }
-
-      // 新标题开始
-      if (isHeading(line)) {
-        return lineIndex - 1
-      }
-
-      // 新代码块开始
-      if (detectFenceStart(line)) {
-        return lineIndex - 1
-      }
-
-      // 新引用块开始（排除连续引用）
-      if (isBlockquoteStart(line) && !isBlockquoteStart(prevLine)) {
-        return lineIndex - 1
-      }
-
-      // 新列表开始（排除连续列表项）
-      // ⚠️ 修改：只有在不在列表中时才触发这个逻辑
-      if (!context.inList && isListItemStart(line) && !isListItemStart(prevLine)) {
-        return lineIndex - 1
-      }
-
-      // 新容器开始
-      if (this.containerConfig !== undefined) {
-        const container = detectContainer(line, this.containerConfig)
-        if (container && !container.isEnd) {
-          const prevContainer = detectContainer(prevLine, this.containerConfig)
-          if (!prevContainer || prevContainer.isEnd) {
-            return lineIndex - 1
-          }
-        }
-      }
-    }
-
-    // 空行标志段落结束
-    // ⚠️ 修改：如果在列表中，空行不作为稳定边界
-    if (isEmptyLine(line) && !isEmptyLine(prevLine) && !context.inList) {
-      return lineIndex
     }
 
     return -1

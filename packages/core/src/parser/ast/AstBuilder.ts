@@ -5,8 +5,6 @@
  * - 解析 Markdown 文本为 AST
  * - 将 AST 节点转换为 ParsedBlock
  * - 转换 HTML 节点为纯文本（当未启用 HTML 树转换时）
- *
- * 此类是直接从 IncremarkParser 中提取的 AST 构建逻辑，未做任何优化。
  */
 
 import { fromMarkdown } from 'mdast-util-from-markdown'
@@ -25,6 +23,28 @@ import type { ParsedBlock, BlockStatus, ParserOptions, ContainerConfig } from '.
 import { transformHtmlNodes, type HtmlTreeExtensionOptions } from '../../extensions/html-extension'
 import { micromarkReferenceExtension } from '../../extensions/micromark-reference-extension'
 import { gfmFootnoteIncremental } from '../../extensions/micromark-gfm-footnote-incremental'
+
+/**
+ * 内联容器节点类型
+ * 这些节点的 children 包含内联内容（文本、emphasis、strong 等）
+ */
+const INLINE_CONTAINER_TYPES = [
+  'paragraph',
+  'heading',
+  'tableCell',
+  'delete',
+  'emphasis',
+  'strong',
+  'link',
+  'linkReference'
+] as const
+
+/**
+ * 判断是否为内联容器节点
+ */
+function isInlineContainer(node: RootContent): boolean {
+  return INLINE_CONTAINER_TYPES.includes(node.type as any)
+}
 
 /**
  * AST 构建器
@@ -100,14 +120,14 @@ export class AstBuilder {
     if (this.options.gfm) {
       extensions.push(gfmFootnoteIncremental())
     }
-    
+
     // 添加 reference 扩展（支持增量解析），覆盖 commonmark 的 labelEnd
     // ⚠️ 必须最后添加，确保它能拦截 `]` 并正确处理脚注
     extensions.push(micromarkReferenceExtension())
 
     // 生成 AST
     let ast = fromMarkdown(text, { extensions, mdastExtensions })
-    
+
     // 如果启用了 HTML 树转换，应用转换
     if (this.htmlTreeConfig) {
       ast = transformHtmlNodes(ast, this.htmlTreeConfig)
@@ -115,7 +135,7 @@ export class AstBuilder {
       // 如果未启用 HTML 树，将 HTML 节点转换为纯文本
       ast = this.convertHtmlToText(ast)
     }
-    
+
     return ast
   }
 
@@ -126,79 +146,90 @@ export class AstBuilder {
    * @returns 转换后的 AST
    */
   private convertHtmlToText(ast: Root): Root {
-    // 处理内联节点（段落内部的 children）
-    const processInlineChildren = (children: unknown[]): unknown[] => {
-      return children.map(node => {
-        const n = node as RootContent
-        // 内联 html 节点转换为纯文本节点
-        if (n.type === 'html') {
-          const htmlNode = n as HTML
-          const textNode: Text = {
-            type: 'text',
-            value: htmlNode.value,
-            position: htmlNode.position
-          }
-          return textNode
-        }
-        
-        // 递归处理有 children 的内联节点（如 strong, emphasis 等）
-        if ('children' in n && Array.isArray(n.children)) {
-          const parent = n as MdastParent
-          return {
-            ...parent,
-            children: processInlineChildren(parent.children)
-          }
-        }
-        
-        return n
-      })
-    }
-
-    // 处理块级节点
-    const processBlockChildren = (children: RootContent[]): RootContent[] => {
-      return children.map(node => {
-        // 块级 html 节点转换为段落包含纯文本
-        if (node.type === 'html') {
-          const htmlNode = node as HTML
-          const textNode: Text = {
-            type: 'text',
-            value: htmlNode.value
-          }
-          const paragraphNode: Paragraph = {
-            type: 'paragraph',
-            children: [textNode],
-            position: htmlNode.position
-          }
-          return paragraphNode as RootContent
-        }
-        
-        // 递归处理有 children 的块级节点
-        if ('children' in node && Array.isArray(node.children)) {
-          const parent = node as MdastParent
-          // 对于段落等内联容器，使用 processInlineChildren
-          if (node.type === 'paragraph' || node.type === 'heading' || 
-              node.type === 'tableCell' || node.type === 'delete' ||
-              node.type === 'emphasis' || node.type === 'strong' ||
-              node.type === 'link' || node.type === 'linkReference') {
-            return {
-              ...parent,
-              children: processInlineChildren(parent.children)
-            } as RootContent
-          }
-          // 对于其他块级容器，递归处理
-          return {
-            ...parent,
-            children: processBlockChildren(parent.children as RootContent[])
-          } as RootContent
-        }
-        
-        return node
-      })
-    }
-    
     return {
       ...ast,
-      children: processBlockChildren(ast.children)
+      children: this.processBlockChildren(ast.children)
+    }
+  }
+
+  /**
+   * 处理块级节点
+   */
+  private processBlockChildren(children: RootContent[]): RootContent[] {
+    return children.map((node) => {
+      // 块级 html 节点转换为段落包含纯文本
+      if (node.type === 'html') {
+        return this.convertBlockHtmlToParagraph(node as HTML)
+      }
+
+      // 递归处理有 children 的节点
+      if ('children' in node && Array.isArray(node.children)) {
+        const parent = node as MdastParent
+        const children = isInlineContainer(node)
+          ? this.processInlineChildren(parent.children)
+          : this.processBlockChildren(parent.children as RootContent[])
+
+        return {
+          ...parent,
+          children
+        } as RootContent
+      }
+
+      return node
+    })
+  }
+
+  /**
+   * 处理内联节点
+   */
+  private processInlineChildren(children: unknown[]): unknown[] {
+    return children.map((node) => {
+      const n = node as RootContent
+
+      // 内联 html 节点转换为纯文本节点
+      if (n.type === 'html') {
+        return this.convertInlineHtmlToText(n as HTML)
+      }
+
+      // 递归处理有 children 的内联节点
+      if ('children' in n && Array.isArray(n.children)) {
+        const parent = n as MdastParent
+        return {
+          ...parent,
+          children: this.processInlineChildren(parent.children)
+        }
+      }
+
+      return n
+    })
+  }
+
+  /**
+   * 将块级 HTML 节点转换为段落
+   */
+  private convertBlockHtmlToParagraph(htmlNode: HTML): RootContent {
+    const textNode: Text = {
+      type: 'text',
+      value: htmlNode.value
+    }
+
+    const paragraphNode: Paragraph = {
+      type: 'paragraph',
+      children: [textNode],
+      position: htmlNode.position
+    }
+
+    return paragraphNode as RootContent
+  }
+
+  /**
+   * 将内联 HTML 节点转换为纯文本节点
+   */
+  private convertInlineHtmlToText(htmlNode: HTML): Text {
+    return {
+      type: 'text',
+      value: htmlNode.value,
+      position: htmlNode.position
     }
   }
 

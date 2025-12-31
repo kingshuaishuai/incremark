@@ -51,3 +51,50 @@ export function isDefinitionNode(node: RootContent): node is Definition {
 export function isFootnoteDefinitionNode(node: RootContent): node is FootnoteDefinition {
   return node.type === 'footnoteDefinition'
 }
+
+/**
+ * AST 节点遍历器
+ * 深度优先遍历 AST 节点
+ *
+ * @param node 起始节点
+ * @param visitor 访问者函数，返回 true 可以提前终止遍历
+ */
+export function traverseAst(
+  node: RootContent,
+  visitor: (node: RootContent) => boolean | void
+): void {
+  // 访问当前节点
+  const stopEarly = visitor(node)
+  if (stopEarly === true) {
+    return
+  }
+
+  // 递归遍历子节点
+  if ('children' in node && Array.isArray(node.children)) {
+    for (const child of node.children) {
+      traverseAst(child as RootContent, visitor)
+    }
+  }
+}
+
+/**
+ * 从 AST 节点中收集指定类型的节点
+ *
+ * @param node 起始节点
+ * @param predicate 匹配谓词
+ * @returns 匹配的节点列表
+ */
+export function collectAstNodes<T extends RootContent>(
+  node: RootContent,
+  predicate: (node: RootContent) => node is T
+): T[] {
+  const results: T[] = []
+
+  traverseAst(node, (node) => {
+    if (predicate(node)) {
+      results.push(node)
+    }
+  })
+
+  return results
+}

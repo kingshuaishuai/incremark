@@ -5,13 +5,10 @@
  * - 从 AST 节点中提取 definitions
  * - 管理 Definition 映射表
  * - 提供访问 Definition 的方法
- *
- * 此类是直接从 IncremarkParser 中提取的 Definition 管理逻辑，未做任何优化。
  */
 
-import type { RootContent, Definition } from 'mdast'
 import type { ParsedBlock, DefinitionMap } from '../../types'
-import { isDefinitionNode } from '../../utils'
+import { collectAstNodes, isDefinitionNode } from '../../utils'
 
 /**
  * Definition 管理器
@@ -41,21 +38,8 @@ export class DefinitionManager {
    * @returns Definition 映射表
    */
   private findDefinitions(block: ParsedBlock): DefinitionMap {
-    const definitions: Definition[] = []
-
-    function findDefinitionRecursive(node: RootContent) {
-      if (isDefinitionNode(node)) {
-        definitions.push(node as Definition)
-      }
-
-      if ('children' in node && Array.isArray(node.children)) {
-        for (const child of node.children) {
-          findDefinitionRecursive(child as RootContent)
-        }
-      }
-    }
-
-    findDefinitionRecursive(block.node)
+    // 使用通用遍历工具收集 definition 节点
+    const definitions = collectAstNodes(block.node, isDefinitionNode)
 
     return definitions.reduce<DefinitionMap>((acc, node) => {
       acc[node.identifier] = node
