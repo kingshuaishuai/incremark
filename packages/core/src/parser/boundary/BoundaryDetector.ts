@@ -21,7 +21,8 @@ import {
   detectContainerEnd,
   isFootnoteDefinitionStart,
   isFootnoteContinuation,
-  detectFenceStart
+  detectFenceStart,
+  isSetextHeadingUnderline
 } from '../../detector'
 
 /**
@@ -166,6 +167,11 @@ class NewBlockBoundaryChecker implements StabilityChecker {
 
     if (isEmptyLine(prevLine)) {
       return -1
+    }
+
+    // 检测 Setext 标题下划线
+    if (isSetextHeadingUnderline(line, prevLine)) {
+      return lineIndex - 1
     }
 
     // 新标题开始
@@ -342,6 +348,11 @@ export class BoundaryDetector {
 
     // 前一行是独立块（标题、分割线），该块已完成
     if (isHeading(prevLine) || isThematicBreak(prevLine)) {
+      return lineIndex - 1
+    }
+
+    // 前一行是 Setext 标题下划线，该标题已完成
+    if (isSetextHeadingUnderline(prevLine, lines[lineIndex - 2])) {
       return lineIndex - 1
     }
 

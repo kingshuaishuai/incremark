@@ -71,6 +71,67 @@ export function isEmptyLine(line: string): boolean {
 }
 
 /**
+ * 检测是否是 Setext 标题下划线（=== 或 ---）
+ * @param line 当前行
+ * @param prevLine 前一行
+ * @returns 是否是 Setext 标题下划线
+ */
+export function isSetextHeadingUnderline(line: string, prevLine?: string): boolean {
+  const trimmed = line.trim()
+
+  // 检查是否是 === 或 --- 形式的下划线
+  if (!/^={3,}$|^-{3,}$/.test(trimmed)) {
+    return false
+  }
+
+  // 如果没有前一行，不能判断
+  if (!prevLine) {
+    return false
+  }
+
+  const trimmedPrev = prevLine.trim()
+
+  // 前一行是空行，不是 Setext 标题
+  if (trimmedPrev === '') {
+    return false
+  }
+
+  // 前一行是 ATX 标题或 thematic break，不是 Setext 标题
+  if (/^#{1,6}\s/.test(trimmedPrev) || /^(\*{3,}|-{3,}|_{3,})\s*$/.test(trimmedPrev)) {
+    return false
+  }
+
+  // 前一行是列表项，不是 Setext 标题
+  if (/^(\s*)([-*+])\s/.test(trimmedPrev) || /^(\s*)(\d{1,9})[.)]\s/.test(trimmedPrev)) {
+    return false
+  }
+
+  // 前一行是引用块，不是 Setext 标题
+  if (/^\s{0,3}>/.test(trimmedPrev)) {
+    return false
+  }
+
+  // 前一行是代码块 fence，不是 Setext 标题
+  if (/^(\s*)(`{3,}|~{3,})/.test(trimmedPrev)) {
+    return false
+  }
+
+  // 检查下划线行的缩进（不超过3个空格）
+  const underlineIndent = line.match(/^(\s*)/)?.[1].length ?? 0
+  if (underlineIndent > 3) {
+    return false
+  }
+
+  // 检查前一行缩进（不超过3个空格）
+  const contentIndent = prevLine.match(/^(\s*)/)?.[1].length ?? 0
+  if (contentIndent > 3) {
+    return false
+  }
+
+  return true
+}
+
+/**
  * 检测是否是标题行
  */
 export function isHeading(line: string): boolean {
