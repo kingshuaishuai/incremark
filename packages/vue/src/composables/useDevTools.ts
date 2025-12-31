@@ -26,8 +26,8 @@ export function useDevTools(
   // 设置 parser 的 onChange 回调
   incremark.parser.setOnChange((state) => {
     const blocks = [
-      ...state.completedBlocks.map((b) => ({ ...b, stableId: b.id })),
-      ...state.pendingBlocks.map((b, i) => ({ ...b, stableId: `pending-${i}` }))
+      ...state.completedBlocks,
+      ...state.pendingBlocks
     ]
 
     devtools.update({

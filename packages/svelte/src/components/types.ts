@@ -12,10 +12,7 @@ import type { ParsedBlock } from '@incremark/core'
 export type ComponentMap = Partial<Record<string, any>>
 
 /**
- * 带稳定 ID 的块类型
+ * 可渲染的块类型（带 isLastPending 字段用于打字机光标）
  */
-export interface BlockWithStableId extends ParsedBlock {
-  stableId: string
-  isLastPending?: boolean // 是否是最后一个 pending 块
-}
+export type RenderableBlock = ParsedBlock & { isLastPending?: boolean }
 

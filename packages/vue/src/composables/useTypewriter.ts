@@ -16,7 +16,8 @@ import {
   type ParsedBlock,
   type DisplayBlock,
   type AnimationEffect,
-  type BlockTransformer
+  type BlockTransformer,
+  type BlockStatus
 } from '@incremark/core'
 import type { TypewriterOptions, TypewriterControls } from './useIncremark'
 import { addCursorToNode } from '../utils/cursor'
@@ -29,7 +30,7 @@ export interface UseTypewriterOptions {
 
 export interface UseTypewriterReturn {
   /** 用于渲染的 blocks（经过打字机处理或原始blocks） */
-  blocks: ComputedRef<Array<ParsedBlock & { stableId: string }>>
+  blocks: ComputedRef<Array<ParsedBlock & { isLastPending?: boolean }>>
   /** 打字机控制对象 */
   typewriter: TypewriterControls
   /** transformer 实例 */
@@ -91,7 +92,7 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
     return completedBlocks.value.map(block => ({
       id: block.id,
       node: block.node,
-      status: block.status as 'pending' | 'stable' | 'completed'
+      status: block.status as BlockStatus
     }))
   })
 
@@ -117,20 +118,7 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
 
   // 原始 blocks（不经过打字机）
   const rawBlocks = computed(() => {
-    const result: Array<ParsedBlock & { stableId: string }> = []
-
-    for (const block of completedBlocks.value) {
-      result.push({ ...block, stableId: block.id })
-    }
-
-    for (let i = 0; i < pendingBlocks.value.length; i++) {
-      result.push({
-        ...pendingBlocks.value[i],
-        stableId: `pending-${i}`
-      })
-    }
-
-    return result
+    return [...completedBlocks.value, ...pendingBlocks.value]
   })
 
   // 最终用于渲染的 blocks
@@ -153,8 +141,7 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
 
       return {
         id: db.id,
-        stableId: db.id,
-        status: (db.isDisplayComplete ? 'completed' : 'pending') as 'pending' | 'stable' | 'completed',
+        status: (db.isDisplayComplete ? 'completed' : 'pending') as BlockStatus,
         isLastPending,
         node,
         startOffset: 0,

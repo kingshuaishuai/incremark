@@ -1,10 +1,5 @@
-import { ref, computed, type Ref, type ComputedRef } from 'vue'
+import { computed, type Ref, type ComputedRef } from 'vue'
 import type { ParsedBlock } from '@incremark/core'
-
-export interface BlockWithStableId extends ParsedBlock {
-  /** 稳定的渲染 ID（用于 Vue key） */
-  stableId: string
-}
 
 export interface UseStreamRendererOptions {
   /** 已完成的块 */
@@ -14,42 +9,30 @@ export interface UseStreamRendererOptions {
 }
 
 export interface UseStreamRendererReturn {
-  /** 带稳定 ID 的已完成块 */
-  stableCompletedBlocks: ComputedRef<BlockWithStableId[]>
-  /** 带稳定 ID 的待处理块 */
-  stablePendingBlocks: ComputedRef<BlockWithStableId[]>
-  /** 所有带稳定 ID 的块 */
-  allStableBlocks: ComputedRef<BlockWithStableId[]>
+  /** 已完成的块 */
+  completedBlocks: ComputedRef<ParsedBlock[]>
+  /** 待处理的块 */
+  pendingBlocks: ComputedRef<ParsedBlock[]>
+  /** 所有块 */
+  allBlocks: ComputedRef<ParsedBlock[]>
 }
 
 /**
  * Vue 3 Composable: 流式渲染辅助
  *
- * 为块分配稳定的渲染 ID，确保 Vue 的虚拟 DOM 复用
+ * 直接使用 block.id 作为稳定的渲染 key
  */
 export function useStreamRenderer(options: UseStreamRendererOptions): UseStreamRendererReturn {
   const { completedBlocks, pendingBlocks } = options
 
-  const stableCompletedBlocks = computed<BlockWithStableId[]>(() =>
-    completedBlocks.value.map((block) => ({
-      ...block,
-      stableId: block.id
-    }))
-  )
-
-  const stablePendingBlocks = computed<BlockWithStableId[]>(() =>
-    pendingBlocks.value.map((block, index) => ({
-      ...block,
-      stableId: `pending-${index}`
-    }))
-  )
-
-  const allStableBlocks = computed(() => [...stableCompletedBlocks.value, ...stablePendingBlocks.value])
+  const completedBlocksComputed = computed<ParsedBlock[]>(() => completedBlocks.value)
+  const pendingBlocksComputed = computed<ParsedBlock[]>(() => pendingBlocks.value)
+  const allBlocks = computed(() => [...completedBlocksComputed.value, ...pendingBlocksComputed.value])
 
   return {
-    stableCompletedBlocks,
-    stablePendingBlocks,
-    allStableBlocks
+    completedBlocks: completedBlocksComputed,
+    pendingBlocks: pendingBlocksComputed,
+    allBlocks
   }
 }
 

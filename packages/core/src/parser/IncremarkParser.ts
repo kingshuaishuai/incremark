@@ -8,15 +8,6 @@
  * 4. 复杂嵌套节点（如列表、引用）作为整体处理，直到确认完成
  */
 
-import { fromMarkdown } from 'mdast-util-from-markdown'
-import { gfmFromMarkdown } from 'mdast-util-gfm'
-import { gfm } from 'micromark-extension-gfm'
-import { gfmFootnoteFromMarkdown } from 'mdast-util-gfm-footnote'
-import { math } from 'micromark-extension-math'
-import { mathFromMarkdown } from 'mdast-util-math'
-import type { Extension as MicromarkExtension } from 'micromark-util-types'
-import type { Extension as MdastExtension } from 'mdast-util-from-markdown'
-
 import type {
   Root,
   RootContent,
@@ -25,33 +16,19 @@ import type {
   ParserOptions,
   BlockStatus,
   BlockContext,
-  ContainerConfig,
-  ParserState
+  ParserState,
+  DefinitionMap,
+  FootnoteDefinitionMap
 } from '../types'
-
-import { transformHtmlNodes, type HtmlTreeExtensionOptions } from '../extensions/html-extension'
-import { micromarkReferenceExtension } from '../extensions/micromark-reference-extension'
-import { gfmFootnoteIncremental } from '../extensions/micromark-gfm-footnote-incremental'
-import { directive } from 'micromark-extension-directive'
-import { directiveFromMarkdown } from 'mdast-util-directive'
-import type { HTML, Paragraph, Text, Parent as MdastParent, Definition, FootnoteDefinition } from 'mdast'
-import type { DefinitionMap, FootnoteDefinitionMap } from '../types'
 
 import {
   createInitialContext,
-  updateContext,
-  isEmptyLine,
-  detectFenceStart,
-  isHeading,
-  isThematicBreak,
-  isBlockquoteStart,
-  isListItemStart,
-  detectContainer,
-  detectContainerEnd,
-  isFootnoteDefinitionStart,
-  isFootnoteContinuation
+  updateContext
 } from '../detector'
-import { isDefinitionNode, isFootnoteDefinitionNode } from '../utils'
+import { BoundaryDetector } from './boundary'
+import { DefinitionManager } from './manager'
+import { FootnoteManager } from './manager'
+import { AstBuilder } from './ast'
 
 // ============ 解析器类 ============
 
@@ -65,18 +42,16 @@ export class IncremarkParser {
   private blockIdCounter = 0
   private context: BlockContext
   private options: ParserOptions
-  /** 缓存的容器配置，避免重复计算 */
-  private readonly containerConfig: ContainerConfig | undefined
-  /** 缓存的 HTML 树配置，避免重复计算 */
-  private readonly htmlTreeConfig: HtmlTreeExtensionOptions | undefined
+  /** 边界检测器 */
+  private readonly boundaryDetector: BoundaryDetector
+  /** AST 构建器 */
+  private readonly astBuilder: AstBuilder
+  /** Definition 管理器 */
+  private readonly definitionManager: DefinitionManager
+  /** Footnote 管理器 */
+  private readonly footnoteManager: FootnoteManager
   /** 上次 append 返回的 pending blocks，用于 getAst 复用 */
   private lastPendingBlocks: ParsedBlock[] = []
-  /** Definition 映射表（用于引用式图片和链接） */
-  private definitionMap: DefinitionMap = {}
-  /** Footnote Definition 映射表 */
-  private footnoteDefinitionMap: FootnoteDefinitionMap = {}
-  /** Footnote Reference 出现顺序（按引用在文档中的顺序） */
-  private footnoteReferenceOrder: string[] = []
 
   constructor(options: ParserOptions = {}) {
     this.options = {
@@ -84,219 +59,25 @@ export class IncremarkParser {
       ...options
     }
     this.context = createInitialContext()
-    // 初始化容器配置（构造时计算一次）
-    this.containerConfig = this.computeContainerConfig()
-    // 初始化 HTML 树配置
-    this.htmlTreeConfig = this.computeHtmlTreeConfig()
+    // 初始化 AST 构建器
+    this.astBuilder = new AstBuilder(this.options)
+    // 初始化边界检测器
+    this.boundaryDetector = new BoundaryDetector({ containers: this.astBuilder.containerConfig })
+    // 初始化 Definition 和 Footnote 管理器
+    this.definitionManager = new DefinitionManager()
+    this.footnoteManager = new FootnoteManager()
   }
 
   private generateBlockId(): string {
     return `block-${++this.blockIdCounter}`
   }
 
-  private computeContainerConfig(): ContainerConfig | undefined {
-    const containers = this.options.containers
-    if (!containers) return undefined
-    return containers === true ? {} : containers
-  }
-
-  private computeHtmlTreeConfig(): HtmlTreeExtensionOptions | undefined {
-    const htmlTree = this.options.htmlTree
-    if (!htmlTree) return undefined
-    return htmlTree === true ? {} : htmlTree
-  }
-
   /**
-   * 将 HTML 节点转换为纯文本
-   * 递归处理 AST 中所有 html 类型的节点
-   * - 块级 HTML 节点 → 转换为 paragraph 包含 text
-   * - 内联 HTML 节点（在段落内部）→ 转换为 text 节点
+   * 更新已完成的 blocks 中的 definitions 和 footnote definitions
    */
-  private convertHtmlToText(ast: Root): Root {
-    // 处理内联节点（段落内部的 children）
-    const processInlineChildren = (children: unknown[]): unknown[] => {
-      return children.map(node => {
-        const n = node as RootContent
-        // 内联 html 节点转换为纯文本节点
-        if (n.type === 'html') {
-          const htmlNode = n as HTML
-          const textNode: Text = {
-            type: 'text',
-            value: htmlNode.value,
-            position: htmlNode.position
-          }
-          return textNode
-        }
-        
-        // 递归处理有 children 的内联节点（如 strong, emphasis 等）
-        if ('children' in n && Array.isArray(n.children)) {
-          const parent = n as MdastParent
-          return {
-            ...parent,
-            children: processInlineChildren(parent.children)
-          }
-        }
-        
-        return n
-      })
-    }
-
-    // 处理块级节点
-    const processBlockChildren = (children: RootContent[]): RootContent[] => {
-      return children.map(node => {
-        // 块级 html 节点转换为段落包含纯文本
-        if (node.type === 'html') {
-          const htmlNode = node as HTML
-          const textNode: Text = {
-            type: 'text',
-            value: htmlNode.value
-          }
-          const paragraphNode: Paragraph = {
-            type: 'paragraph',
-            children: [textNode],
-            position: htmlNode.position
-          }
-          return paragraphNode as RootContent
-        }
-        
-        // 递归处理有 children 的块级节点
-        if ('children' in node && Array.isArray(node.children)) {
-          const parent = node as MdastParent
-          // 对于段落等内联容器，使用 processInlineChildren
-          if (node.type === 'paragraph' || node.type === 'heading' || 
-              node.type === 'tableCell' || node.type === 'delete' ||
-              node.type === 'emphasis' || node.type === 'strong' ||
-              node.type === 'link' || node.type === 'linkReference') {
-            return {
-              ...parent,
-              children: processInlineChildren(parent.children)
-            } as RootContent
-          }
-          // 对于其他块级容器，递归处理
-          return {
-            ...parent,
-            children: processBlockChildren(parent.children as RootContent[])
-          } as RootContent
-        }
-        
-        return node
-      })
-    }
-    
-    return {
-      ...ast,
-      children: processBlockChildren(ast.children)
-    }
-  }
-
-  private parse(text: string): Root {
-    const extensions: MicromarkExtension[] = []
-    const mdastExtensions: MdastExtension[] = []
-
-    // 先添加 GFM（包含原始的脚注扩展）
-    if (this.options.gfm) {
-      extensions.push(gfm())
-      mdastExtensions.push(...gfmFromMarkdown(), gfmFootnoteFromMarkdown())
-    }
-
-    // 如果启用了数学公式支持，添加 math 扩展
-    if (this.options.math) {
-      extensions.push(math())
-      mdastExtensions.push(mathFromMarkdown())
-    }
-
-    // 如果启用了容器支持，自动添加 directive 扩展
-    if (this.containerConfig !== undefined) {
-      extensions.push(directive())
-      mdastExtensions.push(directiveFromMarkdown())
-    }
-
-    // 如果用户传入了自定义扩展，添加它们
-    if (this.options.extensions) {
-      extensions.push(...this.options.extensions)
-    }
-    if (this.options.mdastExtensions) {
-      mdastExtensions.push(...this.options.mdastExtensions)
-    }
-
-    // 添加增量脚注扩展，覆盖 GFM 脚注的定义检查
-    // ⚠️ 必须在 micromarkReferenceExtension 之前添加
-    // 因为 micromarkReferenceExtension 会拦截 `]`，并将 `[^1]` 交给脚注扩展处理
-    if (this.options.gfm) {
-      extensions.push(gfmFootnoteIncremental())
-    }
-    
-    // 添加 reference 扩展（支持增量解析），覆盖 commonmark 的 labelEnd
-    // ⚠️ 必须最后添加，确保它能拦截 `]` 并正确处理脚注
-    extensions.push(micromarkReferenceExtension())
-
-    // 生成 AST
-    let ast = fromMarkdown(text, { extensions, mdastExtensions })
-    
-    // 如果启用了 HTML 树转换，应用转换
-    if (this.htmlTreeConfig) {
-      ast = transformHtmlNodes(ast, this.htmlTreeConfig)
-    } else {
-      // 如果未启用 HTML 树，将 HTML 节点转换为纯文本
-      ast = this.convertHtmlToText(ast)
-    }
-    
-    return ast
-  }
-
   private updateDefinitionsFromCompletedBlocks(blocks: ParsedBlock[]): void {
-    for (const block of blocks) {
-      this.definitionMap = {
-        ...this.definitionMap,
-        ...this.findDefinition(block)
-      }
-
-      this.footnoteDefinitionMap = {
-        ...this.footnoteDefinitionMap,
-        ...this.findFootnoteDefinition(block)
-      }
-    }
-  }
-
-  private findDefinition(block: ParsedBlock): DefinitionMap {
-    const definitions: Definition[] = [];
-
-    function findDefinitionRecursive(node: RootContent) {
-      if (isDefinitionNode(node)) {
-        definitions.push(node as Definition);
-      }
-
-      if ('children' in node && Array.isArray(node.children)) {
-        for (const child of node.children) {
-          findDefinitionRecursive(child as RootContent);
-        }
-      }
-    }
-
-    findDefinitionRecursive(block.node);
-  
-    return definitions.reduce<DefinitionMap>((acc, node) => {
-      acc[node.identifier] = node;
-      return acc;
-    }, {});
-
-  }
-
-  private findFootnoteDefinition(block: ParsedBlock): FootnoteDefinitionMap {
-    const footnoteDefinitions: FootnoteDefinition[] = [];
-
-    function findFootnoteDefinition(node: RootContent) {
-      if (isFootnoteDefinitionNode(node)) {
-        footnoteDefinitions.push(node as FootnoteDefinition);
-      }
-    }
-
-    findFootnoteDefinition(block.node);
-
-    return footnoteDefinitions.reduce<FootnoteDefinitionMap>((acc, node) => {
-      acc[node.identifier] = node;
-      return acc;
-    }, {});
+    this.definitionManager.extractFromBlocks(blocks)
+    this.footnoteManager.extractDefinitionsFromBlocks(blocks)
   }
 
   /**
@@ -304,25 +85,7 @@ export class IncremarkParser {
    * 用于确定脚注的显示顺序
    */
   private collectFootnoteReferences(nodes: RootContent[]): void {
-    const visitNode = (node: any): void => {
-      if (!node) return
-
-      // 检查是否是脚注引用
-      if (node.type === 'footnoteReference') {
-        const identifier = node.identifier
-        // 去重：只记录第一次出现的位置
-        if (!this.footnoteReferenceOrder.includes(identifier)) {
-          this.footnoteReferenceOrder.push(identifier)
-        }
-      }
-
-      // 递归遍历子节点
-      if (node.children && Array.isArray(node.children)) {
-        node.children.forEach(visitNode)
-      }
-    }
-
-    nodes.forEach(visitNode)
+    this.footnoteManager.collectReferences(nodes)
   }
 
   /**
@@ -372,216 +135,12 @@ export class IncremarkParser {
    * 返回稳定边界行号和该行对应的上下文（用于后续更新，避免重复计算）
    */
   private findStableBoundary(): { line: number; contextAtLine: BlockContext } {
-    let stableLine = -1
-    let stableContext: BlockContext = this.context
-    let tempContext = { ...this.context }
-
-    for (let i = this.pendingStartLine; i < this.lines.length; i++) {
-      const line = this.lines[i]
-      const wasInFencedCode = tempContext.inFencedCode
-      const wasInContainer = tempContext.inContainer
-      const wasContainerDepth = tempContext.containerDepth
-
-      tempContext = updateContext(line, tempContext, this.containerConfig)
-
-      if (wasInFencedCode && !tempContext.inFencedCode) {
-        if (i < this.lines.length - 1) {
-          stableLine = i
-          stableContext = { ...tempContext }
-        }
-        continue
-      }
-
-      if (tempContext.inFencedCode) {
-        continue
-      }
-
-      if (wasInContainer && wasContainerDepth === 1 && !tempContext.inContainer) {
-        if (i < this.lines.length - 1) {
-          stableLine = i
-          stableContext = { ...tempContext }
-        }
-        continue
-      }
-
-      // ⚠️ 关键：如果当前在容器内，跳过所有稳定性检查
-      // 容器内的所有内容（包括空行、列表等）都应该被视为容器的一部分
-      // 只有容器结束标记才能作为稳定边界
-      if (tempContext.inContainer) {
-        continue
-      }
-
-      // 传入上下文信息，让 checkStability 能够判断是否在容器内
-      const stablePoint = this.checkStability(i, tempContext)
-      if (stablePoint >= 0) {
-        stableLine = stablePoint
-        stableContext = { ...tempContext }
-      }
-    }
-
-    return { line: stableLine, contextAtLine: stableContext }
-  }
-
-  private checkStability(lineIndex: number, context: BlockContext): number {
-    // 第一行永远不稳定
-    if (lineIndex === 0) {
-      return -1
-    }
-
-    const line = this.lines[lineIndex]
-    const prevLine = this.lines[lineIndex - 1]
-
-    // ⚠️ 关键修改：如果当前上下文在容器内，且当前行不是容器结束，则不判断为稳定边界
-    // 这样可以确保容器内的所有内容（包括空行、列表等）都被视为容器的一部分
-    if (context.inContainer) {
-      // 检查当前行是否是容器结束
-      if (this.containerConfig !== undefined) {
-        const containerEnd = detectContainerEnd(line, context, this.containerConfig)
-        if (containerEnd) {
-          // 容器结束，返回前一行作为稳定边界
-          return lineIndex - 1
-        }
-      }
-      // 容器内且不是容器结束，不判断为稳定边界
-      return -1
-    }
-
-    // ⚠️ 如果当前在列表中，需要特殊处理
-    // 列表内的空行不应该作为稳定边界，因为列表项之间可以有空行
-    if (context.inList) {
-      // 列表还没有确认结束（listMayEnd 为 false 或 undefined）
-      // 不应该在列表中间创建稳定边界
-      if (!context.listMayEnd) {
-        return -1
-      }
-      // 如果 listMayEnd 为 true，说明上一行是空行
-      // 需要检查当前行是否是列表延续或新列表项
-      const listItem = isListItemStart(line)
-      
-      // 检查当前行是否有足够的缩进以作为列表内容
-      const contentIndent = line.match(/^(\s*)/)?.[1].length ?? 0
-      const isListContent = contentIndent > (context.listIndent ?? 0)
-      
-      // 只有当当前行是列表延续或新列表项时，列表才继续
-      // 否则，空行就是列表的稳定边界
-      if (!listItem && !isListContent && !isEmptyLine(line)) {
-        // 当前行不是列表内容且不是空行，列表在上一行的空行处结束
-        return lineIndex - 1
-      }
-    }
-
-    // 前一行是独立块（标题、分割线），该块已完成
-    if (isHeading(prevLine) || isThematicBreak(prevLine)) {
-      return lineIndex - 1
-    }
-
-    // 最后一行不稳定（可能还有更多内容）
-    if (lineIndex >= this.lines.length - 1) {
-      return -1
-    }
-
-    // ============ 脚注定义的特殊处理 ============
-
-    // 情况 1: 前一行是脚注定义开始
-    if (isFootnoteDefinitionStart(prevLine)) {
-      // 当前行是空行或缩进行，脚注可能继续（不稳定）
-      if (isEmptyLine(line) || isFootnoteContinuation(line)) {
-        return -1
-      }
-      // 当前行是新脚注定义，前一个脚注完成
-      if (isFootnoteDefinitionStart(line)) {
-        return lineIndex - 1
-      }
-      // 当前行是非缩进的新块，前一个脚注完成
-      // 这种情况会在后续的判断中处理
-    }
-
-    // 情况 2: 前一行是缩进行，可能是脚注延续
-    // 注意：这个逻辑已经在 updateContext() 中通过 inFootnote 标志处理
-    // 这里不需要重复判断，统一使用 updateContext() 的结果
-    if (!isEmptyLine(prevLine) && isFootnoteContinuation(prevLine)) {
-      // 在脚注中的缩进行或空行，保持不稳定
-      // 实际的脚注边界判断由 updateContext() 中的 inFootnote 标志控制
-      return -1
-    }
-
-    // 前一行非空时，如果当前行是新块开始，则前一块已完成
-    if (!isEmptyLine(prevLine)) {
-      // 新脚注定义开始（排除连续脚注定义）
-      if (isFootnoteDefinitionStart(line) && !isFootnoteDefinitionStart(prevLine)) {
-        return lineIndex - 1
-      }
-
-      // 新标题开始
-      if (isHeading(line)) {
-        return lineIndex - 1
-      }
-
-      // 新代码块开始
-      if (detectFenceStart(line)) {
-        return lineIndex - 1
-      }
-
-      // 新引用块开始（排除连续引用）
-      if (isBlockquoteStart(line) && !isBlockquoteStart(prevLine)) {
-        return lineIndex - 1
-      }
-
-      // 新列表开始（排除连续列表项）
-      // ⚠️ 修改：只有在不在列表中时才触发这个逻辑
-      if (!context.inList && isListItemStart(line) && !isListItemStart(prevLine)) {
-        return lineIndex - 1
-      }
-
-      // 新容器开始
-      if (this.containerConfig !== undefined) {
-        const container = detectContainer(line, this.containerConfig)
-        if (container && !container.isEnd) {
-          const prevContainer = detectContainer(prevLine, this.containerConfig)
-          if (!prevContainer || prevContainer.isEnd) {
-            return lineIndex - 1
-          }
-        }
-      }
-    }
-
-    // 空行标志段落结束
-    // ⚠️ 修改：如果在列表中，空行不作为稳定边界
-    if (isEmptyLine(line) && !isEmptyLine(prevLine) && !context.inList) {
-      return lineIndex
-    }
-
-    return -1
-  }
-
-
-  private nodesToBlocks(
-    nodes: RootContent[],
-    startOffset: number,
-    rawText: string,
-    status: BlockStatus
-  ): ParsedBlock[] {
-    const blocks: ParsedBlock[] = []
-    let currentOffset = startOffset
-
-    for (const node of nodes) {
-      const nodeStart = node.position?.start?.offset ?? currentOffset
-      const nodeEnd = node.position?.end?.offset ?? currentOffset + 1
-      const nodeText = rawText.substring(nodeStart - startOffset, nodeEnd - startOffset)
-
-      blocks.push({
-        id: this.generateBlockId(),
-        status,
-        node,
-        startOffset: nodeStart,
-        endOffset: nodeEnd,
-        rawText: nodeText
-      })
-
-      currentOffset = nodeEnd
-    }
-
-    return blocks
+    const result = this.boundaryDetector.findStableBoundary(
+      this.lines,
+      this.pendingStartLine,
+      this.context
+    )
+    return { line: result.line, contextAtLine: result.context }
   }
 
   /**
@@ -607,8 +166,8 @@ export class IncremarkParser {
       const stableText = this.lines.slice(this.pendingStartLine, stableBoundary + 1).join('\n')
       const stableOffset = this.getLineOffset(this.pendingStartLine)
 
-      const ast = this.parse(stableText)
-      const newBlocks = this.nodesToBlocks(ast.children, stableOffset, stableText, 'completed')
+      const ast = this.astBuilder.parse(stableText)
+      const newBlocks = this.astBuilder.nodesToBlocks(ast.children, stableOffset, stableText, 'completed', () => this.generateBlockId())
 
       this.completedBlocks.push(...newBlocks)
       update.completed = newBlocks
@@ -626,9 +185,9 @@ export class IncremarkParser {
 
       if (pendingText.trim()) {
         const pendingOffset = this.getLineOffset(this.pendingStartLine)
-        const ast = this.parse(pendingText)
+        const ast = this.astBuilder.parse(pendingText)
 
-        update.pending = this.nodesToBlocks(ast.children, pendingOffset, pendingText, 'pending')
+        update.pending = this.astBuilder.nodesToBlocks(ast.children, pendingOffset, pendingText, 'pending', () => this.generateBlockId())
       }
     }
 
@@ -670,8 +229,8 @@ export class IncremarkParser {
             ...pendingBlocks.map((b) => b.node)
           ]
         },
-        definitions: { ...this.definitionMap },
-        footnoteDefinitions: { ...this.footnoteDefinitionMap }
+        definitions: { ...this.getDefinitionMap() },
+        footnoteDefinitions: { ...this.getFootnoteDefinitionMap() }
       }
       this.options.onChange(state)
     }
@@ -687,9 +246,9 @@ export class IncremarkParser {
       updated: [],
       pending: [],
       ast: { type: 'root', children: [] },
-      definitions: {},
-      footnoteDefinitions: {},
-      footnoteReferenceOrder: []
+      definitions: this.getDefinitionMap(),
+      footnoteDefinitions: this.getFootnoteDefinitionMap(),
+      footnoteReferenceOrder: this.getFootnoteReferenceOrder()
     }
 
     if (this.pendingStartLine < this.lines.length) {
@@ -697,13 +256,14 @@ export class IncremarkParser {
 
       if (remainingText.trim()) {
         const remainingOffset = this.getLineOffset(this.pendingStartLine)
-        const ast = this.parse(remainingText)
+        const ast = this.astBuilder.parse(remainingText)
 
-        const finalBlocks = this.nodesToBlocks(
+        const finalBlocks = this.astBuilder.nodesToBlocks(
           ast.children,
           remainingOffset,
           remainingText,
-          'completed'
+          'completed',
+          () => this.generateBlockId()
         )
 
         this.completedBlocks.push(...finalBlocks)
@@ -782,21 +342,21 @@ export class IncremarkParser {
    * 获取 Definition 映射表（用于引用式图片和链接）
    */
   getDefinitionMap(): DefinitionMap {
-    return { ...this.definitionMap }
+    return this.definitionManager.getAll()
   }
 
   /**
    * 获取 Footnote Definition 映射表
    */
   getFootnoteDefinitionMap(): FootnoteDefinitionMap {
-    return { ...this.footnoteDefinitionMap }
+    return this.footnoteManager.getDefinitions()
   }
 
   /**
    * 获取脚注引用的出现顺序
    */
   getFootnoteReferenceOrder(): string[] {
-    return [...this.footnoteReferenceOrder]
+    return this.footnoteManager.getReferenceOrder()
   }
 
   /**
@@ -822,10 +382,9 @@ export class IncremarkParser {
     this.blockIdCounter = 0
     this.context = createInitialContext()
     this.lastPendingBlocks = []
-    // 清空 definition 映射
-    this.definitionMap = {}
-    this.footnoteDefinitionMap = {}
-    this.footnoteReferenceOrder = []
+    // 清空 definition 和 footnote 映射
+    this.definitionManager.clear()
+    this.footnoteManager.clear()
 
     // 触发状态变化回调
     this.emitChange([])

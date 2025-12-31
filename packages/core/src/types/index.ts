@@ -20,7 +20,6 @@ export interface FootnoteDefinitionMap {
  */
 export type BlockStatus =
   | 'pending'    // 正在接收中，可能不完整
-  | 'stable'     // 可能完整，但下一个 chunk 可能会改变它
   | 'completed'  // 确认完成，不会再改变
 
 /**

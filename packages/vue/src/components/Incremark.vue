@@ -9,11 +9,8 @@ import IncremarkFootnotes from './IncremarkFootnotes.vue'
 // 组件映射类型
 export type ComponentMap = Partial<Record<string, Component>>
 
-// 带稳定 ID 的块类型
-export interface BlockWithStableId extends ParsedBlock {
-  stableId: string
-  isLastPending?: boolean // 是否是最后一个 pending 块
-}
+// 可渲染的块类型（带 isLastPending 字段用于打字机光标）
+export type RenderableBlock = ParsedBlock & { isLastPending?: boolean }
 
 /**
  * 代码块配置
@@ -34,7 +31,7 @@ export interface CodeBlockConfig {
 const props = withDefaults(
   defineProps<{
     /** 要渲染的块列表（来自 useIncremark 的 blocks） */
-    blocks?: BlockWithStableId[]
+    blocks?: RenderableBlock[]
     /** 内容是否完全显示完成（用于控制脚注等需要在内容完全显示后才出现的元素）
      * 如果传入了 incremark，则会自动使用 incremark.isDisplayComplete，此 prop 被忽略 */
     isDisplayComplete?: boolean
@@ -73,7 +70,7 @@ const {
 } = useDefinationsContext();
 
 // 计算实际使用的 blocks 和 isDisplayComplete
-const actualBlocks = computed<BlockWithStableId[]>(() => props.incremark?.blocks.value || props.blocks || [])
+const actualBlocks = computed<RenderableBlock[]>(() => props.incremark?.blocks.value || props.blocks || [])
 const actualIsDisplayComplete = computed(() => {
   // 优先使用 incremark 提供的 isDisplayComplete（已考虑打字机等状态）
   if (props.incremark) {
@@ -91,7 +88,7 @@ const actualIsDisplayComplete = computed(() => {
     <template v-for="block in actualBlocks">
       <div
         v-if="block.node.type !== 'definition' && block.node.type !== 'footnoteDefinition'"
-        :key="block.stableId"
+        :key="block.id"
         :class="[
           'incremark-block',
           block.status === 'completed' ? completedClass : pendingClass,

@@ -35,10 +35,8 @@ export interface UseIncremarkOptions extends ParserOptions {
   typewriter?: TypewriterOptions
 }
 
-export interface BlockWithStableId extends ParsedBlock {
-  stableId: string
-  isLastPending?: boolean // 是否是最后一个 pending 块
-}
+// 可渲染的块类型（带 isLastPending 字段用于打字机光标）
+export type RenderableBlock = ParsedBlock & { isLastPending?: boolean }
 
 /** 打字机控制对象 */
 export interface TypewriterControls {

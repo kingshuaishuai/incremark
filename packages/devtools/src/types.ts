@@ -2,7 +2,7 @@ import type { ParsedBlock, Root } from '@incremark/core'
 
 export interface DevToolsState {
   /** 所有块 */
-  blocks: Array<ParsedBlock & { stableId: string }>
+  blocks: ParsedBlock[]
   /** 已完成的块 */
   completedBlocks: ParsedBlock[]
   /** 待处理的块 */

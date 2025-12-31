@@ -11,7 +11,8 @@ import {
   type ParsedBlock,
   type DisplayBlock,
   type AnimationEffect,
-  type BlockTransformer
+  type BlockTransformer,
+  type BlockStatus
 } from '@incremark/core'
 import type { TypewriterOptions, TypewriterControls } from './useIncremark'
 import { addCursorToNode } from '../utils/cursor'
@@ -33,7 +34,7 @@ export interface UseTypewriterOptions {
  */
 export interface UseTypewriterReturn {
   /** 用于渲染的 blocks（经过打字机处理或原始blocks） */
-  blocks: Readable<Array<ParsedBlock & { stableId: string; isLastPending?: boolean }>>
+  blocks: Readable<Array<ParsedBlock & { isLastPending?: boolean }>>
   /** 打字机控制对象 */
   typewriter: TypewriterControls
   /** transformer 实例 */
@@ -97,7 +98,7 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
       return $completedBlocks.map(block => ({
         id: block.id,
         node: block.node,
-        status: block.status as 'pending' | 'stable' | 'completed'
+        status: block.status as BlockStatus
       }))
     }
   )
@@ -127,17 +128,16 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
   const rawBlocks = derived(
     [completedBlocks, pendingBlocks],
     ([$completedBlocks, $pendingBlocks]) => {
-      const result: Array<ParsedBlock & { stableId: string; isLastPending?: boolean }> = []
+      const result: Array<ParsedBlock & { isLastPending?: boolean }> = []
 
       for (const block of $completedBlocks) {
-        result.push({ ...block, stableId: block.id })
+        result.push(block)
       }
 
       for (let i = 0; i < $pendingBlocks.length; i++) {
         const isLastPending = i === $pendingBlocks.length - 1
         result.push({
           ...$pendingBlocks[i],
-          stableId: `pending-${i}`,
           isLastPending
         })
       }
@@ -168,8 +168,7 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
 
         return {
           id: db.id,
-          stableId: db.id,
-          status: (db.isDisplayComplete ? 'completed' : 'pending') as 'pending' | 'stable' | 'completed',
+          status: (db.isDisplayComplete ? 'completed' : 'pending') as BlockStatus,
           isLastPending,
           node,
           startOffset: 0,

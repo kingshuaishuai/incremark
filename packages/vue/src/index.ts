@@ -30,7 +30,7 @@ export {
   IncremarkFootnotes,
   AutoScrollContainer
 } from './components'
-export type { ComponentMap, BlockWithStableId } from './components'
+export type { ComponentMap, RenderableBlock } from './components'
 export { default as ThemeProvider } from './ThemeProvider.vue'
 
 // Re-export core types

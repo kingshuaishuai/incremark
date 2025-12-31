@@ -19,5 +19,5 @@ export { default as IncremarkDefault } from './IncremarkDefault.svelte'
 export { default as IncremarkRenderer } from './IncremarkRenderer.svelte'
 export { default as AutoScrollContainer } from './AutoScrollContainer.svelte'
 
-export type { ComponentMap, BlockWithStableId } from './types'
+export type { ComponentMap, RenderableBlock } from './types'
 

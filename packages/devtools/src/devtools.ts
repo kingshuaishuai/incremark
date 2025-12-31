@@ -419,8 +419,8 @@ export function mountDevTools(options?: DevToolsOptions) {
   }) => {
     // 转换为 DevToolsState 格式
     const blocks = [
-      ...state.completedBlocks.map((b) => ({ ...b, stableId: b.id })),
-      ...state.pendingBlocks.map((b, i) => ({ ...b, stableId: `pending-${i}` }))
+      ...state.completedBlocks,
+      ...state.pendingBlocks
     ]
 
     devtools.update({

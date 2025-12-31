@@ -16,9 +16,10 @@ import {
   type ParsedBlock,
   type DisplayBlock,
   type AnimationEffect,
-  type BlockTransformer
+  type BlockTransformer,
+  type BlockStatus
 } from '@incremark/core'
-import type { TypewriterOptions, TypewriterControls, BlockWithStableId } from './useIncremark'
+import type { TypewriterOptions, TypewriterControls, RenderableBlock } from './useIncremark'
 import { addCursorToNode } from '../utils/cursor'
 
 export interface UseTypewriterOptions {
@@ -29,7 +30,7 @@ export interface UseTypewriterOptions {
 
 export interface UseTypewriterReturn {
   /** 用于渲染的 blocks（经过打字机处理或原始blocks） */
-  blocks: BlockWithStableId[]
+  blocks: Array<RenderableBlock>
   /** 打字机控制对象 */
   typewriter: TypewriterControls
   /** transformer 实例 */
@@ -56,7 +57,7 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
   const transformerRef = useRef<BlockTransformer<RootContent> | null>(null)
 
   // 缓存已完成的 blocks，避免重新创建导致 fade-in 重新触发
-  const completedBlocksCacheRef = useRef<Map<string, BlockWithStableId>>(new Map())
+  const completedBlocksCacheRef = useRef<Map<string, RenderableBlock>>(new Map())
 
   // 打字机状态
   const [typewriterEnabled, setTypewriterEnabled] = useState(typewriterConfig?.enabled ?? hasTypewriterConfig)
@@ -102,7 +103,7 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
       completedBlocks.map((block) => ({
         id: block.id,
         node: block.node,
-        status: block.status as 'pending' | 'stable' | 'completed'
+        status: block.status as BlockStatus
       })),
     [completedBlocks]
   )
@@ -128,23 +129,10 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
   }, [sourceBlocks, transformer])
 
   // 最终用于渲染的 blocks
-  const blocks = useMemo<BlockWithStableId[]>(() => {
+  const blocks = useMemo(() => {
     // 未启用打字机或没有 transformer：返回原始 blocks
     if (!typewriterEnabled || !transformer) {
-      const result: BlockWithStableId[] = []
-
-      for (const block of completedBlocks) {
-        result.push({ ...block, stableId: block.id })
-      }
-
-      for (let i = 0; i < pendingBlocks.length; i++) {
-        result.push({
-          ...pendingBlocks[i],
-          stableId: `pending-${i}`
-        })
-      }
-
-      return result
+      return [...completedBlocks, ...pendingBlocks]
     }
 
     // 启用打字机：使用 displayBlocks state
@@ -166,10 +154,9 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
         node = addCursorToNode(db.displayNode, cursorRef.current)
       }
 
-      const block: BlockWithStableId = {
+      const block: RenderableBlock = {
         id: db.id,
-        stableId: db.id,
-        status: (db.isDisplayComplete ? 'completed' : 'pending') as 'pending' | 'stable' | 'completed',
+        status: (db.isDisplayComplete ? 'completed' : 'pending') as BlockStatus,
         isLastPending,
         node,
         startOffset: 0,

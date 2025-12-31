@@ -1,14 +1,8 @@
 import React from 'react'
-import type { ParsedBlock } from '@incremark/core'
 import { IncremarkRenderer } from './IncremarkRenderer'
 import { IncremarkFootnotes } from './IncremarkFootnotes'
-import type { UseIncremarkReturn } from '../hooks/useIncremark'
+import type { UseIncremarkReturn, RenderableBlock } from '../hooks/useIncremark'
 import { IncremarkContainerProvider } from './IncremarkContainerProvider'
-
-interface BlockWithStableId extends ParsedBlock {
-  stableId: string
-  isLastPending?: boolean // 是否是最后一个 pending 块
-}
 
 /**
  * 代码块配置
@@ -20,7 +14,7 @@ export interface CodeBlockConfig {
 
 export interface IncremarkProps {
   /** 要渲染的块列表 */
-  blocks?: BlockWithStableId[]
+  blocks?: RenderableBlock[]
   /** 内容是否完全显示完成（用于控制脚注等需要在内容完全显示后才出现的元素）
    * 如果传入了 incremark，则会自动使用 incremark.isDisplayComplete，此 prop 被忽略 */
   isDisplayComplete?: boolean
@@ -105,7 +99,7 @@ export const Incremark: React.FC<IncremarkProps> = (props) => {
  * 内部渲染组件（不对外暴露）
  */
 interface IncremarkInternalProps {
-  blocks: BlockWithStableId[]
+  blocks: RenderableBlock[]
   components?: Partial<Record<string, React.ComponentType<{ node: any }>>>
   customContainers?: Record<string, React.ComponentType<{ name: string; options?: Record<string, any>; children?: React.ReactNode }>>
   customCodeBlocks?: Record<string, React.ComponentType<{ codeStr: string; lang?: string; completed?: boolean; takeOver?: boolean }>>
@@ -143,7 +137,7 @@ const IncremarkInternal: React.FC<IncremarkInternalProps> = ({
         ].filter(Boolean).join(' ')
 
         return (
-          <div key={block.stableId} className={classes}>
+          <div key={block.id} className={classes}>
             <IncremarkRenderer
               node={block.node}
               components={components}

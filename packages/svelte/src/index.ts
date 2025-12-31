@@ -32,7 +32,7 @@ export {
   IncremarkDefault,
   IncremarkRenderer,
   type ComponentMap,
-  type BlockWithStableId
+  type RenderableBlock
 } from './components'
 
 // Additional Components

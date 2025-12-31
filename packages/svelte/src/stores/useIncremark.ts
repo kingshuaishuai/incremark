@@ -44,6 +44,9 @@ export interface UseIncremarkOptions extends ParserOptions {
   typewriter?: TypewriterOptions
 }
 
+// 可渲染的块类型（带 isLastPending 字段用于打字机光标）
+export type RenderableBlock = ParsedBlock & { isLastPending?: boolean }
+
 /**
  * 打字机控制对象
  */
@@ -81,7 +84,7 @@ export interface UseIncremarkReturn {
   /** 当前完整的 AST */
   ast: Readable<Root>
   /** 用于渲染的 blocks（根据打字机设置自动处理） */
-  blocks: Readable<Array<ParsedBlock & { stableId: string; isLastPending?: boolean }>>
+  blocks: Readable<Array<RenderableBlock>>
   /** 是否正在加载 */
   isLoading: Writable<boolean>
   /** 是否已完成（finalize） */

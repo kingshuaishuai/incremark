@@ -11,7 +11,7 @@
 
   import { getDefinitionsContext } from '../context/definitionsContext'
   import type { UseIncremarkReturn } from '../stores/useIncremark'
-  import type { ComponentMap, BlockWithStableId } from './types'
+  import type { ComponentMap, RenderableBlock } from './types'
 
   // 导入组件
   import IncremarkFootnotes from './IncremarkFootnotes.svelte'
@@ -29,7 +29,7 @@
    */
   interface Props {
     /** 要渲染的块列表（来自 useIncremark 的 blocks） */
-    blocks?: BlockWithStableId[] | Readable<BlockWithStableId[]>
+    blocks?: RenderableBlock[] | Readable<RenderableBlock[]>
     /** 内容是否完全显示完成（用于控制脚注等需要在内容完全显示后才出现的元素）
      * 如果传入了 incremark，则会自动使用 incremark.isDisplayComplete，此 prop 被忽略 */
     isDisplayComplete?: boolean
@@ -80,10 +80,10 @@
   <!-- 主要内容块 -->
   {#if incremark}
     <!-- 使用 incremark 的 blocks store -->
-    {#each $incremarkBlocks as block (block.stableId)}
+    {#each $incremarkBlocks as block (block.id)}
       {#if (block as ParsedBlock).node.type !== 'definition' && (block as ParsedBlock).node.type !== 'footnoteDefinition'}
         <div
-          class="incremark-block {(block as ParsedBlock).status === 'completed' ? completedClass : pendingClass} {showBlockStatus ? 'incremark-show-status' : ''} {(block as BlockWithStableId).isLastPending ? 'incremark-last-pending' : ''}"
+          class="incremark-block {(block as ParsedBlock).status === 'completed' ? completedClass : pendingClass} {showBlockStatus ? 'incremark-show-status' : ''} {(block as RenderableBlock).isLastPending ? 'incremark-last-pending' : ''}"
         >
           <!-- 使用 IncremarkRenderer，传递 customContainers 和 customCodeBlocks -->
           <IncremarkRenderer
@@ -98,10 +98,10 @@
     {/each}
   {:else}
     <!-- 使用传入的 blocks 数组 -->
-    {#each (Array.isArray(blocks) ? blocks : []) as block (block.stableId)}
+    {#each (Array.isArray(blocks) ? blocks : []) as block (block.id)}
       {#if (block as ParsedBlock).node.type !== 'definition' && (block as ParsedBlock).node.type !== 'footnoteDefinition'}
         <div
-          class="incremark-block {(block as ParsedBlock).status === 'completed' ? completedClass : pendingClass} {showBlockStatus ? 'incremark-show-status' : ''} {block.isLastPending ? 'incremark-last-pending' : ''}"
+          class="incremark-block {(block as ParsedBlock).status === 'completed' ? completedClass : pendingClass} {showBlockStatus ? 'incremark-show-status' : ''} {(block as RenderableBlock).isLastPending ? 'incremark-last-pending' : ''}"
         >
           <!-- 使用 IncremarkRenderer，传递 customContainers 和 customCodeBlocks -->
           <IncremarkRenderer

@@ -1,6 +1,6 @@
 // 主组件
 export { default as Incremark } from './Incremark.vue'
-export type { ComponentMap, BlockWithStableId } from './Incremark.vue'
+export type { ComponentMap, RenderableBlock } from './Incremark.vue'
 
 // 渲染器组件 - 用于自定义渲染
 export { default as IncremarkRenderer } from './IncremarkRenderer.vue'
