@@ -2,72 +2,32 @@
  * @incremark/core
  *
  * 增量式 Markdown 解析器核心库
+ *
+ * 提供流式解析 Markdown 文本的能力
  * 专为 AI 流式输出场景设计
  */
 
-// 核心解析器
+// ============ 核心解析器 ============
 export { IncremarkParser, createIncremarkParser } from './parser'
 
-// 类型导出
+// ============ 核心类型 ============
 export type {
-  BlockStatus,
-  ParsedBlock,
-  IncrementalUpdate,
+  // 解析器相关
   ParserOptions,
   ParserState,
-  ContainerConfig,
-  BlockContext,
-  ContainerMatch,
-  BlockTypeInfo,
+  ParsedBlock,
+  IncrementalUpdate,
+  BlockStatus,
   AstNode,
+  // mdast 类型（用户处理 AST 时需要）
   Root,
   RootContent
 } from './types'
 
-// 检测器
+// ============ Block Transformer（打字机效果） ============
 export {
-  // 代码块
-  detectFenceStart,
-  detectFenceEnd,
-  // 行类型
-  isEmptyLine,
-  isHeading,
-  isThematicBreak,
-  isListItemStart,
-  isBlockquoteStart,
-  isHtmlBlock,
-  isTableDelimiter,
-  // 容器
-  detectContainer,
-  detectContainerEnd,
-  // 边界
-  isBlockBoundary,
-  // 上下文
-  createInitialContext,
-  updateContext
-} from './detector'
-
-// 工具函数
-export { generateId, resetIdCounter, calculateLineOffset, splitLines, joinLines } from './utils'
-
-// Block Transformer（打字机效果中间层）
-export {
-  // 核心类
   BlockTransformer,
-  createBlockTransformer,
-  // 工具函数
-  countChars,
-  sliceAst,
-  cloneNode,
-  // 内置插件
-  codeBlockPlugin,
-  mermaidPlugin,
-  imagePlugin,
-  mathPlugin,
-  thematicBreakPlugin,
-  defaultPlugins,
-  allPlugins,
-  createPlugin
+  createBlockTransformer
 } from './transformer'
 
 // Transformer 类型
@@ -77,41 +37,30 @@ export type {
   TransformerPlugin,
   TransformerOptions,
   TransformerState,
-  AnimationEffect,
+  AnimationEffect
+} from './transformer/types'
+
+// Transformer 插件
+export {
+  codeBlockPlugin,
+  mermaidPlugin,
+  imagePlugin,
+  mathPlugin,
+  thematicBreakPlugin,
+  defaultPlugins,
+  allPlugins,
+  createPlugin
+} from './transformer/plugins'
+
+// Transformer 工具函数（处理 AST 时需要）
+export {
+  countChars,
+  sliceAst,
+  cloneNode
+} from './transformer/utils'
+
+// Transformer 工具类型
+export type {
   TextChunk,
   TextNodeWithChunks
-} from './transformer'
-
-// HTML 树扩展
-export {
-  // 核心转换器
-  transformHtmlNodes,
-  createHtmlTreeTransformer,
-  // 解析工具
-  parseHtmlTag,
-  parseHtmlFragment,
-  detectHtmlContentType,
-  // 类型守卫
-  isHtmlElementNode,
-  // 遍历工具
-  walkHtmlElements,
-  findHtmlElementsByTag,
-  // 序列化
-  htmlElementToString,
-  // 黑名单常量
-  HTML_TAG_BLACKLIST,
-  HTML_ATTR_BLACKLIST,
-  HTML_PROTOCOL_BLACKLIST,
-  // mdast 扩展
-  htmlTreeExtension
-} from './extensions/html-extension'
-
-// HTML 扩展类型
-export type {
-  HtmlElementNode,
-  HtmlAttrInfo,
-  ParsedHtmlTag,
-  HtmlTreeExtensionOptions,
-  HtmlContentType
-} from './extensions/html-extension'
-
+} from './transformer/utils'
