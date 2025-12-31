@@ -1,11 +1,5 @@
-<!--
-  @file IncremarkCode.svelte - 代码块组件
-  @description 渲染 Markdown 代码块，支持 Shiki 代码高亮和 Mermaid 图表渲染
--->
-
 <script lang="ts">
   import type { Code } from 'mdast'
-  import { onDestroy } from 'svelte'
   import { useShiki } from '../stores/useShiki'
 
   /**
@@ -54,8 +48,8 @@
   // 视图模式：'preview' | 'source'
   let mermaidViewMode = $state<'preview' | 'source'>('preview')
 
-  // 使用 Shiki 单例管理器
-  const { isHighlighting, highlight } = useShiki(theme)
+  // 使用 Shiki 单例管理器 - 修复：传入 getter 闭包以保持响应式
+  const shiki = useShiki(() => theme)
 
   /**
    * 计算属性
@@ -69,18 +63,10 @@
     const component = customCodeBlocks?.[language]
     if (!component) return null
 
-    // 检查该语言的配置
     const config = codeBlockConfigs?.[language]
 
-    // 如果配置了 takeOver 为 true，则从一开始就使用
-    if (config?.takeOver) {
-      return component
-    }
-
-    // 否则，默认行为：只在 completed 状态使用
-    if (blockStatus !== 'completed') {
-      return null
-    }
+    if (config?.takeOver) return component
+    if (blockStatus !== 'completed') return null
 
     return component
   })
@@ -93,37 +79,15 @@
   }
 
   /**
-   * Mermaid 渲染（带防抖动）
-   */
-  function scheduleRenderMermaid() {
-    if (!isMermaid || !code) return
-
-    // 清除之前的定时器
-    if (mermaidTimer) {
-      clearTimeout(mermaidTimer)
-    }
-
-    // 显示加载状态
-    mermaidLoading = true
-
-    // 防抖动延迟渲染
-    mermaidTimer = setTimeout(() => {
-      doRenderMermaid()
-    }, mermaidDelay)
-  }
-
-  /**
    * 执行 Mermaid 渲染
    */
   async function doRenderMermaid() {
     if (!code) return
-
     mermaidError = ''
 
     try {
-      // 动态导入 mermaid
       if (!mermaidRef) {
-        // @ts-ignore - mermaid 是可选依赖
+        // @ts-ignore
         const mermaidModule = await import('mermaid')
         mermaidRef = mermaidModule.default
         mermaidRef.initialize({
@@ -133,13 +97,10 @@
         })
       }
 
-      const mermaid = mermaidRef
       const id = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2)}`
-
-      const { svg } = await mermaid.render(id, code)
+      const { svg } = await mermaidRef.render(id, code)
       mermaidSvg = svg
     } catch (e: any) {
-      // 不显示错误，可能是代码还不完整
       mermaidError = ''
       mermaidSvg = ''
     } finally {
@@ -152,7 +113,10 @@
    */
   async function doHighlight() {
     if (isMermaid) {
-      scheduleRenderMermaid()
+      // Mermaid 防抖逻辑
+      if (mermaidTimer) clearTimeout(mermaidTimer)
+      mermaidLoading = true
+      mermaidTimer = setTimeout(doRenderMermaid, mermaidDelay)
       return
     }
 
@@ -162,10 +126,10 @@
     }
 
     try {
-      const html = await highlight(code, language, fallbackTheme)
+      // 调用经过修复的 shiki.highlight
+      const html = await shiki.highlight(code, language, fallbackTheme)
       highlightedHtml = html
     } catch (e) {
-      // Shiki 不可用或加载失败
       highlightedHtml = ''
     }
   }
@@ -177,31 +141,29 @@
     try {
       await navigator.clipboard.writeText(code)
       copied = true
-      setTimeout(() => {
-        copied = false
-      }, 2000)
-    } catch {
-      // 复制失败静默处理
-    }
+      setTimeout(() => { copied = false }, 2000)
+    } catch { /* 静默处理 */ }
   }
 
-  // 监听代码变化，重新高亮/渲染
+  // 监听代码、主题、语言变化并重新渲染
   $effect(() => {
     doHighlight()
-  })
-
-  // 清理
-  onDestroy(() => {
-    if (mermaidTimer) {
-      clearTimeout(mermaidTimer)
+    
+    // 返回清理函数取代 onDestroy
+    return () => {
+      if (mermaidTimer) clearTimeout(mermaidTimer)
     }
   })
 </script>
 
-<!-- 自定义代码块组件 -->
 {#if CustomCodeBlock}
   {@const Component = CustomCodeBlock}
-  <Component codeStr={code} lang={language} completed={blockStatus === 'completed'} takeOver={codeBlockConfigs?.[language]?.takeOver} />
+  <Component 
+    codeStr={code} 
+    lang={language} 
+    completed={blockStatus === 'completed'} 
+    takeOver={codeBlockConfigs?.[language]?.takeOver} 
+  />
 {:else if isMermaid}
   <div class="incremark-mermaid">
     <div class="mermaid-header">
@@ -221,23 +183,18 @@
       </div>
     </div>
     <div class="mermaid-content">
-      <!-- 加载中 -->
       {#if mermaidLoading && !mermaidSvg}
         <pre class="mermaid-source-code">{code}</pre>
-      <!-- 源码模式 -->
       {:else if mermaidViewMode === 'source'}
         <pre class="mermaid-source-code">{code}</pre>
-      <!-- 预览模式 -->
       {:else if mermaidSvg}
         {@html mermaidSvg}
-      <!-- 无法渲染时显示源码 -->
       {:else}
         <pre class="mermaid-source-code">{code}</pre>
       {/if}
     </div>
   </div>
 {:else}
-  <!-- 普通代码块 -->
   <div class="incremark-code">
     <div class="code-header">
       <span class="language">{language}</span>
@@ -246,21 +203,17 @@
       </button>
     </div>
     <div class="code-content">
-      <!-- 正在加载高亮 -->
-      {#if isHighlighting && !highlightedHtml}
+      {#if shiki.isHighlighting && !highlightedHtml}
         <div class="code-loading">
           <pre><code>{code}</code></pre>
         </div>
-      <!-- 高亮后的代码 -->
       {:else if highlightedHtml}
         <div class="shiki-wrapper">
           {@html highlightedHtml}
         </div>
-      <!-- 回退：无高亮 -->
       {:else}
         <pre class="code-fallback"><code>{code}</code></pre>
       {/if}
     </div>
   </div>
 {/if}
-
