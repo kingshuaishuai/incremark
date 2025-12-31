@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import type { Code } from 'mdast'
+import { useShiki } from '../hooks/useShiki'
 
 export interface IncremarkCodeProps {
   node: Code
@@ -31,20 +32,19 @@ export const IncremarkCode: React.FC<IncremarkCodeProps> = ({
 }) => {
   const [copied, setCopied] = useState(false)
   const [highlightedHtml, setHighlightedHtml] = useState('')
-  const [isHighlighting, setIsHighlighting] = useState(false)
   const [mermaidSvg, setMermaidSvg] = useState('')
   const [mermaidLoading, setMermaidLoading] = useState(false)
   const [mermaidViewMode, setMermaidViewMode] = useState<'preview' | 'source'>('preview')
-  
+
   const mermaidRef = useRef<any>(null)
-  const highlighterRef = useRef<any>(null)
   const mermaidTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const loadedLanguagesRef = useRef<Set<string>>(new Set())
-  const loadedThemesRef = useRef<Set<string>>(new Set())
-  
+
   const language = node.lang || 'text'
   const code = node.value
   const isMermaid = language === 'mermaid'
+
+  // 使用 Shiki 单例管理器
+  const { isHighlighting, highlight } = useShiki(theme)
 
   // 检查是否有自定义代码块组件
   const CustomCodeBlock = React.useMemo(() => {
@@ -70,7 +70,7 @@ export const IncremarkCode: React.FC<IncremarkCodeProps> = ({
   const toggleMermaidView = useCallback(() => {
     setMermaidViewMode(prev => prev === 'preview' ? 'source' : 'preview')
   }, [])
-  
+
   const copyCode = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(code)
@@ -80,10 +80,10 @@ export const IncremarkCode: React.FC<IncremarkCodeProps> = ({
       // 复制失败静默处理
     }
   }, [code])
-  
+
   const doRenderMermaid = useCallback(async () => {
     if (!code) return
-    
+
     try {
       if (!mermaidRef.current) {
         const mermaidModule = await import('mermaid')
@@ -94,7 +94,7 @@ export const IncremarkCode: React.FC<IncremarkCodeProps> = ({
           securityLevel: 'loose'
         })
       }
-      
+
       const mermaid = mermaidRef.current
       const id = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2)}`
       const { svg } = await mermaid.render(id, code)
@@ -105,21 +105,21 @@ export const IncremarkCode: React.FC<IncremarkCodeProps> = ({
       setMermaidLoading(false)
     }
   }, [code])
-  
+
   const scheduleRenderMermaid = useCallback(() => {
     if (!isMermaid || !code) return
-    
+
     if (mermaidTimerRef.current) {
       clearTimeout(mermaidTimerRef.current)
     }
-    
+
     setMermaidLoading(true)
     mermaidTimerRef.current = setTimeout(() => {
       doRenderMermaid()
     }, mermaidDelay)
   }, [isMermaid, code, mermaidDelay, doRenderMermaid])
-  
-  const highlight = useCallback(async () => {
+
+  const doHighlight = useCallback(async () => {
     if (isMermaid) {
       scheduleRenderMermaid()
       return
@@ -130,57 +130,18 @@ export const IncremarkCode: React.FC<IncremarkCodeProps> = ({
       return
     }
 
-    setIsHighlighting(true)
-
     try {
-      if (!highlighterRef.current) {
-        const { createHighlighter } = await import('shiki')
-        highlighterRef.current = await createHighlighter({
-          themes: [theme as any],
-          langs: []
-        })
-        loadedThemesRef.current.add(theme)
-      }
-
-      const highlighter = highlighterRef.current
-      const lang = language
-
-      // 按需加载语言
-      if (!loadedLanguagesRef.current.has(lang) && lang !== 'text') {
-        try {
-          await highlighter.loadLanguage(lang)
-          loadedLanguagesRef.current.add(lang)
-        } catch {
-          // 语言不支持，标记但不阻止
-        }
-      }
-
-      // 按需加载主题
-      if (!loadedThemesRef.current.has(theme)) {
-        try {
-          await highlighter.loadTheme(theme)
-          loadedThemesRef.current.add(theme)
-        } catch {
-          // 主题不支持
-        }
-      }
-
-      const html = highlighter.codeToHtml(code, {
-        lang: loadedLanguagesRef.current.has(lang) ? lang : 'text',
-        theme: loadedThemesRef.current.has(theme) ? theme : fallbackTheme
-      })
+      const html = await highlight(code, language, fallbackTheme)
       setHighlightedHtml(html)
     } catch {
       // Shiki 不可用或加载失败
       setHighlightedHtml('')
-    } finally {
-      setIsHighlighting(false)
     }
-  }, [code, language, theme, fallbackTheme, disableHighlight, isMermaid, scheduleRenderMermaid])
-  
+  }, [code, language, fallbackTheme, disableHighlight, isMermaid, highlight, scheduleRenderMermaid])
+
   useEffect(() => {
-    highlight()
-  }, [highlight])
+    doHighlight()
+  }, [doHighlight])
   
   useEffect(() => {
     return () => {

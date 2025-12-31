@@ -5,7 +5,8 @@
 
 <script lang="ts">
   import type { Code } from 'mdast'
-  import { onMount, onDestroy } from 'svelte'
+  import { onDestroy } from 'svelte'
+  import { useShiki } from '../stores/useShiki'
 
   /**
    * 组件 Props
@@ -43,8 +44,6 @@
   // 状态
   let copied = $state(false)
   let highlightedHtml = $state('')
-  let isHighlighting = $state(false)
-  let highlightError = $state(false)
 
   // Mermaid 支持
   let mermaidSvg = $state('')
@@ -55,10 +54,8 @@
   // 视图模式：'preview' | 'source'
   let mermaidViewMode = $state<'preview' | 'source'>('preview')
 
-  // 缓存 highlighter
-  let highlighterRef: any = null
-  const loadedLanguages = new Set<string>()
-  const loadedThemes = new Set<string>()
+  // 使用 Shiki 单例管理器
+  const { isHighlighting, highlight } = useShiki(theme)
 
   /**
    * 计算属性
@@ -153,7 +150,7 @@
   /**
    * 动态加载 shiki 并高亮
    */
-  async function highlight() {
+  async function doHighlight() {
     if (isMermaid) {
       scheduleRenderMermaid()
       return
@@ -164,54 +161,12 @@
       return
     }
 
-    isHighlighting = true
-    highlightError = false
-
     try {
-      // 动态导入 shiki
-      if (!highlighterRef) {
-        const { createHighlighter } = await import('shiki')
-        highlighterRef = await createHighlighter({
-          themes: [theme as any],
-          langs: []
-        })
-        loadedThemes.add(theme)
-      }
-
-      const highlighter = highlighterRef
-      const lang = language
-
-      // 按需加载语言
-      if (!loadedLanguages.has(lang) && lang !== 'text') {
-        try {
-          await highlighter.loadLanguage(lang)
-          loadedLanguages.add(lang)
-        } catch {
-          // 语言不支持，标记但不阻止
-        }
-      }
-
-      // 按需加载主题
-      if (!loadedThemes.has(theme)) {
-        try {
-          await highlighter.loadTheme(theme)
-          loadedThemes.add(theme)
-        } catch {
-          // 主题不支持
-        }
-      }
-
-      const html = highlighter.codeToHtml(code, {
-        lang: loadedLanguages.has(lang) ? lang : 'text',
-        theme: loadedThemes.has(theme) ? theme : fallbackTheme
-      })
+      const html = await highlight(code, language, fallbackTheme)
       highlightedHtml = html
     } catch (e) {
       // Shiki 不可用或加载失败
-      highlightError = true
       highlightedHtml = ''
-    } finally {
-      isHighlighting = false
     }
   }
 
@@ -232,7 +187,7 @@
 
   // 监听代码变化，重新高亮/渲染
   $effect(() => {
-    highlight()
+    doHighlight()
   })
 
   // 清理

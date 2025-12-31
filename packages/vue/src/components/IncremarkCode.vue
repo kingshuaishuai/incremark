@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { Code } from 'mdast'
 import type { Component } from 'vue'
-import { computed, ref, watch, shallowRef, onUnmounted } from 'vue'
+import { computed, ref, watch, onUnmounted, shallowRef } from 'vue'
 
 import type { CodeBlockConfig } from './Incremark.vue'
+import { useShiki } from '../composables/useShiki'
 
 const props = withDefaults(
   defineProps<{
@@ -36,8 +37,6 @@ const props = withDefaults(
 
 const copied = ref(false)
 const highlightedHtml = ref('')
-const isHighlighting = ref(false)
-const highlightError = ref(false)
 
 // Mermaid 支持
 const mermaidSvg = ref('')
@@ -78,13 +77,8 @@ const CustomCodeBlock = computed(() => {
   return component
 })
 
-// 是否使用自定义组件
-const useCustomComponent = computed(() => !!CustomCodeBlock.value)
-
-// 缓存 highlighter
-const highlighterRef = shallowRef<any>(null)
-const loadedLanguages = new Set<string>()
-const loadedThemes = new Set<string>()
+// 使用 Shiki 单例管理器
+const { isHighlighting, highlight } = useShiki(props.theme)
 
 // Mermaid 渲染（带防抖动）
 function scheduleRenderMermaid() {
@@ -136,14 +130,8 @@ async function doRenderMermaid() {
   }
 }
 
-onUnmounted(() => {
-  if (mermaidTimer) {
-    clearTimeout(mermaidTimer)
-  }
-})
-
 // 动态加载 shiki 并高亮
-async function highlight() {
+async function doHighlight() {
   if (isMermaid.value) {
     scheduleRenderMermaid()
     return
@@ -154,59 +142,24 @@ async function highlight() {
     return
   }
 
-  isHighlighting.value = true
-  highlightError.value = false
-
   try {
-    // 动态导入 shiki
-    if (!highlighterRef.value) {
-      const { createHighlighter } = await import('shiki')
-      highlighterRef.value = await createHighlighter({
-        themes: [props.theme as any],
-        langs: []
-      })
-      loadedThemes.add(props.theme)
-    }
-
-    const highlighter = highlighterRef.value
-    const lang = language.value
-
-    // 按需加载语言
-    if (!loadedLanguages.has(lang) && lang !== 'text') {
-      try {
-        await highlighter.loadLanguage(lang)
-        loadedLanguages.add(lang)
-      } catch {
-        // 语言不支持，标记但不阻止
-      }
-    }
-
-    // 按需加载主题
-    if (!loadedThemes.has(props.theme)) {
-      try {
-        await highlighter.loadTheme(props.theme)
-        loadedThemes.add(props.theme)
-      } catch {
-        // 主题不支持
-      }
-    }
-
-    const html = highlighter.codeToHtml(code.value, {
-      lang: loadedLanguages.has(lang) ? lang : 'text',
-      theme: loadedThemes.has(props.theme) ? props.theme : props.fallbackTheme
-    })
+    const html = await highlight(code.value, language.value, props.fallbackTheme)
     highlightedHtml.value = html
   } catch (e) {
     // Shiki 不可用或加载失败
-    highlightError.value = true
     highlightedHtml.value = ''
-  } finally {
-    isHighlighting.value = false
   }
 }
 
 // 监听代码变化，重新高亮/渲染
-watch([code, () => props.theme, isMermaid], highlight, { immediate: true })
+watch([code, () => props.theme, isMermaid], doHighlight, { immediate: true })
+
+// 组件卸载时清理 Mermaid 定时器
+onUnmounted(() => {
+  if (mermaidTimer) {
+    clearTimeout(mermaidTimer)
+  }
+})
 
 async function copyCode() {
   try {
