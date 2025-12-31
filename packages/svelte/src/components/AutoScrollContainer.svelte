@@ -4,7 +4,7 @@
 -->
 
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte'
+  import { onMount, onDestroy, tick } from 'svelte'
   import type { HTMLAttributes } from 'svelte/elements';
 
   /**
@@ -117,24 +117,24 @@
     lastScrollTop = containerRef.scrollTop
     lastScrollHeight = containerRef.scrollHeight
     
-    observer = new MutationObserver(() => {
+    observer = new MutationObserver(async () => {
       // 使用 tick 等待 DOM 更新
-      setTimeout(() => {
-        if (!containerRef) return
-        
-        // 如果没有滚动条，重置状态
-        if (!hasScrollbar()) {
-          isUserScrolledUp = false
-        }
-        
-        // 更新 scrollHeight 记录（内容变化后）
-        lastScrollHeight = containerRef.scrollHeight
-        
-        // 自动滚动
-        if (enabled && !isUserScrolledUp) {
-          scrollToBottom()
-        }
-      }, 0)
+      await tick()
+      
+      if (!containerRef) return
+      
+      // 如果没有滚动条，重置状态
+      if (!hasScrollbar()) {
+        isUserScrolledUp = false
+      }
+      
+      // 更新 scrollHeight 记录（内容变化后）
+      lastScrollHeight = containerRef.scrollHeight
+      
+      // 自动滚动
+      if (enabled && !isUserScrolledUp) {
+        scrollToBottom()
+      }
     })
     
     observer.observe(containerRef, {
