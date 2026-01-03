@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { IncremarkParser } from './IncremarkParser'
+import { IncremarkParser } from '../parser/IncremarkParser'
 import type { FootnoteDefinition } from 'mdast'
 
 /**

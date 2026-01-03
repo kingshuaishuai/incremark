@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { IncremarkParser } from './IncremarkParser'
+import { IncremarkParser } from '../parser/IncremarkParser'
 
 // 包含所有 Markdown 语法的完整文档
 const COMPREHENSIVE_MARKDOWN = `# 一级标题

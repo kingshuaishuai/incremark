@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { IncremarkParser, createIncremarkParser } from './IncremarkParser'
+import { IncremarkParser, createIncremarkParser } from '../parser/IncremarkParser'
 
 describe('IncremarkParser', () => {
   let parser: IncremarkParser

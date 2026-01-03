@@ -1,19 +1,17 @@
 import { defineConfig } from 'vitest/config'
-import path from 'path'
 
 export default defineConfig({
-  root: process.cwd().endsWith('packages/core') ? '../..' : './',
   test: {
     globals: true,
     environment: 'node',
     include: [
-      'packages/core/src/**/*.test.ts',
-      'packages/core/src/**/*.spec.ts'
+      'src/**/*.test.ts',
+      'src/**/*.spec.ts'
     ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['packages/*/src/**/*.ts'],
+      include: ['src/**/*.ts'],
       exclude: ['**/*.test.ts', '**/*.spec.ts']
     }
   },

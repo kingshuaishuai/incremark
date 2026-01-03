@@ -28,6 +28,7 @@
     "dev": "tsup --watch",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:coverage": "vitest run -- --coverage",
     "benchmark": "npx tsx src/benchmark/run.ts"
   },
   "dependencies": {

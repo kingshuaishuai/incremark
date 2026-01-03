@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { IncremarkParser } from './IncremarkParser'
+import { IncremarkParser } from '../parser/IncremarkParser'
 
 describe('健壮性测试', () => {
   describe('空输入和边界情况', () => {
