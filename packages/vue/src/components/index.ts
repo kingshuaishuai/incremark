@@ -1,5 +1,7 @@
+export type { IncremarkContentProps } from '../types'
 // 主组件
 export { default as Incremark } from './Incremark.vue'
+export { default as IncremarkContent } from '../components/IncremarkContent.vue'
 export type { ComponentMap, RenderableBlock } from './Incremark.vue'
 
 // 渲染器组件 - 用于自定义渲染

@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Code } from 'mdast'
-  import { useShiki } from '../stores/useShiki'
+  import { useShiki } from '../stores/useShiki.svelte'
 
   /**
    * 组件 Props
@@ -93,7 +93,8 @@
         mermaidRef.initialize({
           startOnLoad: false,
           theme: 'dark',
-          securityLevel: 'loose'
+          securityLevel: 'loose',
+          suppressErrorRendering: true
         })
       }
 

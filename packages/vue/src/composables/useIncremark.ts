@@ -1,4 +1,4 @@
-import { ref, shallowRef, computed, markRaw, type ComputedRef } from 'vue'
+import { ref, shallowRef, computed, markRaw, watch, toValue, type ComputedRef, type MaybeRefOrGetter } from 'vue'
 import {
   createIncremarkParser,
   type ParserOptions,
@@ -91,20 +91,24 @@ export type UseIncremarkReturn = ReturnType<typeof useIncremark>
  * </template>
  * ```
  */
-export function useIncremark(options: UseIncremarkOptions = {}) {
+export function useIncremark(optionsInput: MaybeRefOrGetter<UseIncremarkOptions> = {}) {
   // 内部自动提供 definitions context
   const { setDefinations, setFootnoteDefinitions, setFootnoteReferenceOrder } = useProvideDefinations()
 
+  // 创建解析器的工厂函数
+  function createParser(options: UseIncremarkOptions) {
+    return createIncremarkParser({
+      ...options,
+      onChange: (state) => {
+        setDefinations(state.definitions)
+        setFootnoteDefinitions(state.footnoteDefinitions)
+        options.onChange?.(state)
+      }
+    })
+  }
+
   // 解析器
-  const parser = createIncremarkParser({
-    ...options,
-    onChange: (state) => {
-      setDefinations(state.definitions)
-      setFootnoteDefinitions(state.footnoteDefinitions)
-      // 调用用户提供的 onChange
-      options.onChange?.(state)
-    }
-  })
+  let parser = createParser(toValue(optionsInput))
 
   const completedBlocks = shallowRef<ParsedBlock[]>([])
   const pendingBlocks = shallowRef<ParsedBlock[]>([])
@@ -114,8 +118,9 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
   const footnoteReferenceOrder = ref<string[]>([])
 
   // 使用 useTypewriter composable 管理打字机效果
+  // 传入响应式的 typewriter 配置，让 useTypewriter 内部监听变化
   const { blocks, typewriter, transformer, isAnimationComplete } = useTypewriter({
-    typewriter: options.typewriter,
+    typewriter: () => toValue(optionsInput).typewriter,
     completedBlocks,
     pendingBlocks
   })
@@ -124,8 +129,10 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
   // 如果没有配置打字机或未启用打字机：解析完成即显示完成
   // 如果启用打字机：解析完成 + 动画完成
   const isDisplayComplete = computed(() => {
+    console.log("计算属性变更")
     // 没有配置打字机，或者打字机未启用：只需判断是否 finalized
-    if (!options.typewriter || !typewriter.enabled.value) {
+    if (!toValue(optionsInput).typewriter || !typewriter.enabled.value) {
+      console.log('isDisplayComplete', isFinalized.value)
       return isFinalized.value
     }
     // 启用了打字机：需要 finalize + 动画完成
@@ -195,6 +202,20 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
     // 重置 transformer
     transformer?.reset()
   }
+
+  // 监听 parser 相关 options 变化，重建 parser（排除 typewriter 配置）
+  // 使用 JSON.stringify 比较，避免 deep watch 对新对象的误触发
+  watch(
+    () => {
+      const { typewriter: _, ...parserOptions } = toValue(optionsInput)
+      return JSON.stringify(parserOptions)
+    },
+    () => {
+      const { typewriter: _, ...parserOptions } = toValue(optionsInput)
+      parser = createParser(parserOptions)
+      reset()
+    }
+  )
 
   function render(content: string): IncrementalUpdate {
     const update = parser.render(content)

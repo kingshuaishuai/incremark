@@ -4,6 +4,7 @@
  */
 
 export { default as Incremark } from './Incremark.svelte'
+export { default as IncremarkContent } from './IncremarkContent.svelte'
 export { default as IncremarkParagraph } from './IncremarkParagraph.svelte'
 export { default as IncremarkInline } from './IncremarkInline.svelte'
 export { default as IncremarkHeading } from './IncremarkHeading.svelte'
@@ -19,5 +20,5 @@ export { default as IncremarkDefault } from './IncremarkDefault.svelte'
 export { default as IncremarkRenderer } from './IncremarkRenderer.svelte'
 export { default as AutoScrollContainer } from './AutoScrollContainer.svelte'
 
-export type { ComponentMap, RenderableBlock } from './types'
+export type { ComponentMap, RenderableBlock, IncremarkContentProps, CodeBlockConfig } from './types'
 

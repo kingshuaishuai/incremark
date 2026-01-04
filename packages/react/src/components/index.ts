@@ -1,4 +1,6 @@
+export type { IncremarkContentProps } from '../types'
 export { Incremark, type IncremarkProps } from './Incremark'
+export { IncremarkContent } from './IncremarkContent'
 export { IncremarkRenderer, type IncremarkRendererProps } from './IncremarkRenderer'
 export {
   AutoScrollContainer,

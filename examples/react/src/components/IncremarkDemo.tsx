@@ -1,17 +1,15 @@
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
+import { useState, useCallback, useMemo, useRef } from 'react'
 import {
-  useIncremark,
-  useDevTools,
-  Incremark,
+  IncremarkContent,
   AutoScrollContainer,
   ThemeProvider,
   type AutoScrollContainerRef,
-  type DesignTokens
+  type DesignTokens,
+  type UseIncremarkOptions
 } from '@incremark/react'
 
-import { useBenchmark } from '../hooks'
-import { 
-  BenchmarkPanel, 
+import {
+  BenchmarkPanel,
   CustomInputPanel,
   CustomHeading,
   CustomWarningContainer,
@@ -21,6 +19,11 @@ import {
 } from './index'
 import type { Messages } from '../locales'
 
+interface BenchmarkStats {
+  traditional: { time: number; parseCount: number; totalChars: number }
+  incremark: { time: number; parseCount: number; totalChars: number }
+}
+
 interface IncremarkDemoProps {
   htmlEnabled: boolean
   sampleMarkdown: string
@@ -29,42 +32,32 @@ interface IncremarkDemoProps {
 
 export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoProps) {
   // ============ 打字机配置 ============
+  const [typewriterEnabled, setTypewriterEnabled] = useState(false)
   const [typewriterSpeed, setTypewriterSpeed] = useState(2)
   const [typewriterInterval, setTypewriterInterval] = useState(30)
   const [typewriterRandomStep, setTypewriterRandomStep] = useState(true)
   const [typewriterEffect, setTypewriterEffect] = useState<'none' | 'fade-in' | 'typing'>('typing')
 
-  // 计算打字机配置
-  const computedCharsPerTick = useMemo(() => {
-    return typewriterRandomStep ? [1, Math.max(2, typewriterSpeed)] as [number, number] : typewriterSpeed
-  }, [typewriterRandomStep, typewriterSpeed])
+  // ============ 内容状态 ============
+  const [mdContent, setMdContent] = useState('')
+  const [isFinished, setIsFinished] = useState(false)
 
-  // ============ Incremark（集成打字机） ============
-  const incremark = useIncremark({
+  // ============ Incremark 配置（响应式） ============
+  const incremarkOptions = useMemo<UseIncremarkOptions>(() => ({
     gfm: true,
     math: true,
-    containers: true,
     htmlTree: htmlEnabled,
+    containers: true,
     typewriter: {
-      enabled: false,
-      charsPerTick: computedCharsPerTick,
+      enabled: typewriterEnabled,
+      charsPerTick: typewriterRandomStep
+        ? [1, Math.max(2, typewriterSpeed)] as [number, number]
+        : typewriterSpeed,
       tickInterval: typewriterInterval,
       effect: typewriterEffect,
       cursor: '|'
     }
-  })
-  const { markdown, completedBlocks, pendingBlocks, append, finalize, reset, render, typewriter } = incremark
-
-  useDevTools(incremark)
-
-  // 监听打字机配置变化（副作用必须用 useEffect，避免 render 阶段触发更新导致卡顿/不生效）
-  useEffect(() => {
-    typewriter.setOptions({
-      charsPerTick: computedCharsPerTick,
-      tickInterval: typewriterInterval,
-      effect: typewriterEffect
-    })
-  }, [computedCharsPerTick, typewriterInterval, typewriterEffect, typewriter])
+  }), [htmlEnabled, typewriterEnabled, typewriterSpeed, typewriterInterval, typewriterRandomStep, typewriterEffect])
 
   // ============ 状态 ============
   const [isStreaming, setIsStreaming] = useState(false)
@@ -75,7 +68,7 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
 
   // ============ 自定义组件 ============
   const [useCustomComponents, setUseCustomComponents] = useState(false)
-  const customComponents = { heading: CustomHeading }
+  const customComponents = useMemo(() => ({ heading: CustomHeading }), [])
 
   const currentMarkdown = useMemo(() =>
     customInputMode && customMarkdown.trim() ? customMarkdown : sampleMarkdown,
@@ -85,7 +78,6 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
   // ============ 主题系统 ============
   const [themeMode, setThemeMode] = useState<'default' | 'dark' | 'custom'>('default')
 
-  // 自定义主题示例 - 紫色主题（部分覆盖）
   const customThemeOverride: Partial<DesignTokens> = useMemo(() => ({
     color: {
       brand: {
@@ -97,7 +89,6 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
     } as any
   }), [])
 
-  // 计算当前主题
   const currentTheme = useMemo<'default' | 'dark' | DesignTokens | Partial<DesignTokens>>(() => {
     switch (themeMode) {
       case 'dark':
@@ -110,38 +101,112 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
   }, [themeMode, customThemeOverride])
 
   // ============ Benchmark ============
-  const { 
-    benchmarkMode, 
-    setBenchmarkMode, 
-    benchmarkRunning, 
-    benchmarkProgress, 
-    benchmarkStats, 
-    runBenchmark 
-  } = useBenchmark(append, finalize, reset)
+  const [benchmarkMode, setBenchmarkMode] = useState(false)
+  const [benchmarkRunning, setBenchmarkRunning] = useState(false)
+  const [benchmarkProgress, setBenchmarkProgress] = useState(0)
+  const [benchmarkStats, setBenchmarkStats] = useState<BenchmarkStats>({
+    traditional: { time: 0, parseCount: 0, totalChars: 0 },
+    incremark: { time: 0, parseCount: 0, totalChars: 0 }
+  })
 
-  const handleRunBenchmark = useCallback(() => {
-    runBenchmark(currentMarkdown)
-  }, [runBenchmark, currentMarkdown])
+  const handleRunBenchmark = useCallback(async () => {
+    const content = currentMarkdown
+
+    setBenchmarkRunning(true)
+    setBenchmarkProgress(0)
+
+    const chunks = content.match(/[\s\S]{1,20}/g) || []
+
+    // 1. 测试传统方式：模拟每次重新渲染
+    let traditionalTime = 0
+    let traditionalParseCount = 0
+    let traditionalTotalChars = 0
+    let accumulated = ''
+
+    for (let i = 0; i < chunks.length; i++) {
+      accumulated += chunks[i]
+      const start = performance.now()
+      // 模拟传统方式：每次都重新设置完整内容
+      setMdContent(accumulated)
+      traditionalTime += performance.now() - start
+      traditionalParseCount++
+      traditionalTotalChars += accumulated.length
+      setBenchmarkProgress(((i + 1) / chunks.length) * 50)
+      await new Promise(r => setTimeout(r, 5))
+    }
+
+    // 2. 测试增量方式
+    setMdContent('')
+    setIsFinished(false)
+    let incremarkTime = 0
+    let incremarkParseCount = 0
+    let incremarkTotalChars = 0
+
+    for (let i = 0; i < chunks.length; i++) {
+      const start = performance.now()
+      setMdContent(prev => prev + chunks[i])
+      incremarkTime += performance.now() - start
+      incremarkParseCount++
+      incremarkTotalChars += chunks[i].length
+      setBenchmarkProgress(50 + ((i + 1) / chunks.length) * 50)
+      await new Promise(r => setTimeout(r, 5))
+    }
+
+    setIsFinished(true)
+
+    setBenchmarkStats({
+      traditional: { time: traditionalTime, parseCount: traditionalParseCount, totalChars: traditionalTotalChars },
+      incremark: { time: incremarkTime, parseCount: incremarkParseCount, totalChars: incremarkTotalChars }
+    })
+
+    setBenchmarkRunning(false)
+  }, [currentMarkdown])
 
   // ============ 流式输出 ============
   const simulateStream = useCallback(async () => {
-    reset()
+    setMdContent('')
+    setIsFinished(false)
     setIsStreaming(true)
 
-    const chunks = currentMarkdown.match(/[\s\S]{1,30}/g) || []
+    const chunks = currentMarkdown.match(/[\s\S]{1,20}/g) || []
 
     for (const chunk of chunks) {
-      append(chunk)
-      await new Promise((r) => setTimeout(r, 30 + Math.random() * 50))
+      setMdContent(prev => prev + chunk)
+      await new Promise((r) => setTimeout(r, 30))
     }
 
-    finalize()
+    setIsFinished(true)
     setIsStreaming(false)
-  }, [append, finalize, reset, currentMarkdown])
+  }, [currentMarkdown])
 
-  const renderAll = useCallback(() => {
-    render(currentMarkdown)
-  }, [render, currentMarkdown])
+  const renderOnce = useCallback(() => {
+    setMdContent(currentMarkdown)
+    setIsFinished(true)
+  }, [currentMarkdown])
+
+  const reset = useCallback(() => {
+    setMdContent('')
+    setIsFinished(false)
+  }, [])
+
+  // ============ 自定义容器 ============
+  const customContainers = useMemo(() => ({
+    warning: CustomWarningContainer,
+    info: CustomInfoContainer,
+    tip: CustomTipContainer,
+  }), [])
+
+  // ============ 自定义代码块 ============
+  const customCodeBlocks = useMemo(() => ({
+    echarts: CustomEchartCodeBlock,
+  }), [])
+
+  // ============ 代码块配置 ============
+  const codeBlockConfigs = useMemo(() => ({
+    echarts: {
+      takeOver: true,
+    }
+  }), [])
 
   return (
     <div className="demo-content">
@@ -149,9 +214,9 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
         <button onClick={simulateStream} disabled={isStreaming || benchmarkRunning}>
           {isStreaming ? t.streaming : t.simulateAI}
         </button>
-        <button onClick={renderAll} disabled={isStreaming || benchmarkRunning}>{t.renderOnce}</button>
+        <button onClick={renderOnce} disabled={isStreaming || benchmarkRunning}>{t.renderOnce}</button>
         <button onClick={reset} disabled={isStreaming || benchmarkRunning}>{t.reset}</button>
-        
+
         <label className="checkbox">
           <input type="checkbox" checked={useCustomComponents} onChange={(e) => setUseCustomComponents(e.target.checked)} />
           {t.customComponents}
@@ -165,7 +230,7 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
           {t.customInput}
         </label>
         <label className="checkbox typewriter-toggle">
-          <input type="checkbox" checked={typewriter.enabled} onChange={(e) => typewriter.setEnabled(e.target.checked)} />
+          <input type="checkbox" checked={typewriterEnabled} onChange={(e) => setTypewriterEnabled(e.target.checked)} />
           {t.typewriterMode}
         </label>
         <label className="checkbox auto-scroll-toggle">
@@ -174,12 +239,12 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
         </label>
 
         <select value={themeMode} onChange={(e) => setThemeMode(e.target.value as 'default' | 'dark' | 'custom')} className="theme-select">
-          <option value="default">🌞 Light Theme</option>
-          <option value="dark">🌙 Dark Theme</option>
-          <option value="custom">💜 Custom Theme</option>
+          <option value="default">Light Theme</option>
+          <option value="dark">Dark Theme</option>
+          <option value="custom">Custom Theme</option>
         </select>
 
-        {typewriter.enabled && (
+        {typewriterEnabled && (
           <>
             <label className="speed-control">
               <input type="range" value={typewriterSpeed} onChange={(e) => setTypewriterSpeed(Number(e.target.value))} min="1" max="10" step="1" />
@@ -198,23 +263,11 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
               <option value="fade-in">{t.effectFadeIn}</option>
               <option value="typing">{t.effectTyping}</option>
             </select>
-            {typewriter.isProcessing && !typewriter.isPaused && (
-              <button className="pause-btn" onClick={typewriter.pause}>⏸️ {t.pause}</button>
-            )}
-            {typewriter.isPaused && (
-              <button className="resume-btn" onClick={typewriter.resume}>▶️ {t.resume}</button>
-            )}
-            {typewriter.isProcessing && (
-              <button className="skip-btn" onClick={typewriter.skip}>⏭️ {t.skip}</button>
-            )}
           </>
         )}
-        
+
         <span className="stats">
-          📝 {markdown.length} {t.chars} |
-          ✅ {completedBlocks.length} {t.blocks} |
-          ⏳ {pendingBlocks.length} {t.pending}
-          {typewriter.enabled && typewriter.isProcessing && ` | ⌨️ ${typewriter.isPaused ? t.paused : t.typing}`}
+          {mdContent.length} {t.chars}
         </span>
       </div>
 
@@ -237,25 +290,17 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
         />
       )}
 
-      <main className={typewriter.enabled ? `content effect-${typewriterEffect}` : 'content'}>
+      <main className={typewriterEnabled ? `content effect-${typewriterEffect}` : 'content'}>
         <ThemeProvider theme={currentTheme}>
           <AutoScrollContainer ref={scrollContainerRef} enabled={autoScrollEnabled} className="scroll-container">
-            <Incremark
-              incremark={incremark}
+            <IncremarkContent
+              content={mdContent}
+              isFinished={isFinished}
+              incremarkOptions={incremarkOptions}
               components={useCustomComponents ? customComponents : {}}
-              customContainers={{
-                warning: CustomWarningContainer,
-                info: CustomInfoContainer,
-                tip: CustomTipContainer,
-              }}
-              customCodeBlocks={{
-                echarts: CustomEchartCodeBlock,
-              }}
-              codeBlockConfigs={{
-                echarts: {
-                  takeOver: true, // 从一开始就接管渲染
-                }
-              }}
+              customContainers={customContainers}
+              customCodeBlocks={customCodeBlocks}
+              codeBlockConfigs={codeBlockConfigs}
               showBlockStatus={true}
             />
           </AutoScrollContainer>
@@ -264,4 +309,3 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
     </div>
   )
 }
-

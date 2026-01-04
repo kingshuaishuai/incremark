@@ -8,7 +8,7 @@
  * @license MIT
  */
 
-import { ref, shallowRef, computed, watch, onUnmounted, type Ref, type ComputedRef } from 'vue'
+import { ref, shallowRef, computed, watch, toValue, onUnmounted, type Ref, type ComputedRef, type MaybeRefOrGetter } from 'vue'
 import {
   createBlockTransformer,
   defaultPlugins,
@@ -23,7 +23,7 @@ import type { TypewriterOptions, TypewriterControls } from './useIncremark'
 import { addCursorToNode } from '../utils/cursor'
 
 export interface UseTypewriterOptions {
-  typewriter?: TypewriterOptions
+  typewriter: MaybeRefOrGetter<TypewriterOptions | undefined>
   completedBlocks: Ref<ParsedBlock[]>
   pendingBlocks: Ref<ParsedBlock[]>
 }
@@ -49,28 +49,30 @@ export interface UseTypewriterReturn {
  * @returns 打字机状态和控制对象
  */
 export function useTypewriter(options: UseTypewriterOptions): UseTypewriterReturn {
-  const { typewriter: typewriterConfig, completedBlocks, pendingBlocks } = options
+  const { typewriter: typewriterInput, completedBlocks, pendingBlocks } = options
+
+  // 获取初始配置
+  const initialConfig = toValue(typewriterInput)
 
   // 打字机状态
-  const typewriterEnabled = ref(typewriterConfig?.enabled ?? !!typewriterConfig)
+  const typewriterEnabled = ref(initialConfig?.enabled ?? !!initialConfig)
   const displayBlocksRef = shallowRef<DisplayBlock<RootContent>[]>([])
   const isTypewriterProcessing = ref(false)
   const isTypewriterPaused = ref(false)
-  const typewriterEffect = ref<AnimationEffect>(typewriterConfig?.effect ?? 'none')
-  const typewriterCursor = ref(typewriterConfig?.cursor ?? '|')
+  const typewriterEffect = ref<AnimationEffect>(initialConfig?.effect ?? 'none')
+  const typewriterCursor = ref(initialConfig?.cursor ?? '|')
   const isAnimationComplete = ref(true) // 初始为 true（没有动画时视为完成）
 
   // 创建 transformer（如果有 typewriter 配置）
   let transformer: BlockTransformer<RootContent> | null = null
 
-  if (typewriterConfig) {
-    const twOptions = typewriterConfig
+  if (initialConfig) {
     transformer = createBlockTransformer<RootContent>({
-      charsPerTick: twOptions.charsPerTick ?? [1, 3],
-      tickInterval: twOptions.tickInterval ?? 30,
-      effect: twOptions.effect ?? 'none',
-      pauseOnHidden: twOptions.pauseOnHidden ?? true,
-      plugins: twOptions.plugins ?? defaultPlugins,
+      charsPerTick: initialConfig.charsPerTick ?? [1, 3],
+      tickInterval: initialConfig.tickInterval ?? 30,
+      effect: initialConfig.effect ?? 'none',
+      pauseOnHidden: initialConfig.pauseOnHidden ?? true,
+      plugins: initialConfig.plugins ?? defaultPlugins,
       onChange: (blocks) => {
         displayBlocksRef.value = blocks as DisplayBlock<RootContent>[]
         isTypewriterProcessing.value = transformer?.isProcessing() ?? false
@@ -86,6 +88,34 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
       }
     })
   }
+
+  // 监听配置变化，更新 transformer
+  watch(
+    () => toValue(typewriterInput),
+    (newConfig) => {
+      if (!newConfig) return
+
+      // 更新本地状态
+      if (newConfig.enabled !== undefined) {
+        typewriterEnabled.value = newConfig.enabled
+      }
+      if (newConfig.effect !== undefined) {
+        typewriterEffect.value = newConfig.effect
+      }
+      if (newConfig.cursor !== undefined) {
+        typewriterCursor.value = newConfig.cursor
+      }
+
+      // 更新 transformer 配置
+      transformer?.setOptions({
+        charsPerTick: newConfig.charsPerTick,
+        tickInterval: newConfig.tickInterval,
+        effect: newConfig.effect,
+        pauseOnHidden: newConfig.pauseOnHidden
+      })
+    },
+    { deep: true }
+  )
 
   // 将 completedBlocks 转换为 SourceBlock 格式
   const sourceBlocks = computed(() => {

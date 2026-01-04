@@ -91,7 +91,8 @@ export const IncremarkCode: React.FC<IncremarkCodeProps> = ({
         mermaidRef.current.initialize({
           startOnLoad: false,
           theme: 'dark',
-          securityLevel: 'loose'
+          securityLevel: 'loose',
+          suppressErrorRendering: true
         })
       }
 

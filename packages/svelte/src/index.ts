@@ -18,6 +18,7 @@ export { setDefinitionsContext, getDefinitionsContext, type DefinitionsContextVa
 // Components
 export {
   Incremark,
+  IncremarkContent,
   IncremarkParagraph,
   IncremarkInline,
   IncremarkHeading,
@@ -32,7 +33,9 @@ export {
   IncremarkDefault,
   IncremarkRenderer,
   type ComponentMap,
-  type RenderableBlock
+  type RenderableBlock,
+  type IncremarkContentProps,
+  type CodeBlockConfig
 } from './components'
 
 // Additional Components

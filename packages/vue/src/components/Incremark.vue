@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
-import type { ParsedBlock, RootContent } from '@incremark/core'
+import type { ParsedBlock } from '@incremark/core'
 import { useDefinationsContext } from '../composables/useDefinationsContext'
 import type { UseIncremarkReturn } from '../composables/useIncremark'
 import IncremarkRenderer from './IncremarkRenderer.vue'

@@ -11,6 +11,7 @@ export interface Messages {
   streaming: string
   renderOnce: string
   reset: string
+  customComponents: string
   chars: string
   blocks: string
   pending: string

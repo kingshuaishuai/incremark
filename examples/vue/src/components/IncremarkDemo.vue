@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import { useIncremark, useDevTools, Incremark, AutoScrollContainer, ThemeProvider, type DesignTokens } from '@incremark/vue'
+import { ref, computed } from 'vue'
+import { IncremarkContent, AutoScrollContainer, ThemeProvider, type DesignTokens, type UseIncremarkOptions } from '@incremark/vue'
 
-import { useBenchmark } from '../composables'
 import { BenchmarkPanel, CustomInputPanel, CustomHeading, CustomWarningContainer, CustomInfoContainer, CustomTipContainer, CustomEchartCodeBlock } from './index'
+import type { BenchmarkStats } from '../composables'
 import type { Messages } from '../locales'
 
 const props = defineProps<{
@@ -13,67 +13,66 @@ const props = defineProps<{
 }>()
 
 // ============ 打字机配置 ============
+const typewriterEnabled = ref(false)
 const typewriterSpeed = ref(2)
 const typewriterInterval = ref(30)
 const typewriterRandomStep = ref(true)
 const typewriterEffect = ref<'none' | 'fade-in' | 'typing'>('typing')
 
-// ============ 初始化 Incremark（集成打字机） ============
-const incremark = useIncremark({
+// ============ 内容状态 ============
+const mdContent = ref('')
+const isFinished = ref(false)
+
+// ============ Incremark 配置（响应式） ============
+const incremarkOptions = computed<UseIncremarkOptions>(() => ({
   gfm: true,
   math: true,
   htmlTree: props.htmlEnabled,
-  containers: true, // 启用容器边界检测
+  containers: true,
   typewriter: {
-    enabled: false,
-    charsPerTick: [1, Math.max(2, typewriterSpeed.value)],
-    tickInterval: typewriterInterval.value,
-    effect: typewriterEffect.value,
-    cursor: '|'
-  }
-})
-
-const { markdown, completedBlocks, pendingBlocks, append, finalize, reset, render, typewriter } = incremark
-
-useDevTools(incremark)
-
-// 监听打字机配置变化
-watch([typewriterSpeed, typewriterInterval, typewriterEffect, typewriterRandomStep], () => {
-  typewriter.setOptions({
+    enabled: typewriterEnabled.value,
     charsPerTick: typewriterRandomStep.value
       ? [1, Math.max(2, typewriterSpeed.value)] as [number, number]
       : typewriterSpeed.value,
     tickInterval: typewriterInterval.value,
-    effect: typewriterEffect.value
-  })
-})
+    effect: typewriterEffect.value,
+    cursor: '|'
+  }
+}))
 
 // ============ 流式输出 ============
 const isStreaming = ref(false)
 
 async function simulateStream() {
-  reset()
+  mdContent.value = ''
+  isFinished.value = false
   isStreaming.value = true
 
-  const content = customInputMode.value && customMarkdown.value.trim() 
-    ? customMarkdown.value 
+  const content = customInputMode.value && customMarkdown.value.trim()
+    ? customMarkdown.value
     : props.sampleMarkdown
   const chunks = content.match(/[\s\S]{1,20}/g) || []
 
   for (const chunk of chunks) {
-    append(chunk)
+    mdContent.value += chunk
     await new Promise((resolve) => setTimeout(resolve, 30))
   }
 
-  finalize()
+  isFinished.value = true
   isStreaming.value = false
 }
 
 function renderOnce() {
-  const content = customInputMode.value && customMarkdown.value.trim() 
-    ? customMarkdown.value 
+  const content = customInputMode.value && customMarkdown.value.trim()
+    ? customMarkdown.value
     : props.sampleMarkdown
-  render(content)
+  mdContent.value = content
+  isFinished.value = true
+}
+
+function reset() {
+  mdContent.value = ''
+  isFinished.value = false
 }
 
 // ============ 自动滚动 ============
@@ -85,14 +84,67 @@ const customInputMode = ref(false)
 const customMarkdown = ref('')
 
 // ============ Benchmark ============
-const { benchmarkMode, benchmarkRunning, benchmarkProgress, benchmarkStats, runBenchmark } = 
-  useBenchmark(append, finalize, reset)
+const benchmarkMode = ref(false)
+const benchmarkRunning = ref(false)
+const benchmarkProgress = ref(0)
+const benchmarkStats = ref<BenchmarkStats>({
+  traditional: { time: 0, parseCount: 0, totalChars: 0 },
+  incremark: { time: 0, parseCount: 0, totalChars: 0 }
+})
 
-function handleRunBenchmark() {
-  const content = customInputMode.value && customMarkdown.value.trim() 
-    ? customMarkdown.value 
+async function handleRunBenchmark() {
+  const content = customInputMode.value && customMarkdown.value.trim()
+    ? customMarkdown.value
     : props.sampleMarkdown
-  runBenchmark(content)
+
+  benchmarkRunning.value = true
+  benchmarkProgress.value = 0
+
+  const chunks = content.match(/[\s\S]{1,20}/g) || []
+
+  // 1. 测试传统方式：模拟每次重新渲染
+  let traditionalTime = 0
+  let traditionalParseCount = 0
+  let traditionalTotalChars = 0
+  let accumulated = ''
+
+  for (let i = 0; i < chunks.length; i++) {
+    accumulated += chunks[i]
+    const start = performance.now()
+    // 模拟传统方式：每次都重新设置完整内容
+    mdContent.value = accumulated
+    traditionalTime += performance.now() - start
+    traditionalParseCount++
+    traditionalTotalChars += accumulated.length
+    benchmarkProgress.value = ((i + 1) / chunks.length) * 50
+    await new Promise(r => setTimeout(r, 5))
+  }
+
+  // 2. 测试增量方式
+  mdContent.value = ''
+  isFinished.value = false
+  let incremarkTime = 0
+  let incremarkParseCount = 0
+  let incremarkTotalChars = 0
+
+  for (let i = 0; i < chunks.length; i++) {
+    const start = performance.now()
+    mdContent.value += chunks[i]
+    incremarkTime += performance.now() - start
+    incremarkParseCount++
+    incremarkTotalChars += chunks[i].length
+    benchmarkProgress.value = 50 + ((i + 1) / chunks.length) * 50
+    await new Promise(r => setTimeout(r, 5))
+  }
+
+  isFinished.value = true
+
+  benchmarkStats.value = {
+    traditional: { time: traditionalTime, parseCount: traditionalParseCount, totalChars: traditionalTotalChars },
+    incremark: { time: incremarkTime, parseCount: incremarkParseCount, totalChars: incremarkTotalChars }
+  }
+
+  benchmarkRunning.value = false
 }
 
 // ============ 自定义组件 ============
@@ -114,14 +166,13 @@ const customCodeBlocks = {
 // ============ 代码块配置 ============
 const codeBlockConfigs = {
   echarts: {
-    takeOver: true, // 从一开始就接管渲染
+    takeOver: true,
   }
 }
 
 // ============ 主题系统 ============
 const themeMode = ref<'default' | 'dark' | 'custom'>('default')
 
-// 自定义主题示例 - 紫色主题（部分覆盖）
 const customThemeOverride: Partial<DesignTokens> = {
   color: {
     brand: {
@@ -133,7 +184,6 @@ const customThemeOverride: Partial<DesignTokens> = {
   } as any
 }
 
-// 计算当前主题
 const currentTheme = computed<'default' | 'dark' | DesignTokens | Partial<DesignTokens>>(() => {
   switch (themeMode.value) {
     case 'dark':
@@ -148,8 +198,8 @@ const currentTheme = computed<'default' | 'dark' | DesignTokens | Partial<Design
 // 暴露方法供父组件调用
 defineExpose({
   reset,
-  render,
-  markdown,
+  renderOnce,
+  mdContent,
   isStreaming,
   benchmarkRunning
 })
@@ -163,7 +213,7 @@ defineExpose({
       </button>
       <button @click="renderOnce" :disabled="isStreaming || benchmarkRunning">{{ t.renderOnce }}</button>
       <button @click="reset" :disabled="isStreaming || benchmarkRunning">{{ t.reset }}</button>
-      
+
       <label class="checkbox">
         <input type="checkbox" v-model="useCustomComponents" />
         {{ t.customComponents }}
@@ -177,7 +227,7 @@ defineExpose({
         {{ t.customInput }}
       </label>
       <label class="checkbox typewriter-toggle">
-        <input type="checkbox" :checked="typewriter.enabled.value" @change="typewriter.setEnabled(!typewriter.enabled.value)" />
+        <input type="checkbox" v-model="typewriterEnabled" />
         {{ t.typewriterMode }}
       </label>
       <label class="checkbox auto-scroll-toggle">
@@ -186,12 +236,12 @@ defineExpose({
       </label>
 
       <select v-model="themeMode" class="theme-select">
-        <option value="default">🌞 Light Theme</option>
-        <option value="dark">🌙 Dark Theme</option>
-        <option value="custom">💜 Custom Theme</option>
+        <option value="default">Light Theme</option>
+        <option value="dark">Dark Theme</option>
+        <option value="custom">Custom Theme</option>
       </select>
 
-      <template v-if="typewriter.enabled.value">
+      <template v-if="typewriterEnabled">
         <label class="speed-control">
           <input type="range" v-model.number="typewriterSpeed" min="1" max="10" step="1" />
           <span class="speed-value">{{ typewriterSpeed }} {{ t.charsPerTick }}</span>
@@ -209,24 +259,10 @@ defineExpose({
           <option value="fade-in">{{ t.effectFadeIn }}</option>
           <option value="typing">{{ t.effectTyping }}</option>
         </select>
-        <button v-if="typewriter.isProcessing.value && !typewriter.isPaused.value" class="pause-btn" @click="typewriter.pause">
-          ⏸️ {{ t.pause }}
-        </button>
-        <button v-if="typewriter.isPaused.value" class="resume-btn" @click="typewriter.resume">
-          ▶️ {{ t.resume }}
-        </button>
-        <button v-if="typewriter.isProcessing.value" class="skip-btn" @click="typewriter.skip">
-          ⏭️ {{ t.skip }}
-        </button>
       </template>
-      
+
       <span class="stats">
-        📝 {{ markdown.length }} {{ t.chars }} |
-        ✅ {{ completedBlocks.length }} {{ t.blocks }} |
-        ⏳ {{ pendingBlocks.length }} {{ t.pending }}
-        <template v-if="typewriter.enabled.value && typewriter.isProcessing.value">
-          | ⌨️ {{ typewriter.isPaused.value ? t.paused : t.typing }}
-        </template>
+        {{ mdContent.length }} {{ t.chars }}
       </span>
     </div>
 
@@ -246,11 +282,13 @@ defineExpose({
       @use-example="customMarkdown = sampleMarkdown"
     />
 
-    <main :class="['content', typewriter.enabled.value && `effect-${typewriterEffect}`]">
+    <main :class="['content', typewriterEnabled && `effect-${typewriterEffect}`]">
       <ThemeProvider :theme="currentTheme">
         <AutoScrollContainer ref="scrollContainerRef" :enabled="autoScrollEnabled" class="scroll-container">
-          <Incremark
-            :incremark="incremark"
+          <IncremarkContent
+            :content="mdContent"
+            :is-finished="isFinished"
+            :incremark-options="incremarkOptions"
             :components="useCustomComponents ? customComponents : {}"
             :custom-containers="customContainers"
             :custom-code-blocks="customCodeBlocks"
@@ -262,4 +300,3 @@ defineExpose({
     </main>
   </div>
 </template>
-

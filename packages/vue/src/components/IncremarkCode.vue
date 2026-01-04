@@ -112,7 +112,8 @@ async function doRenderMermaid() {
       mermaidRef.value.initialize({
         startOnLoad: false,
         theme: 'dark',
-        securityLevel: 'loose'
+        securityLevel: 'loose',
+        suppressErrorRendering: true
       })
     }
 

@@ -14,7 +14,7 @@ export {
 } from './hooks'
 
 // Components
-export { Incremark, type IncremarkProps } from './components'
+export { Incremark, type IncremarkProps, IncremarkContent, type IncremarkContentProps } from './components'
 export { IncremarkRenderer, type IncremarkRendererProps } from './components'
 export {
   AutoScrollContainer,

@@ -1,22 +1,8 @@
-/**
- * @file Component Types - 组件类型定义
- * @description 定义组件相关的类型
- */
+import { Component } from "vue"
+import { UseIncremarkOptions } from "./composables"
 
-import type { Component } from 'svelte'
-import type { ParsedBlock } from '@incremark/core'
-import type { UseIncremarkOptions } from '../stores/useIncremark'
-
-/**
- * 组件映射类型
- * 使用 any 以支持不同类型的组件
- */
-export type ComponentMap = Partial<Record<string, any>>
-
-/**
- * 可渲染的块类型（带 isLastPending 字段用于打字机光标）
- */
-export type RenderableBlock = ParsedBlock & { isLastPending?: boolean }
+// 组件映射类型
+export type ComponentMap = Partial<Record<string, Component>>
 
 /**
  * 代码块配置
@@ -26,17 +12,14 @@ export interface CodeBlockConfig {
   takeOver?: boolean
 }
 
-/**
- * IncremarkContent 组件 Props
- */
 export interface IncremarkContentProps {
   stream?: () => AsyncGenerator<string>
   content?: string
   components?: ComponentMap
   /** 自定义容器组件映射，key 为容器名称（如 'warning', 'info'） */
-  customContainers?: Record<string, Component<any>>
+  customContainers?: Record<string, Component>
   /** 自定义代码块组件映射，key 为代码语言名称（如 'echart', 'mermaid'） */
-  customCodeBlocks?: Record<string, Component<any>>
+  customCodeBlocks?: Record<string, Component>
   /** 代码块配置映射，key 为代码语言名称 */
   codeBlockConfigs?: Record<string, CodeBlockConfig>
   isFinished?: boolean
@@ -44,4 +27,3 @@ export interface IncremarkContentProps {
   pendingClass?: string
   showBlockStatus?: boolean
 }
-

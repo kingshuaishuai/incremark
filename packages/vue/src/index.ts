@@ -13,24 +13,8 @@ export type {
 } from './composables'
 
 // Components
-export {
-  Incremark,
-  IncremarkRenderer,
-  IncremarkHeading,
-  IncremarkParagraph,
-  IncremarkCode,
-  IncremarkList,
-  IncremarkTable,
-  IncremarkBlockquote,
-  IncremarkThematicBreak,
-  IncremarkInline,
-  IncremarkMath,
-  IncremarkHtmlElement,
-  IncremarkDefault,
-  IncremarkFootnotes,
-  AutoScrollContainer
-} from './components'
-export type { ComponentMap, RenderableBlock } from './components'
+export * from './components';
+
 export { default as ThemeProvider } from './ThemeProvider.vue'
 
 // Re-export core types
