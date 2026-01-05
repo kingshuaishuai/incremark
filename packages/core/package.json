@@ -1,7 +1,7 @@
 {
   "name": "@incremark/core",
   "version": "0.2.7",
-  "description": "增量式 Markdown 解析器核心库",
+  "description": "High-performance incremental markdown parser specifically designed for AI streaming output scenarios.",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -63,8 +63,11 @@
     "incremental",
     "streaming",
     "ai",
+    "chatgpt",
+    "llm",
     "mdast",
-    "unified"
+    "high-performance",
+    "typewriter"
   ],
   "license": "MIT",
   "repository": {

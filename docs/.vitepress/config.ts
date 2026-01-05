@@ -1,10 +1,22 @@
-import { defineConfig } from 'vitepress'
+import { defineConfig, type HeadConfig } from 'vitepress'
 import taskLists from 'markdown-it-task-lists';
 import { vitepressMermaidPreview } from 'vitepress-mermaid-preview';
 
 
 const shared = {
   title: "Incremark",
+  head: [
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
+    ['meta', { name: 'keywords', content: 'markdown, streaming, incremental, parser, ai, chatgpt, llm, typewriter, performance, vue, react, svelte' }],
+    ['meta', { name: 'author', content: 'Incremark' }],
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:title', content: 'Incremark - High-performance streaming markdown renderer' }],
+    ['meta', { property: 'og:description', content: 'A context-aware incremental markdown parser specifically designed for AI streaming output scenarios.' }],
+    ['meta', { property: 'og:image', content: 'https://www.incremark.com/og-image.png' }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:title', content: 'Incremark' }],
+    ['meta', { name: 'twitter:description', content: 'High-performance streaming markdown renderer for AI apps.' }],
+  ] as HeadConfig[],
   themeConfig: {
     logo: '/logo.svg',
     socialLinks: [
@@ -179,5 +191,8 @@ export default defineConfig({
   locales: {
     root: en,
     zh: zh
+  },
+  sitemap: {
+    hostname: 'https://www.incremark.com'
   }
 })

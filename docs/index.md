@@ -1,5 +1,12 @@
 ---
 layout: home
+title: Incremark - High-performance streaming markdown renderer
+description: A context-aware incremental markdown parser specifically designed for AI streaming output scenarios, featuring high-performance rendering and cross-framework support.
+head:
+  - - meta
+    - name: keywords
+      content: markdown, streaming, incremental, parser, ai, chatgpt, llm, typewriter, performance, vue, react, svelte
+
 
 hero:
   name: Incremark

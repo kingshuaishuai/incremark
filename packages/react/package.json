@@ -2,7 +2,7 @@
   "name": "@incremark/react",
   "version": "0.2.7",
   "license": "MIT",
-  "description": "Incremark React integration - Incremental Markdown parser for AI streaming",
+  "description": "High-performance streaming markdown renderer for React ecosystem.",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -40,6 +40,15 @@
     "tsup": "^8.0.0",
     "typescript": "^5.3.0"
   },
+  "keywords": [
+    "markdown",
+    "react",
+    "streaming",
+    "ai",
+    "chatgpt",
+    "llm",
+    "typewriter"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/kingshuaishuai/incremark.git",
@@ -47,4 +56,3 @@
   },
   "homepage": "https://www.incremark.com/"
 }
-

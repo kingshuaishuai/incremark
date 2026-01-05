@@ -1,7 +1,7 @@
 {
   "name": "@incremark/svelte",
   "version": "0.2.7",
-  "description": "Incremark Svelte 5 集成",
+  "description": "High-performance streaming markdown renderer for Svelte 5 ecosystem.",
   "type": "module",
   "svelte": "./dist/index.js",
   "main": "./dist/index.js",
@@ -58,7 +58,10 @@
     "svelte",
     "svelte5",
     "streaming",
-    "ai"
+    "ai",
+    "chatgpt",
+    "llm",
+    "typewriter"
   ],
   "license": "MIT",
   "repository": {
@@ -68,4 +71,3 @@
   },
   "homepage": "https://www.incremark.com/"
 }
-

@@ -1,7 +1,7 @@
 {
   "name": "@incremark/vue",
   "version": "0.2.7",
-  "description": "Incremark Vue 3 集成",
+  "description": "High-performance streaming markdown renderer for Vue 3 ecosystem.",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -55,7 +55,10 @@
     "vue",
     "vue3",
     "streaming",
-    "ai"
+    "ai",
+    "chatgpt",
+    "llm",
+    "typewriter"
   ],
   "license": "MIT",
   "repository": {
