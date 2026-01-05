@@ -1,127 +1,90 @@
 # Core Concepts
 
-Understanding how Incremark works helps you use and debug it better.
+Understanding how Incremark works will help you build high-performance, flicker-free AI chat applications.
 
 ## Incremental Parsing Flow
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                        Input Stream                           │
-│  "# Title" → "\n\nCon" → "tent\n" → "\n## Sub" → "title"     │
-└──────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌──────────────────────────────────────────────────────────────┐
-│                      Buffer                                   │
-│  "# Title\n\nContent\n\n## Subtitle"                         │
-└──────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌──────────────────────────────────────────────────────────────┐
-│                    Boundary Detection                         │
-│  Line-by-line scanning to identify block boundaries:         │
-│  - Empty lines separate paragraphs                           │
-│  - Heading lines form independent blocks                     │
-│  - Code fences ``` must be paired                            │
-└──────────────────────────────────────────────────────────────┘
-                              │
-              ┌───────────────┴───────────────┐
-              ▼                               ▼
-┌─────────────────────────┐     ┌─────────────────────────┐
-│    Completed Blocks      │     │    Pending Blocks       │
-│  • Never re-parsed       │     │  • Re-parsed on append  │
-│  • Nodes can be reused   │     │  • May be incomplete    │
-└─────────────────────────┘     └─────────────────────────┘
+Traditional Markdown parsers (like `marked` or `markdown-it`) are designed for static documents. In a streaming context, they must re-parse the entire document from scratch every time a new character is received.
+
+**Incremark** employs a completely different "Incremental Parsing" strategy:
+
+```mermaid
+graph TD
+    Stream["Markdown Stream"] --> Buffer["Line Buffer"]
+    Buffer --> Boundary["Boundary Detection"]
+    
+    subgraph Engine ["Incremental Engine"]
+        Boundary -- "Stable Boundary Detected" --> Completed["Completed Block (Cached)"]
+        Boundary -- "Inside Unstable Region" --> Pending["Pending Block"]
+    end
+    
+    Completed --> Cache["AST Cache (Mdast)"]
+    Pending --> ReParse["Local Re-parse (Current Block Only)"]
+    
+    Cache --> FinalAST["Full AST (Root)"]
+    ReParse --> FinalAST
+    
+    FinalAST --> Transformer["BlockTransformer (Animation handling)"]
 ```
 
-## Block States
+## Block Lifecycle
 
-Each parsed block has three possible states:
+In Incremark, every top-level element (heading, paragraph, code block, etc.) is treated as an independent **Block**. They go through a lifecycle from "uncertain" to "stable":
 
-| State | Description | Handling |
-|-------|-------------|----------|
-| `pending` | Being received, may be incomplete | Re-parsed on each append |
-| `stable` | Possibly complete, but subsequent chunks may change it | Cached but not confirmed |
-| `completed` | Confirmed complete, won't change | Permanently cached, no further processing |
+| State | Description | Handling Strategy |
+| :--- | :--- | :--- |
+| **Pending** | Currently streaming; content and type may change at any time. | Every time new content arrives, a micro-parse is performed only on the text segment for this block. |
+| **Completed** | Confirmed as finished; subsequent input will not affect this block. | **Persistent Cache**. Unless the stream is reset, it is no longer involved in parsing or re-rendering. |
+
+> [!TIP]
+> **Why do we need a Pending state?**
+> In Markdown, the prefix determines the type. For example, when `#` is input, it could be a heading or just text. The type is only truly determined when a space or newline is received.
 
 ## Boundary Detection Rules
 
-Incremark uses heuristic rules to detect block boundaries:
+Incremark uses heuristic rules to determine when a block can transition from `Pending` to `Completed`:
 
-### Simple Blocks
+### 1. Simple Block Boundaries
+*   **Empty Line**: The natural end of a paragraph.
+*   **New Heading / Thematic Break**: The appearance of a new block implies the end of the previous non-container block.
 
-- **Empty lines** - Separate paragraphs
-- **Headings** (`#`) - Form independent blocks
-- **Thematic breaks** (`---`) - Form independent blocks
+### 2. Fenced Block Boundaries
+*   **Code Block (```)**: Must detect a matching closing fence. Until the closing fence appears, the entire code block remains `Pending`.
+*   **Custom Container (:::)**: Same as above; supports nested detection.
 
-### Blocks Requiring Closure
-
-- **Code blocks** (` ``` `) - Must wait for closing fence
-- **Containers** (`:::`) - Must wait for closing marker
-
-### Nested Blocks
-
-- **Lists** - Track indentation level
-- **Blockquotes** (`>`) - Track quote depth
-- **Tables** - Detect separator line
+### 3. Nested Block Boundaries
+*   **Lists and Blockquotes**: The parser continuously tracks the current indentation level and blockquote depth. When a new line's indentation retreats or the quote marker disappears, the previous block is determined to be finished.
 
 ## Context Tracking
 
-To correctly handle nested structures, the parser maintains context state:
+To accurately identify boundaries during the streaming process, the parser maintains a lightweight state machine:
 
 ```ts
 interface BlockContext {
-  inFencedCode: boolean     // Inside code block
-  fenceChar?: string        // Code fence character
-  fenceLength?: number      // Fence length
-  listDepth: number         // List nesting depth
-  blockquoteDepth: number   // Quote nesting depth
-  inContainer: boolean      // Inside container
-  containerDepth: number    // Container nesting depth
+  inFencedCode: boolean;     // Processing a code block
+  inContainer: boolean;      // Processing a custom container
+  listStack: ListInfo[];     // Tracking nested list state
+  blockquoteDepth: number;   // Tracking blockquote depth
 }
 ```
 
-## AST Structure
+## Performance Analysis
 
-Incremark generates standard [MDAST](https://github.com/syntax-tree/mdast) format:
+Thanks to the incremental mechanism, Incremark's performance is almost independent of the total document length and only linearly related to the current chunk size.
 
-```ts
-interface Root {
-  type: 'root'
-  children: RootContent[]
-}
+| Dimension | Traditional Full Parsing | Incremark Incremental Parsing |
+| :--- | :--- | :--- |
+| **Incremental Complexity** | O(N) | **O(K)** |
+| **Total Parsing Complexity** | O(N²) | **O(N)** |
+| **Memory Overhead** | High (Repeated object creation) | **Low (Incremental AST reuse)** |
+| **UI Responsiveness** | Performance degrades as N grows | **Maintains 60fps smooth performance** |
 
-// Block-level nodes
-type RootContent = 
-  | Heading 
-  | Paragraph 
-  | Code 
-  | List 
-  | Blockquote 
-  | Table 
-  | ThematicBreak
-  | ...
-```
+*Note: N is total document length, K is current chunk size.*
 
-## Performance Optimization
+## Typewriter Effect (BlockTransformer)
 
-### Why Fast?
+After the AST is parsed, the `BlockTransformer` acts as a filtering layer before rendering. It converts the "instant results" of parsing into a "progressive process":
 
-1. **Skip completed blocks** - O(1) instead of O(n)
-2. **Incremental line updates** - Only process new lines
-3. **Prefix sum optimization** - O(1) line offset calculation
-
-### Complexity Comparison
-
-| Operation | Traditional | Incremark |
-|-----------|-------------|-----------|
-| Append chunk | O(n) | O(k) |
-| Total parsing | O(n²) | O(n) |
-| Memory | Repeated creation | Incremental reuse |
-
-*n = total chars, k = new chars*
-
-## Next Steps
-
-- [Vue Integration](./vue) - Vue deep dive
-- [Custom Components](./custom-components) - Custom rendering
+1.  **Node Tracking**: Keeps track of which characters have already been "played."
+2.  **TextChunk Wrapping**: Wraps newly added text nodes into `TextChunk`, allowing the rendering layer to implement fade-in animations.
+3.  **Smart Skipping**: It can strategically skip animations if the user requests immediate display or for non-text nodes (like images).

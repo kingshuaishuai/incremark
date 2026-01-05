@@ -1,166 +1,183 @@
 import { defineConfig } from 'vitepress'
-import taskLists from 'markdown-it-task-lists'
+import taskLists from 'markdown-it-task-lists';
+import { vitepressMermaidPreview } from 'vitepress-mermaid-preview';
 
-export default defineConfig({
-  markdown: {
-    config: (md) => {
-      md.use(taskLists)
-    }
-  },
 
-  title: 'Incremark',
-  description: 'Incremental Markdown Parser for AI Streaming',
-  
-  head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }]
-  ],
-
-  locales: {
-    root: {
-      label: 'English',
-      lang: 'en',
-      themeConfig: {
-        nav: [
-          { text: 'Guide', link: '/guide/introduction' },
-          { text: 'API', link: '/api/core' },
-          { text: 'Roadmap', link: '/roadmap' },
-          { text: 'GitHub', link: 'https://github.com/kingshuaishuai/incremark' }
-        ],
-        sidebar: {
-          '/guide/': [
-            {
-              text: 'Getting Started',
-              items: [
-                { text: 'Introduction', link: '/guide/introduction' },
-                { text: 'Quick Start', link: '/guide/getting-started' },
-                { text: 'Core Concepts', link: '/guide/concepts' },
-                { text: '🚀 Benchmark', link: '/guide/benchmark' },
-                { text: '📊 Solution Comparison', link: '/guide/compared' }
-              ]
-            },
-            {
-              text: 'Framework Integration',
-              items: [
-                { text: 'Vue', link: '/guide/vue' },
-                { text: 'React', link: '/guide/react' },
-                { text: 'Svelte', link: '/guide/svelte' }
-              ]
-            },
-            {
-              text: 'Features',
-              items: [
-                { text: '⌨️ Typewriter Effect', link: '/guide/typewriter' },
-                { text: '📜 Auto-scroll', link: '/guide/auto-scroll' }
-              ]
-            },
-            {
-              text: 'Advanced',
-              items: [
-                { text: 'Custom Components', link: '/guide/custom-components' },
-                { text: 'DevTools', link: '/guide/devtools' },
-                { text: 'Extensions', link: '/guide/extensions' }
-              ]
-            },
-          ],
-          '/api/': [
-            {
-              text: 'API Reference',
-              items: [
-                { text: '@incremark/core', link: '/api/core' },
-                { text: '@incremark/vue', link: '/api/vue' },
-                { text: '@incremark/react', link: '/api/react' },
-                { text: '@incremark/svelte', link: '/api/svelte' },
-                { text: '@incremark/devtools', link: '/api/devtools' }
-              ]
-            }
-          ]
-        }
-      }
-    },
-    zh: {
-      label: '中文',
-      lang: 'zh-CN',
-      link: '/zh/',
-      themeConfig: {
-        nav: [
-          { text: '指南', link: '/zh/guide/introduction' },
-          { text: 'API', link: '/zh/api/core' },
-          { text: '路线图', link: '/zh/roadmap' },
-          { text: 'GitHub', link: 'https://github.com/kingshuaishuai/incremark' }
-        ],
-        sidebar: {
-          '/zh/guide/': [
-            {
-              text: '开始',
-              items: [
-                { text: '介绍', link: '/zh/guide/introduction' },
-                { text: '快速开始', link: '/zh/guide/getting-started' },
-                { text: '核心概念', link: '/zh/guide/concepts' },
-                { text: '🚀 性能测试', link: '/zh/guide/benchmark' },
-                { text: '📊 方案对比', link: '/zh/guide/compared' }
-              ]
-            },
-            {
-              text: '框架集成',
-              items: [
-                { text: 'Vue', link: '/zh/guide/vue' },
-                { text: 'React', link: '/zh/guide/react' },
-                { text: 'Svelte', link: '/zh/guide/svelte' }
-              ]
-            },
-            {
-              text: '功能',
-              items: [
-                { text: '⌨️ 打字机效果', link: '/zh/guide/typewriter' },
-                { text: '📜 自动滚动', link: '/zh/guide/auto-scroll' }
-              ]
-            },
-            {
-              text: '高级',
-              items: [
-                { text: '自定义组件', link: '/zh/guide/custom-components' },
-                { text: 'DevTools', link: '/zh/guide/devtools' },
-                { text: '扩展支持', link: '/zh/guide/extensions' }
-              ]
-            },
-          ],
-          '/zh/api/': [
-            {
-              text: 'API 参考',
-              items: [
-                { text: '@incremark/core', link: '/zh/api/core' },
-                { text: '@incremark/vue', link: '/zh/api/vue' },
-                { text: '@incremark/react', link: '/zh/api/react' },
-                { text: '@incremark/svelte', link: '/zh/api/svelte' },
-                { text: '@incremark/devtools', link: '/zh/api/devtools' }
-              ]
-            }
-          ]
-        },
-        outlineTitle: '目录',
-        lastUpdatedText: '最后更新',
-        docFooter: {
-          prev: '上一页',
-          next: '下一页'
-        }
-      }
-    }
-  },
-
+const shared = {
+  title: "Incremark",
   themeConfig: {
     logo: '/logo.svg',
-    
     socialLinks: [
       { icon: 'github', link: 'https://github.com/kingshuaishuai/incremark' }
+    ]
+  }
+}
+
+const en = {
+  label: 'English',
+  lang: 'en',
+  link: '/',
+  description: "High-performance streaming markdown renderer",
+  themeConfig: {
+    nav: [
+      { text: 'Guide', link: '/guide/quick-start' },
+      { text: 'Features', link: '/features/basic-usage' },
+      { text: 'API', link: '/api/' },
+      { text: 'Examples', link: '/examples/openai' },
+      { text: 'Roadmap', link: '/roadmap' },
+      { text: 'GitHub', link: 'https://github.com/kingshuaishuai/incremark' }
     ],
-
-    footer: {
-      message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2024'
-    },
-
-    search: {
-      provider: 'local'
+    sidebar: {
+      '/guide/': [
+        {
+          text: 'Getting Started',
+          items: [
+            { text: 'Introduction', link: '/guide/introduction' },
+            { text: 'Quick Start', link: '/guide/quick-start' },
+            { text: 'Core Concepts', link: '/guide/concepts' },
+            { text: 'Comparison', link: '/guide/comparison' }
+          ]
+        }
+      ],
+      '/features/': [
+        {
+          text: 'Features',
+          items: [
+            { text: 'Basic Usage', link: '/features/basic-usage' },
+            { text: 'Typewriter Effect', link: '/features/typewriter' },
+            { text: 'HTML Elements', link: '/features/html-elements' },
+            { text: 'Footnotes', link: '/features/footnotes' },
+            { text: 'Custom Containers', link: '/features/custom-containers' },
+            { text: 'Custom Components', link: '/features/custom-components' },
+            { text: 'Custom Code Blocks', link: '/features/custom-codeblocks' },
+            { text: 'Themes', link: '/features/themes' },
+            { text: 'Auto Scroll', link: '/features/auto-scroll' },
+            { text: 'DevTools', link: '/features/devtools' }
+          ]
+        }
+      ],
+      '/advanced/': [
+        {
+          text: 'Advanced',
+          items: [
+            { text: 'Architecture', link: '/advanced/architecture' },
+            { text: 'Extensions', link: '/advanced/extensions' }
+          ]
+        }
+      ],
+      '/examples/': [
+        {
+          text: 'Examples',
+          items: [
+            { text: 'OpenAI', link: '/examples/openai' },
+            { text: 'Anthropic', link: '/examples/anthropic' },
+            { text: 'Vercel AI SDK', link: '/examples/vercel-ai' },
+            { text: 'Custom Stream', link: '/examples/custom-stream' }
+          ]
+        }
+      ],
+      '/migration/': [
+        {
+          text: 'Migration',
+          items: [
+            { text: 'v0 to v1', link: '/migration/v0-to-v1' }
+          ]
+        }
+      ]
     }
+  }
+}
+
+const zh = {
+  label: '简体中文',
+  lang: 'zh',
+  link: '/zh/',
+  description: "高性能流式 Markdown 渲染器",
+  themeConfig: {
+    nav: [
+      { text: '指南', link: '/zh/guide/quick-start' },
+      { text: '功能', link: '/zh/features/basic-usage' },
+      { text: 'API', link: '/zh/api/' },
+      { text: '示例', link: '/zh/examples/openai' },
+      { text: '路线图', link: '/zh/roadmap' },
+      { text: 'GitHub', link: 'https://github.com/kingshuaishuai/incremark' }
+    ],
+    sidebar: {
+      '/zh/guide/': [
+        {
+          text: '快速开始',
+          items: [
+            { text: '介绍', link: '/zh/guide/introduction' },
+            { text: '快速上手', link: '/zh/guide/quick-start' },
+            { text: '核心概念', link: '/zh/guide/concepts' },
+            { text: '方案对比', link: '/zh/guide/comparison' }
+          ]
+        }
+      ],
+      '/zh/features/': [
+        {
+          text: '功能特性',
+          items: [
+            { text: '基础用法', link: '/zh/features/basic-usage' },
+            { text: '打字机效果', link: '/zh/features/typewriter' },
+            { text: 'HTML 元素', link: '/zh/features/html-elements' },
+            { text: '脚注', link: '/zh/features/footnotes' },
+            { text: '自定义容器', link: '/zh/features/custom-containers' },
+            { text: '自定义组件', link: '/zh/features/custom-components' },
+            { text: '自定义代码块', link: '/zh/features/custom-codeblocks' },
+            { text: '主题', link: '/zh/features/themes' },
+            { text: '自动滚动', link: '/zh/features/auto-scroll' },
+            { text: '开发者工具', link: '/zh/features/devtools' }
+          ]
+        }
+      ],
+      '/zh/advanced/': [
+        {
+          text: '进阶',
+          items: [
+            { text: '架构原理', link: '/zh/advanced/architecture' },
+            { text: '扩展功能', link: '/zh/advanced/extensions' }
+          ]
+        }
+      ],
+      '/zh/examples/': [
+        {
+          text: '示例',
+          items: [
+            { text: 'OpenAI', link: '/zh/examples/openai' },
+            { text: 'Anthropic', link: '/zh/examples/anthropic' },
+            { text: 'Vercel AI SDK', link: '/zh/examples/vercel-ai' },
+            { text: '自定义流', link: '/zh/examples/custom-stream' }
+          ]
+        }
+      ],
+      '/zh/migration/': [
+        {
+          text: '迁移',
+          items: [
+            { text: 'v0 到 v1', link: '/zh/migration/v0-to-v1' }
+          ]
+        }
+      ]
+    },
+    outlineTitle: '页面导航',
+    docFooter: {
+      prev: '上一页',
+      next: '下一页'
+    }
+  }
+}
+
+export default defineConfig({
+  ...shared,
+  markdown: {
+    config: (md) => {
+      md.use(taskLists);
+      vitepressMermaidPreview(md);
+    }
+  },
+  locales: {
+    root: en,
+    zh: zh
   }
 })

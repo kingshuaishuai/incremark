@@ -1,70 +1,27 @@
 # Introduction
 
-Incremark is an **incremental Markdown parser** designed specifically for AI streaming output scenarios.
+**Incremark** is a markdown renderer designed for the AI era. It prioritizes **streaming performance**, **incremental updates**, and **smooth visual effects**.
 
-## Problem Background
+## Why Incremark?
 
-In AI chat scenarios, AI typically outputs Markdown text in a streaming manner. The traditional approach is:
+With the rise of LLMs (Large Language Models), applications are increasingly displaying streaming text. Traditional markdown parsers were built for static documents, not for text that updates 50 times a second.
 
-```
-Receive new chunk → Concatenate to existing text → Re-parse complete text → Re-render
-```
+This mismatch leads to:
+- High CPU usage on long responses.
+- Janky scrolling and rendering.
+- Difficulty implementing "Typewriter" effects without breaking markdown syntax.
 
-This approach has serious performance issues:
+**Incremark** rethinks markdown rendering as a stream processing problem.
 
-- **Repeated parsing**: Already parsed content is parsed repeatedly
-- **High CPU overhead**: Parsing time grows O(n²) as text increases
-- **Page stutters**: Poor user experience
+## Key Features
 
-## Solution
+- ⚡️ **Incremental Parsing**: Never re-parse what hasn't changed.
+- 🚀 **Extreme Performance**: Handles massive streaming documents with ease.
+- ⌨️ **Built-in Typewriter**: Smooth character-by-character reveals that respect markdown structure.
+- 🧩 **Framework Agnostic**: Core logic is shared; connectors for Vue, React, and Svelte.
+- 🎨 **Themable**: Tailored for modern, dark-mode-first interfaces.
+- 🛠 **DevTools**: Inspect the parsing process in real-time.
 
-Incremark uses an **incremental parsing** strategy:
+## Ready to Start?
 
-```
-Receive new chunk → Append to buffer → Detect completed blocks → Only parse new blocks → Incremental update
-```
-
-### Core Advantages
-
-1. **Completed blocks are never re-parsed** - Up to 46x faster for long documents
-2. **Smart boundary detection** - Accurately identify when blocks are complete
-3. **Maintain parsing correctness** - Handle code blocks, lists and other complex nested structures
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────┐
-│                    @incremark/core                   │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │
-│  │   Parser    │  │  Detector   │  │    Types    │  │
-│  │  Incremental│  │  Boundary   │  │   Type Def  │  │
-│  └─────────────┘  └─────────────┘  └─────────────┘  │
-└─────────────────────────────────────────────────────┘
-                          │
-          ┌───────────────┼───────────────┼───────────────┐
-          ▼               ▼               ▼               ▼
-   ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
-   │@incremark/vue│ │@incremark/react│ │@incremark/svelte│ │@incremark/devtools│
-   │  Vue 3      │ │  React 18+  │ │  Svelte 5   │ │  Dev Tools   │
-   └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘
-```
-
-## Use Cases
-
-- ✅ AI chat applications (ChatGPT, Claude, etc.)
-- ✅ Streaming document generation
-- ✅ Real-time Markdown preview
-- ✅ Low-latency rendering scenarios
-
-## Online Demo
-
-Try Incremark right now:
-
-- 🎮 [Vue Demo](https://vue.incremark.com/) - Vue 3 integration example
-- ⚛️ [React Demo](https://react.incremark.com/) - React integration example
-- 🎯 [Svelte Demo](https://svelte.incremark.com/) - Svelte 5 integration example
-
-## Next Steps
-
-- [Quick Start](./getting-started) - Get started in 5 minutes
-- [Core Concepts](./concepts) - Understand how it works
+Check out the [Quick Start](/guide/quick-start) to integrate it into your app in minutes.

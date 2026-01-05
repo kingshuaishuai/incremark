@@ -4,13 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vitepress dev",
+    "dev": "vitepress dev --port 5230",
     "build": "vitepress build",
     "preview": "vitepress preview"
   },
   "devDependencies": {
     "markdown-it-task-lists": "^2.1.1",
     "vitepress": "^1.3.0"
+  },
+  "dependencies": {
+    "vitepress-mermaid-preview": "^0.1.1"
   }
 }
-
