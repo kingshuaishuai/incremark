@@ -1,6 +1,6 @@
 {
   "name": "@incremark/svelte",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Incremark Svelte 5 集成",
   "type": "module",
   "svelte": "./dist/index.js",
