@@ -31,7 +31,8 @@ export const IncremarkContent: React.FC<IncremarkContentProps> = (props) => {
     codeBlockConfigs,
     isFinished = false,
     incremarkOptions,
-    showBlockStatus
+    showBlockStatus,
+    pendingClass
   } = props
 
   // 初始化时使用的选项（使用 ref 避免重建 hook）
@@ -115,6 +116,7 @@ export const IncremarkContent: React.FC<IncremarkContentProps> = (props) => {
         blocks={blocks}
         isDisplayComplete={isDisplayComplete}
         showBlockStatus={showBlockStatus}
+        pendingClass={pendingClass}
         components={components}
         customContainers={customContainers}
         customCodeBlocks={customCodeBlocks}

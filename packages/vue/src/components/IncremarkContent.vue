@@ -76,5 +76,6 @@
     :components="components"
     :custom-containers="customContainers"
     :custom-code-blocks="customCodeBlocks"
+    :code-block-configs="codeBlockConfigs"
   />
 </template>

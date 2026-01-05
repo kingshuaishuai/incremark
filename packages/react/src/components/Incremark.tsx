@@ -30,6 +30,10 @@ export interface IncremarkProps {
   showBlockStatus?: boolean
   /** 自定义类名 */
   className?: string
+  /** 待处理块的样式类名 */
+  pendingClass?: string
+  /** 已完成块的样式类名 */
+  completedClass?: string
   /** 可选：useIncremark 返回的对象（用于自动提供 context） */
   incremark?: UseIncremarkReturn
 }
@@ -57,6 +61,8 @@ export const Incremark: React.FC<IncremarkProps> = (props) => {
     customCodeBlocks,
     showBlockStatus = true,
     className = '',
+    pendingClass = 'incremark-pending',
+    completedClass = 'incremark-completed',
     incremark
   } = props
 
@@ -72,6 +78,8 @@ export const Incremark: React.FC<IncremarkProps> = (props) => {
           customCodeBlocks={customCodeBlocks}
           showBlockStatus={showBlockStatus}
           className={className}
+          pendingClass={pendingClass}
+          completedClass={completedClass}
           isDisplayComplete={isDisplayComplete}
         />
       </IncremarkContainerProvider>
@@ -90,6 +98,8 @@ export const Incremark: React.FC<IncremarkProps> = (props) => {
       customCodeBlocks={customCodeBlocks}
       showBlockStatus={showBlockStatus}
       className={className}
+      pendingClass={pendingClass}
+      completedClass={completedClass}
       isDisplayComplete={isDisplayComplete}
     />
   )
@@ -106,6 +116,8 @@ interface IncremarkInternalProps {
   codeBlockConfigs?: Record<string, { takeOver?: boolean }>
   showBlockStatus: boolean
   className: string
+  pendingClass: string
+  completedClass: string
   isDisplayComplete: boolean
 }
 
@@ -117,6 +129,8 @@ const IncremarkInternal: React.FC<IncremarkInternalProps> = ({
   codeBlockConfigs,
   showBlockStatus,
   className,
+  pendingClass,
+  completedClass,
   isDisplayComplete
 }) => {
   return (
@@ -131,7 +145,7 @@ const IncremarkInternal: React.FC<IncremarkInternalProps> = ({
         const isPending = block.status === 'pending'
         const classes = [
           'incremark-block',
-          isPending ? 'incremark-pending' : 'incremark-completed',
+          isPending ? pendingClass : completedClass,
           showBlockStatus && 'incremark-show-status',
           block.isLastPending && 'incremark-last-pending'
         ].filter(Boolean).join(' ')
