@@ -25,3 +25,9 @@
 ## 准备好开始了吗？
 
 查看 [快速开始](/zh/guide/quick-start) 以在几分钟内将其集成到您的应用中。
+
+## AI 友好性
+
+Incremark 为 AI 而生，我们的文档也是如此。我们为 LLM 提供了结构化的文档版本，以便更好地被索引和理解：
+- [llms.txt](/llms.txt)：文档的精简索引。
+- [llms-full.txt](/llms-full.txt)：完整文档的单文件版本，非常适合为 Claude、Cursor 或 ChatGPT 提供上下文。

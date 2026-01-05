@@ -1,6 +1,8 @@
 import { defineConfig, type HeadConfig } from 'vitepress'
 import taskLists from 'markdown-it-task-lists';
 import { vitepressMermaidPreview } from 'vitepress-mermaid-preview';
+import llms from 'vitepress-plugin-llms'
+
 
 
 const shared = {
@@ -194,5 +196,10 @@ export default defineConfig({
   },
   sitemap: {
     hostname: 'https://www.incremark.com'
+  },
+  vite: {
+    plugins: [
+      llms()
+    ]
   }
 })

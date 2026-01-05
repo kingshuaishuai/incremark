@@ -25,3 +25,9 @@ This mismatch leads to:
 ## Ready to Start?
 
 Check out the [Quick Start](/guide/quick-start) to integrate it into your app in minutes.
+
+## AI Friendliness
+
+Incremark is designed for AI, and our documentation is too. We provide structured versions of our docs for better ingestion by LLMs:
+- [llms.txt](/llms.txt): A concise index of our documentation.
+- [llms-full.txt](/llms-full.txt): The entire documentation in a single file, perfect for providing context to Claude, Cursor, or ChatGPT.
