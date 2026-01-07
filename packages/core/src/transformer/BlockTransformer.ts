@@ -613,13 +613,12 @@ export class BlockTransformer<T = unknown> {
       return
     }
 
-    // 如果进度增加了，使用增量追加模式
+    // 如果进度增加了，使用追加模式
     if (currentProgress > this.cachedProgress && this.cachedDisplayNode) {
-      // 真正的增量追加：只处理新增部分，不重复遍历已稳定的节点
+      // 截断并合并：复用已稳定的节点引用，减少框架重渲染
       this.cachedDisplayNode = appendToAst(
         this.cachedDisplayNode,
         block.node,
-        this.cachedProgress,
         currentProgress,
         this.getAccumulatedChunks()
       )

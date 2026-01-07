@@ -66,24 +66,26 @@ interface ChunkRange {
 /**
  * 截断 AST 节点，只保留前 maxChars 个字符
  * 支持 chunks（用于渐入动画）
- * 支持增量模式：跳过已处理的字符，只处理新增部分
  * 
- * @param node 原始节点
+ * 性能说明：
+ * - 此函数每次调用都会从头遍历 AST 节点
+ * - 但由于 BlockTransformer 是按 block 处理的，每次只遍历单个 block 的 AST
+ * - 单个 block（如一个段落、一个代码块）通常只有几百个字符，性能开销很小
+ * - 对于整个文档的渲染，已完成的 blocks 不会重新遍历
+ * 
+ * @param node 原始节点（单个 block 的 AST）
  * @param maxChars 最大字符数
  * @param accumulatedChunks 累积的 chunks 信息（用于渐入动画）
- * @param skipChars 跳过前 N 个字符（已处理的部分，用于增量追加）
  * @returns 截断后的节点，如果 maxChars <= 0 返回 null
  */
 export function sliceAst(
   node: RootContent, 
   maxChars: number,
-  accumulatedChunks?: AccumulatedChunks,
-  skipChars: number = 0
+  accumulatedChunks?: AccumulatedChunks
 ): RootContent | null {
   if (maxChars <= 0) return null
-  if (skipChars >= maxChars) return null
 
-  let remaining = maxChars - skipChars  // 只处理新增部分
+  let remaining = maxChars
   let charIndex = 0
   
   // 计算 chunks 在文本中的范围
@@ -108,20 +110,11 @@ export function sliceAst(
       const nodeStart = charIndex
       const nodeEnd = charIndex + n.value.length
       
-      // 如果整个节点都在 skipChars 之前，跳过
-      if (nodeEnd <= skipChars) {
-        charIndex = nodeEnd
-        return null
-      }
-      
-      // 如果节点跨越 skipChars，需要从 skipChars 位置开始取
-      const skipInNode = Math.max(0, skipChars - nodeStart)
-      const take = Math.min(n.value.length - skipInNode, remaining)
+      const take = Math.min(n.value.length, remaining)
       remaining -= take
-      if (take === 0) return null
-
-      const slicedValue = n.value.slice(skipInNode, skipInNode + take)
       charIndex = nodeEnd
+
+      const slicedValue = n.value.slice(0, take)
       
       const result: AstNode & { stableLength?: number; chunks?: TextChunk[] } = { 
         ...n, 
@@ -134,14 +127,14 @@ export function sliceAst(
         let firstChunkLocalStart = take  // 第一个 chunk 在节点中的起始位置
         
         for (const range of chunkRanges) {
-          // 计算 chunk 与当前节点的交集（考虑 skipChars）
-          const overlapStart = Math.max(range.start, nodeStart + skipInNode)
-          const overlapEnd = Math.min(range.end, nodeStart + skipInNode + take)
+          // 计算 chunk 与当前节点的交集
+          const overlapStart = Math.max(range.start, nodeStart)
+          const overlapEnd = Math.min(range.end, nodeStart + take)
           
           if (overlapStart < overlapEnd) {
             // 有交集，提取对应的文本（相对于 slicedValue）
-            const localStart = overlapStart - (nodeStart + skipInNode)
-            const localEnd = overlapEnd - (nodeStart + skipInNode)
+            const localStart = overlapStart - nodeStart
+            const localEnd = overlapEnd - nodeStart
             const chunkText = slicedValue.slice(localStart, localEnd)
             
             if (chunkText.length > 0) {
@@ -169,34 +162,15 @@ export function sliceAst(
     // 容器节点：递归处理 children
     if (n.children && Array.isArray(n.children)) {
       const newChildren: AstNode[] = []
-      let childCharIndex = charIndex
       
       for (const child of n.children) {
         if (remaining <= 0) break
         
-        // 计算子节点的字符范围
-        const childChars = countCharsInNode(child as AstNode)
-        const childStart = childCharIndex
-        const childEnd = childCharIndex + childChars
-        
-        // 如果子节点完全在 skipChars 之前，跳过
-        if (childEnd <= skipChars) {
-          childCharIndex = childEnd
-          continue
-        }
-        
-        // 如果子节点跨越 skipChars，需要处理
-        // 临时更新 charIndex 以便子节点正确处理 skipChars
-        const savedCharIndex = charIndex
-        charIndex = childStart
         const processed = process(child)
-        charIndex = savedCharIndex
         
         if (processed) {
           newChildren.push(processed)
         }
-        
-        childCharIndex = childEnd
       }
       
       if (newChildren.length === 0) {
@@ -215,30 +189,25 @@ export function sliceAst(
 }
 
 /**
- * 增量追加：将新增的字符范围追加到现有的 displayNode
+ * 追加到 AST：将源节点截断到指定字符数，并与基础节点合并
  *
- * 注意：由于使用 skipChars 优化会丢失结构位置信息（例如无法区分是同一个列表项的追加
- * 还是新列表项的开始），我们改为完整截断然后智能合并的方式。
+ * 实现说明：
+ * - 完整截断 sourceNode 到 endChars，然后通过 smartMergeAst 复用已有节点引用
+ * - 虽然每次都重新遍历，但由于只处理单个 block，性能开销很小
+ * - smartMergeAst 确保前面已稳定的子节点引用被复用，减少 React/Vue 的重渲染
  *
  * @param baseNode 已截断的基础节点（稳定的部分）
- * @param sourceNode 原始完整节点
- * @param startChars 起始字符位置（已处理的字符数）
+ * @param sourceNode 原始完整节点（单个 block）
  * @param endChars 结束字符位置（新的进度）
  * @param accumulatedChunks 累积的 chunks 信息（用于渐入动画）
- * @returns 追加后的完整节点
+ * @returns 合并后的完整节点
  */
 export function appendToAst(
   baseNode: RootContent,
   sourceNode: RootContent,
-  startChars: number,
   endChars: number,
   accumulatedChunks?: AccumulatedChunks
 ): RootContent {
-  // 如果新增字符数为 0，直接返回 baseNode
-  if (endChars <= startChars) {
-    return baseNode
-  }
-
   // 完整截断到 endChars，保留完整的结构信息
   const fullSlice = sliceAst(sourceNode, endChars, accumulatedChunks)
 
@@ -247,18 +216,21 @@ export function appendToAst(
     return baseNode
   }
 
-  // 智能合并：利用 baseNode 中已有的稳定节点
+  // 智能合并：复用 baseNode 中已有的稳定节点引用
   return smartMergeAst(baseNode, fullSlice)
 }
 
 /**
- * 智能合并 AST 节点
+ * 合并 AST 节点：复用已稳定的子节点引用
  *
- * fullSlice 是完整截断的结果（包含所有结构信息），baseNode 是之前缓存的结果。
- * 我们利用 baseNode 中已有的稳定节点，只更新变化的部分。
+ * 目的：
+ * - 虽然 sliceAst 已经创建了新的节点对象，但通过复用 baseNode 中的子节点引用
+ * - 可以让 React/Vue/Svelte 的 diff 算法识别出未变化的部分，减少 DOM 更新
  *
- * 对于容器节点：复用前面稳定的子节点，只处理最后一个（可能变化的）子节点
- * 对于文本节点：直接使用 fullSlice（因为文本节点总是会变化）
+ * 策略：
+ * - 容器节点：复用前面已完成的子节点引用，只替换最后一个（正在增长的）子节点
+ * - 文本节点：直接使用 fullSlice（因为文本内容在变化）
+ * - 这是一个"事后优化"，不减少遍历开销，但减少框架层面的重渲染
  */
 function smartMergeAst(baseNode: RootContent, fullSlice: RootContent): RootContent {
   // 类型不同，直接返回 fullSlice

@@ -40,7 +40,7 @@
 ### 🛠️ Markdown 与工具
 - [x] **Code 组件重构**: 解耦 Mermaid 与默认渲染器，提升定制化能力。
 - [ ] **devtools 重构**: 使用 Svelte 重构开发工具，提升开发体验。
-- [ ] **sliceAST 优化**: 针对超长文档的进一步性能优化。
+- [x] **sliceAST 优化**: 简化代码结构，移除死代码；按 block 处理确保性能。
 - [x] **i18n 国际化**: 内置多语言支持，提供 ConfigProvider 全局配置。
 - [x] **a11y 无障碍**: 完善屏幕阅读器支持与 ARIA 规范。
 - [x] **SSR 支持**: 针对 Nuxt/Next.js 的服务端渲染优化。
