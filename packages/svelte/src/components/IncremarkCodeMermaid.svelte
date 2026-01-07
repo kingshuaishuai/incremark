@@ -1,5 +1,7 @@
 <script lang="ts">
   import type { Code } from 'mdast'
+  import { GravityMermaid, LucideCode, LucideEye, LucideCopy, LucideCopyCheck } from '@incremark/icons'
+  import SvgIcon from './SvgIcon.svelte'
 
   /**
    * 组件 Props
@@ -90,18 +92,27 @@
 
 <div class="incremark-mermaid">
   <div class="mermaid-header">
-    <span class="language">MERMAID</span>
+    <span class="language">
+      <SvgIcon svg={GravityMermaid} class="language-icon" />
+      MERMAID
+    </span>
     <div class="mermaid-actions">
       <button 
         class="code-btn" 
         onclick={toggleMermaidView} 
         type="button"
         disabled={!mermaidSvg}
+        title={mermaidViewMode === 'preview' ? 'View Source' : 'Preview'}
       >
-        {mermaidViewMode === 'preview' ? '源码' : '预览'}
+        <SvgIcon svg={mermaidViewMode === 'preview' ? LucideCode : LucideEye} />
       </button>
-      <button class="code-btn" onclick={copyCode} type="button">
-        {copied ? '✓ 已复制' : '复制'}
+      <button 
+        class="code-btn" 
+        onclick={copyCode} 
+        type="button"
+        title={copied ? 'Copied!' : 'Copy'}
+      >
+        <SvgIcon svg={copied ? LucideCopyCheck : LucideCopy} />
       </button>
     </div>
   </div>
@@ -117,4 +128,3 @@
     {/if}
   </div>
 </div>
-

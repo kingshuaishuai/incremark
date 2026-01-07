@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Code } from 'mdast'
 import { computed, ref, onUnmounted, shallowRef, watch } from 'vue'
+import { GravityMermaid, LucideCode, LucideEye, LucideCopy, LucideCopyCheck } from '@incremark/icons'
+import SvgIcon from './SvgIcon.vue'
 
 interface Props {
   node: Code
@@ -105,18 +107,27 @@ async function copyCode() {
 <template>
   <div class="incremark-mermaid">
     <div class="mermaid-header">
-      <span class="language">MERMAID</span>
+      <span class="language">
+        <SvgIcon :svg="GravityMermaid" class="language-icon" />
+        MERMAID
+      </span>
       <div class="mermaid-actions">
         <button
           class="code-btn"
           @click="toggleMermaidView"
           type="button"
           :disabled="!mermaidSvg"
+          :title="mermaidViewMode === 'preview' ? 'View Source' : 'Preview'"
         >
-          {{ mermaidViewMode === 'preview' ? '源码' : '预览' }}
+          <SvgIcon :svg="mermaidViewMode === 'preview' ? LucideCode : LucideEye" />
         </button>
-        <button class="code-btn" @click="copyCode" type="button">
-          {{ copied ? '✓ 已复制' : '复制' }}
+        <button 
+          class="code-btn" 
+          @click="copyCode" 
+          type="button"
+          :title="copied ? 'Copied!' : 'Copy'"
+        >
+          <SvgIcon :svg="copied ? LucideCopyCheck : LucideCopy" />
         </button>
       </div>
     </div>
@@ -134,4 +145,3 @@ async function copyCode() {
     </div>
   </div>
 </template>
-

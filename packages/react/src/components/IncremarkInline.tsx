@@ -83,11 +83,11 @@ export const IncremarkInline: React.FC<IncremarkInlineProps> = ({ nodes }) => {
 
         // HTML 节点（原始 HTML，如未启用 htmlTree 选项）
         if (isHtmlNode(node)) {
-          // 使用 display: contents 的 span，避免影响布局
+          // 使用 incremark-inline-html class，避免影响布局
           return (
             <span
               key={i}
-              style={{ display: 'contents' }}
+              className="incremark-inline-html"
               dangerouslySetInnerHTML={{ __html: node.value }}
             />
           )

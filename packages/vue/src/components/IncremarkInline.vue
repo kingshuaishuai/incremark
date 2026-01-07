@@ -99,7 +99,7 @@ function isInlineMath(node: PhrasingContent): node is PhrasingContent & MathNode
     />
 
     <!-- HTML 节点（原始 HTML，如未启用 htmlTree 选项） -->
-    <span v-else-if="isHtmlNode(node)" style="display: contents;" v-html="(node as any).value"></span>
+    <span v-else-if="isHtmlNode(node)" class="incremark-inline-html" v-html="(node as any).value"></span>
 
     <!-- 加粗 -->
     <strong v-else-if="node.type === 'strong'">

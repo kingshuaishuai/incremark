@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import type { Code } from 'mdast'
+import { GravityMermaid, LucideCode, LucideEye, LucideCopy, LucideCopyCheck } from '@incremark/icons'
+import { SvgIcon } from './SvgIcon'
 
 export interface IncremarkCodeMermaidProps {
   node: Code
@@ -89,18 +91,27 @@ export const IncremarkCodeMermaid: React.FC<IncremarkCodeMermaidProps> = ({
   return (
     <div className="incremark-mermaid">
       <div className="mermaid-header">
-        <span className="language">MERMAID</span>
+        <span className="language">
+          <SvgIcon svg={GravityMermaid} className="language-icon" />
+          MERMAID
+        </span>
         <div className="mermaid-actions">
           <button
             className="code-btn"
             onClick={toggleMermaidView}
             type="button"
             disabled={!mermaidSvg}
+            title={mermaidViewMode === 'preview' ? 'View Source' : 'Preview'}
           >
-            {mermaidViewMode === 'preview' ? '源码' : '预览'}
+            <SvgIcon svg={mermaidViewMode === 'preview' ? LucideCode : LucideEye} />
           </button>
-          <button className="code-btn" onClick={copyCode} type="button">
-            {copied ? '✓ 已复制' : '复制'}
+          <button 
+            className="code-btn" 
+            onClick={copyCode} 
+            type="button"
+            title={copied ? 'Copied!' : 'Copy'}
+          >
+            <SvgIcon svg={copied ? LucideCopyCheck : LucideCopy} />
           </button>
         </div>
       </div>
@@ -120,4 +131,3 @@ export const IncremarkCodeMermaid: React.FC<IncremarkCodeMermaidProps> = ({
     </div>
   )
 }
-

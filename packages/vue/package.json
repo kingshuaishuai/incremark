@@ -24,6 +24,7 @@
   "dependencies": {
     "@incremark/core": "workspace:*",
     "@incremark/devtools": "workspace:*",
+    "@incremark/icons": "workspace:*",
     "@incremark/shared": "workspace:*",
     "@incremark/theme": "workspace:*",
     "shiki": "^3.20.0"

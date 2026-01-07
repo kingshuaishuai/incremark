@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import type { Code } from 'mdast'
+import { LucideCopy, LucideCopyCheck } from '@incremark/icons'
+import { SvgIcon } from './SvgIcon'
 import { useShiki } from '../hooks/useShiki'
 
 export interface IncremarkCodeDefaultProps {
@@ -60,8 +62,13 @@ export const IncremarkCodeDefault: React.FC<IncremarkCodeDefaultProps> = ({
     <div className="incremark-code">
       <div className="code-header">
         <span className="language">{language}</span>
-        <button className="code-btn" onClick={copyCode} type="button">
-          {copied ? '✓ 已复制' : '复制'}
+        <button 
+          className="code-btn" 
+          onClick={copyCode} 
+          type="button"
+          title={copied ? 'Copied!' : 'Copy'}
+        >
+          <SvgIcon svg={copied ? LucideCopyCheck : LucideCopy} />
         </button>
       </div>
       <div className="code-content">
@@ -78,4 +85,3 @@ export const IncremarkCodeDefault: React.FC<IncremarkCodeDefaultProps> = ({
     </div>
   )
 }
-

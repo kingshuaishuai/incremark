@@ -1,5 +1,7 @@
 <script lang="ts">
   import type { Code } from 'mdast'
+  import { LucideCopy, LucideCopyCheck } from '@incremark/icons'
+  import SvgIcon from './SvgIcon.svelte'
   import { useShiki } from '../stores/useShiki.svelte'
 
   /**
@@ -71,8 +73,13 @@
 <div class="incremark-code">
   <div class="code-header">
     <span class="language">{language}</span>
-    <button class="code-btn" onclick={copyCode} type="button">
-      {copied ? '✓ 已复制' : '复制'}
+    <button 
+      class="code-btn" 
+      onclick={copyCode} 
+      type="button"
+      title={copied ? 'Copied!' : 'Copy'}
+    >
+      <SvgIcon svg={copied ? LucideCopyCheck : LucideCopy} />
     </button>
   </div>
   <div class="code-content">
@@ -89,4 +96,3 @@
     {/if}
   </div>
 </div>
-

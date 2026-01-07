@@ -21,7 +21,8 @@
       "@incremark/react": ["./packages/react/src/index.ts"],
       "@incremark/svelte": ["./packages/svelte/src/index.ts"],
       "@incremark/devtools": ["./packages/devtools/src/index.ts"],
-      "@incremark/shared": ["./packages/shared/src/index.ts"]
+      "@incremark/shared": ["./packages/shared/src/index.ts"],
+      "@incremark/icons": ["./packages/icons/src/index.ts"]
     }
   },
   "include": ["packages/*/src/**/*"],

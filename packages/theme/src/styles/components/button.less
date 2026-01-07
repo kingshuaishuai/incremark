@@ -36,32 +36,35 @@
   }
 }
 
-/* ============ 代码块专用按钮 ============ */
-.incremark-code-btn {
-  padding: @spacing-xs @spacing-md;
-  border: 1px solid @color-border-strong;  // 使用通用深色边框
+/* ============ 图标按钮（用于深色背景，如代码块头部）============ */
+.incremark-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
   border-radius: @border-radius-sm;
   background: transparent;
-  color: @color-text-tertiary;
-  font-size: @font-size-sm;
-  font-weight: @font-weight-medium;
+  color: @color-code-block-text;  // 使用代码块文本色，在深色背景上可见
+  font-size: 16px;  // 控制内部 icon 大小（1em）
   cursor: pointer;
   transition: all @duration-normal @easing-ease-out;
   user-select: none;
-  white-space: nowrap;
+  opacity: 0.6;  // 默认半透明
 
   &:hover:not(:disabled) {
-    background-color: @color-border-strong;  // 使用通用深色边框
-    color: @color-text-inverse;
+    background-color: @color-code-button-hover-background;
+    opacity: 1;
   }
 
   &:active:not(:disabled) {
-    transform: translateY(1px);
+    transform: scale(0.95);
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.3;
     cursor: not-allowed;
   }
 }
-

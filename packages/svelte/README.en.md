@@ -1,27 +1,27 @@
 # @incremark/svelte
 
-Incremark 的 Svelte 5 集成库，提供高性能的流式 Markdown 渲染组件。
+Svelte 5 integration library for Incremark, providing high-performance streaming Markdown rendering components.
 
-🇨🇳 中文 | **[🇺🇸 English](./README.en.md)**
+**[🇨🇳 中文](./README.md)** | 🇺🇸 English
 
-## 核心优势
+## Core Advantages
 
-- 📦 **开箱即用** - 提供 `IncremarkContent` 组件和 `useIncremark` store
-- ⚡ **极致性能** - 增量解析 O(n) 复杂度，双引擎可选
-- ⌨️ **打字机效果** - 内置多种动画效果（淡入、打字机）
-- 🎨 **高度可定制** - 支持自定义组件、代码块、容器
-- 🎯 **Svelte 5 Runes** - 使用最新的 Svelte 5 语法
-- 📜 **自动滚动** - 内置 AutoScrollContainer 组件
+- 📦 **Out of the Box** - Provides `IncremarkContent` component and `useIncremark` store
+- ⚡ **Extreme Performance** - Incremental parsing with O(n) complexity, dual-engine support
+- ⌨️ **Typewriter Effect** - Built-in animation effects (fade-in, typing)
+- 🎨 **Highly Customizable** - Custom components, code blocks, containers
+- 🎯 **Svelte 5 Runes** - Uses the latest Svelte 5 syntax
+- 📜 **Auto Scroll** - Built-in AutoScrollContainer component
 
-## 安装
+## Installation
 
 ```bash
 pnpm add @incremark/core @incremark/svelte
 ```
 
-## 快速开始
+## Quick Start
 
-### 推荐方式：IncremarkContent 组件
+### Recommended: IncremarkContent Component
 
 ```svelte
 <script lang="ts">
@@ -31,7 +31,7 @@ pnpm add @incremark/core @incremark/svelte
   let content = $state('')
   let isFinished = $state(false)
 
-  // 处理 AI 流式输出
+  // Handle AI streaming output
   async function handleStream(stream: AsyncIterable<string>) {
     content = ''
     isFinished = false
@@ -44,7 +44,7 @@ pnpm add @incremark/core @incremark/svelte
   }
 </script>
 
-<button onclick={() => handleStream(stream)}>开始</button>
+<button onclick={() => handleStream(stream)}>Start</button>
 <IncremarkContent 
   {content} 
   {isFinished}
@@ -57,7 +57,7 @@ pnpm add @incremark/core @incremark/svelte
 />
 ```
 
-### 进阶方式：useIncremark Store
+### Advanced: useIncremark Store
 
 ```svelte
 <script lang="ts">
@@ -78,32 +78,32 @@ pnpm add @incremark/core @incremark/svelte
   }
 </script>
 
-<button onclick={() => handleStream(stream)}>开始</button>
+<button onclick={() => handleStream(stream)}>Start</button>
 <Incremark blocks={$blocks} />
 ```
 
-## IncremarkContent 组件
+## IncremarkContent Component
 
-声明式的一体化组件，推荐在大多数场景使用。
+Declarative all-in-one component, recommended for most scenarios.
 
 ### Props
 
 ```ts
 interface IncremarkContentProps {
-  // 输入（二选一）
-  content?: string                       // 累积的 Markdown 字符串
-  stream?: () => AsyncGenerator<string>  // 异步生成器函数
+  // Input (choose one)
+  content?: string                       // Accumulated Markdown string
+  stream?: () => AsyncGenerator<string>  // Async generator function
 
-  // 状态
-  isFinished?: boolean                   // 流结束标志（content 模式必需）
+  // Status
+  isFinished?: boolean                   // Stream finished flag (required for content mode)
 
-  // 配置
+  // Configuration
   incremarkOptions?: {
-    gfm?: boolean              // GFM 支持
-    math?: boolean             // 数学公式
-    htmlTree?: boolean         // HTML 结构化解析
-    containers?: boolean       // ::: 容器语法
-    typewriter?: {             // 打字机效果
+    gfm?: boolean              // GFM support
+    math?: boolean             // Math formulas
+    htmlTree?: boolean         // HTML structured parsing
+    containers?: boolean       // ::: container syntax
+    typewriter?: {             // Typewriter effect
       enabled?: boolean
       charsPerTick?: number | [number, number]
       tickInterval?: number
@@ -112,19 +112,19 @@ interface IncremarkContentProps {
     }
   }
 
-  // 自定义渲染
-  components?: ComponentMap                          // 自定义组件
-  customContainers?: Record<string, Component>       // 自定义容器
-  customCodeBlocks?: Record<string, Component>       // 自定义代码块
+  // Custom rendering
+  components?: ComponentMap                          // Custom components
+  customContainers?: Record<string, Component>       // Custom containers
+  customCodeBlocks?: Record<string, Component>       // Custom code blocks
   codeBlockConfigs?: Record<string, CodeBlockConfig>
 
-  // 样式
-  showBlockStatus?: boolean    // 显示 block 状态边框
-  pendingClass?: string        // pending block 的 CSS 类
+  // Styling
+  showBlockStatus?: boolean    // Show block status border
+  pendingClass?: string        // CSS class for pending blocks
 }
 ```
 
-### 示例：启用打字机效果
+### Example: Enable Typewriter Effect
 
 ```svelte
 <IncremarkContent 
@@ -142,7 +142,7 @@ interface IncremarkContentProps {
 />
 ```
 
-### 示例：自定义组件
+### Example: Custom Components
 
 ```svelte
 <script lang="ts">
@@ -161,25 +161,25 @@ interface IncremarkContentProps {
 />
 ```
 
-## 主题系统
+## Theme System
 
 ```svelte
 <script lang="ts">
   import { ThemeProvider, IncremarkContent } from '@incremark/svelte'
 </script>
 
-<!-- 内置主题 -->
+<!-- Built-in theme -->
 <ThemeProvider theme="dark">
   <IncremarkContent {content} {isFinished} />
 </ThemeProvider>
 
-<!-- 自定义主题 -->
+<!-- Custom theme -->
 <ThemeProvider theme={{ color: { brand: { primary: '#8b5cf6' } } }}>
   <IncremarkContent {content} {isFinished} />
 </ThemeProvider>
 ```
 
-## 自动滚动
+## Auto Scroll
 
 ```svelte
 <script lang="ts">
@@ -199,7 +199,7 @@ interface IncremarkContentProps {
 </AutoScrollContainer>
 
 <button onclick={() => scrollContainer?.scrollToBottom()}>
-  滚动到底部
+  Scroll to Bottom
 </button>
 ```
 
@@ -207,53 +207,53 @@ interface IncremarkContentProps {
 
 ```ts
 const {
-  // 状态（Svelte stores）
-  markdown,           // Writable<string> - 完整 Markdown
-  blocks,             // Readable<Block[]> - 所有块
-  completedBlocks,    // Writable<Block[]> - 已完成块
-  pendingBlocks,      // Writable<Block[]> - 待处理块
-  isLoading,          // Writable<boolean> - 是否加载中
-  isDisplayComplete,  // Readable<boolean> - 显示是否完成
+  // State (Svelte stores)
+  markdown,           // Writable<string> - Complete Markdown
+  blocks,             // Readable<Block[]> - All blocks
+  completedBlocks,    // Writable<Block[]> - Completed blocks
+  pendingBlocks,      // Writable<Block[]> - Pending blocks
+  isLoading,          // Writable<boolean> - Is loading
+  isDisplayComplete,  // Readable<boolean> - Is display complete
   
-  // 方法
+  // Methods
   append,             // (chunk: string) => IncrementalUpdate
   finalize,           // () => IncrementalUpdate
   reset,              // () => void
   render,             // (content: string) => IncrementalUpdate
   
-  // 打字机控制
+  // Typewriter controls
   typewriter: {
-    enabled,          // Writable<boolean> - 是否启用
-    isProcessing,     // Readable<boolean> - 是否处理中
-    skip,             // () => void - 跳过动画
-    setOptions        // (options) => void - 更新配置
+    enabled,          // Writable<boolean> - Is enabled
+    isProcessing,     // Readable<boolean> - Is processing
+    skip,             // () => void - Skip animation
+    setOptions        // (options) => void - Update config
   }
 } = useIncremark(options)
 ```
 
-## Svelte 5 Runes 语法
+## Svelte 5 Runes Syntax
 
-本库使用 Svelte 5 的 Runes 语法：
+This library uses Svelte 5 Runes syntax:
 
 ```svelte
 <script lang="ts">
   import { IncremarkContent } from '@incremark/svelte'
 
-  // 使用 $state 管理响应式状态
+  // Use $state for reactive state
   let content = $state('')
   let isFinished = $state(false)
 
-  // 使用 $derived 计算派生状态
+  // Use $derived for computed values
   let charCount = $derived(content.length)
 </script>
 
 <IncremarkContent {content} {isFinished} />
-<p>字符数: {charCount}</p>
+<p>Character count: {charCount}</p>
 ```
 
-## 数学公式支持
+## Math Formula Support
 
-内置支持，只需启用 `math: true`：
+Built-in support, just enable `math: true`:
 
 ```svelte
 <IncremarkContent 
@@ -263,7 +263,7 @@ const {
 />
 ```
 
-引入 KaTeX 样式：
+Import KaTeX styles:
 
 ```ts
 import 'katex/dist/katex.min.css'
@@ -272,3 +272,5 @@ import 'katex/dist/katex.min.css'
 ## License
 
 MIT
+
+

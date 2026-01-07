@@ -20,7 +20,7 @@ export const IncremarkTable: React.FC<IncremarkTableProps> = ({ node }) => {
               {node.children[0].children.map((cell, cellIndex) => (
                 <th 
                   key={cellIndex}
-                  style={{ textAlign: node.align?.[cellIndex] || 'left' }}
+                  className={`incremark-table-align-${node.align?.[cellIndex] || 'left'}`}
                 >
                   <IncremarkInline nodes={getCellContent(cell)} />
                 </th>
@@ -34,7 +34,7 @@ export const IncremarkTable: React.FC<IncremarkTableProps> = ({ node }) => {
               {row.children.map((cell, cellIndex) => (
                 <td 
                   key={cellIndex}
-                  style={{ textAlign: node.align?.[cellIndex] || 'left' }}
+                  className={`incremark-table-align-${node.align?.[cellIndex] || 'left'}`}
                 >
                   <IncremarkInline nodes={getCellContent(cell)} />
                 </td>

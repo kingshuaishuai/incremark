@@ -205,11 +205,7 @@ export const AutoScrollContainer = forwardRef<AutoScrollContainerRef, AutoScroll
       <div
         ref={containerRef}
         className={`auto-scroll-container ${className || ''}`.trim()}
-        style={{
-          overflowY: 'auto',
-          height: '100%',
-          ...style
-        }}
+        style={style}
         onScroll={handleScroll}
       >
         {children}

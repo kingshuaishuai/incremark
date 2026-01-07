@@ -28,15 +28,13 @@
   }
 
   /**
-   * 获取单元格对齐方式
+   * 获取单元格对齐类名
    * 
    * @param cellIndex - 单元格索引
-   * @returns 对齐方式样式对象
+   * @returns 对齐方式类名
    */
-  function getCellAlign(cellIndex: number): { textAlign: string } {
-    return {
-      textAlign: node.align?.[cellIndex] || 'left'
-    }
+  function getCellAlignClass(cellIndex: number): string {
+    return `incremark-table-align-${node.align?.[cellIndex] || 'left'}`
   }
 
   /**
@@ -56,7 +54,7 @@
       {#if headerRow}
         <tr>
           {#each headerRow.children as cell, cellIndex (cellIndex)}
-            <th style={getCellAlign(cellIndex)}>
+            <th class={getCellAlignClass(cellIndex)}>
               <IncremarkInline nodes={getCellContent(cell)} />
             </th>
           {/each}
@@ -67,7 +65,7 @@
       {#each bodyRows as row, rowIndex (rowIndex)}
         <tr>
           {#each row.children as cell, cellIndex (cellIndex)}
-            <td style={getCellAlign(cellIndex)}>
+            <td class={getCellAlignClass(cellIndex)}>
               <IncremarkInline nodes={getCellContent(cell)} />
             </td>
           {/each}
@@ -76,4 +74,3 @@
     </tbody>
   </table>
 </div>
-

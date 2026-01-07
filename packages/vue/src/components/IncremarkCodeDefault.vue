@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { Code } from 'mdast'
 import { computed, ref, watch } from 'vue'
-
+import { LucideCopy, LucideCopyCheck } from '@incremark/icons'
+import SvgIcon from './SvgIcon.vue'
 import { useShiki } from '../composables/useShiki'
 
 interface Props {
@@ -65,8 +66,13 @@ async function copyCode() {
   <div class="incremark-code">
     <div class="code-header">
       <span class="language">{{ language }}</span>
-      <button class="code-btn" @click="copyCode" type="button">
-        {{ copied ? '✓ 已复制' : '复制' }}
+      <button 
+        class="code-btn" 
+        @click="copyCode" 
+        type="button"
+        :title="copied ? 'Copied!' : 'Copy'"
+      >
+        <SvgIcon :svg="copied ? LucideCopyCheck : LucideCopy" />
       </button>
     </div>
     <div class="code-content">
@@ -81,4 +87,3 @@ async function copyCode() {
     </div>
   </div>
 </template>
-

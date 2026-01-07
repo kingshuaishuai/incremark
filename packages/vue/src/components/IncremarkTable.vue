@@ -19,7 +19,7 @@ function getCellContent(cell: TableCell): PhrasingContent[] {
           <th 
             v-for="(cell, cellIndex) in node.children[0].children" 
             :key="cellIndex"
-            :style="{ textAlign: node.align?.[cellIndex] || 'left' }"
+            :class="`incremark-table-align-${node.align?.[cellIndex] || 'left'}`"
           >
             <IncremarkInline :nodes="getCellContent(cell)" />
           </th>
@@ -30,7 +30,7 @@ function getCellContent(cell: TableCell): PhrasingContent[] {
           <td 
             v-for="(cell, cellIndex) in row.children" 
             :key="cellIndex"
-            :style="{ textAlign: node.align?.[cellIndex] || 'left' }"
+            :class="`incremark-table-align-${node.align?.[cellIndex] || 'left'}`"
           >
             <IncremarkInline :nodes="getCellContent(cell)" />
           </td>

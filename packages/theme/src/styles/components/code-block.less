@@ -17,22 +17,26 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: @spacing-md @spacing-lg;
+  padding: @spacing-sm @spacing-lg;
   background: @color-code-header-background;
-  border-bottom: 1px solid @color-border-strong;  // 使用通用深色边框
+  border-bottom: 1px solid @color-border-strong;
   font-size: @font-size-sm;
+  min-height: 40px;
 
   .language {
+    display: flex;
+    align-items: center;
+    gap: @spacing-sm;
     color: @color-text-tertiary;
     text-transform: uppercase;
     font-weight: @font-weight-medium;
     letter-spacing: 0.5px;
-  }  
+  }
 }
 
-/* ============ 代码按钮样式（引用公共样式）============ */
+/* ============ 代码按钮样式（使用图标按钮）============ */
 .incremark-code .code-btn {
-  .incremark-code-btn();
+  .incremark-icon-btn();
 }
 
 /* ============ 代码内容区域 ============ */
@@ -74,4 +78,3 @@
   line-height: @line-height-normal;
   color: @color-code-block-text;  // 使用代码块文本颜色
 }
-
