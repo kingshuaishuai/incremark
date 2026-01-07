@@ -3,9 +3,11 @@ import {
   IncremarkContent,
   AutoScrollContainer,
   ThemeProvider,
+  ConfigProvider,
   type AutoScrollContainerRef,
   type DesignTokens,
-  type UseIncremarkOptions
+  type UseIncremarkOptions,
+  type IncremarkLocale
 } from '@incremark/react'
 
 import {
@@ -28,9 +30,10 @@ interface IncremarkDemoProps {
   htmlEnabled: boolean
   sampleMarkdown: string
   t: Messages
+  locale?: IncremarkLocale
 }
 
-export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoProps) {
+export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t, locale }: IncremarkDemoProps) {
   // ============ 打字机配置 ============
   const [typewriterEnabled, setTypewriterEnabled] = useState(false)
   const [typewriterSpeed, setTypewriterSpeed] = useState(2)
@@ -297,20 +300,22 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
       )}
 
       <main className={typewriterEnabled ? `content effect-${typewriterEffect}` : 'content'}>
-        <ThemeProvider theme={currentTheme}>
-          <AutoScrollContainer ref={scrollContainerRef} enabled={autoScrollEnabled} className="scroll-container">
-            <IncremarkContent
-              content={mdContent}
-              isFinished={isFinished}
-              incremarkOptions={incremarkOptions}
-              components={useCustomComponents ? customComponents : {}}
-              customContainers={customContainers}
-              customCodeBlocks={customCodeBlocks}
-              codeBlockConfigs={codeBlockConfigs}
-              showBlockStatus={true}
-            />
-          </AutoScrollContainer>
-        </ThemeProvider>
+        <ConfigProvider locale={locale}>
+          <ThemeProvider theme={currentTheme}>
+            <AutoScrollContainer ref={scrollContainerRef} enabled={autoScrollEnabled} className="scroll-container">
+              <IncremarkContent
+                content={mdContent}
+                isFinished={isFinished}
+                incremarkOptions={incremarkOptions}
+                components={useCustomComponents ? customComponents : {}}
+                customContainers={customContainers}
+                customCodeBlocks={customCodeBlocks}
+                codeBlockConfigs={codeBlockConfigs}
+                showBlockStatus={true}
+              />
+            </AutoScrollContainer>
+          </ThemeProvider>
+        </ConfigProvider>
       </main>
     </div>
   )

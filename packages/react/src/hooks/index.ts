@@ -6,4 +6,5 @@ export {
   type UseBlockTransformerOptions,
   type UseBlockTransformerReturn
 } from './useBlockTransformer'
+export { useLocale, type UseLocaleReturn } from './useLocale'
 

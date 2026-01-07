@@ -6,9 +6,15 @@
 <script lang="ts">
   import { useLocale } from './composables'
   import { IncremarkDemo } from './components'
+  import { zhCN, type IncremarkLocale } from '@incremark/svelte'
 
   // ============ 国际化 ============
   const { locale, t, sampleMarkdown, toggleLocale } = useLocale()
+
+  // ============ Incremark Locale ============
+  const incremarkLocale = $derived<IncremarkLocale | undefined>(
+    $locale === 'zh' ? zhCN : undefined
+  )
 
   // ============ HTML 模式 ============
   let htmlEnabled = $state(true)
@@ -33,10 +39,11 @@
     </div>
   </header>
   {#key incremarkKey}
-    <IncremarkDemo 
-      {htmlEnabled} 
-      sampleMarkdown={$sampleMarkdown} 
+    <IncremarkDemo
+      {htmlEnabled}
+      sampleMarkdown={$sampleMarkdown}
       t={$t}
+      locale={incremarkLocale}
     />
   {/key}
 </div>

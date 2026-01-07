@@ -4,6 +4,7 @@
   import { GravityMermaid, LucideCode, LucideEye, LucideCopy, LucideCopyCheck } from '@incremark/icons'
   import { isClipboardAvailable } from '@incremark/shared'
   import SvgIcon from './SvgIcon.svelte'
+  import { useLocale } from '../stores/useLocale.svelte'
 
   /**
    * 组件 Props
@@ -30,6 +31,9 @@
 
   // 计算属性
   const code = $derived(node.value)
+
+  // 使用 i18n
+  const { t } = useLocale()
 
   /**
    * 切换 Mermaid 视图模式
@@ -109,19 +113,21 @@
       MERMAID
     </span>
     <div class="mermaid-actions">
-      <button 
-        class="code-btn" 
-        onclick={toggleMermaidView} 
+      <button
+        class="code-btn"
+        onclick={toggleMermaidView}
         type="button"
         disabled={!mermaidSvg}
+        aria-label={mermaidViewMode === 'preview' ? t('mermaid.viewSource') : t('mermaid.preview')}
         title={mermaidViewMode === 'preview' ? 'View Source' : 'Preview'}
       >
         <SvgIcon svg={mermaidViewMode === 'preview' ? LucideCode : LucideEye} />
       </button>
-      <button 
-        class="code-btn" 
-        onclick={copyCode} 
+      <button
+        class="code-btn"
+        onclick={copyCode}
         type="button"
+        aria-label={copied ? t('mermaid.copied') : t('mermaid.copy')}
         title={copied ? 'Copied!' : 'Copy'}
       >
         <SvgIcon svg={copied ? LucideCopyCheck : LucideCopy} />

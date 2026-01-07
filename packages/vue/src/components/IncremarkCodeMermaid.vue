@@ -4,6 +4,7 @@ import { computed, ref, onUnmounted, shallowRef, watch } from 'vue'
 import { GravityMermaid, LucideCode, LucideEye, LucideCopy, LucideCopyCheck } from '@incremark/icons'
 import { isClipboardAvailable } from '@incremark/shared'
 import SvgIcon from './SvgIcon.vue'
+import { useLocale } from '../composables/useLocale'
 
 interface Props {
   node: Code
@@ -14,6 +15,9 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   mermaidDelay: 500
 })
+
+// 使用 i18n
+const { t } = useLocale()
 
 const mermaidSvg = ref('')
 const mermaidError = ref('')
@@ -130,14 +134,16 @@ async function copyCode() {
           @click="toggleMermaidView"
           type="button"
           :disabled="!mermaidSvg"
+          :aria-label="mermaidViewMode === 'preview' ? t('mermaid.viewSource') : t('mermaid.preview')"
           :title="mermaidViewMode === 'preview' ? 'View Source' : 'Preview'"
         >
           <SvgIcon :svg="mermaidViewMode === 'preview' ? LucideCode : LucideEye" />
         </button>
-        <button 
-          class="code-btn" 
-          @click="copyCode" 
+        <button
+          class="code-btn"
+          @click="copyCode"
           type="button"
+          :aria-label="copied ? t('mermaid.copied') : t('mermaid.copy')"
           :title="copied ? 'Copied!' : 'Copy'"
         >
           <SvgIcon :svg="copied ? LucideCopyCheck : LucideCopy" />

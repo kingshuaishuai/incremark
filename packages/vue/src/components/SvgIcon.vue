@@ -18,5 +18,6 @@ defineProps<Props>()
   <span
     :class="['incremark-icon', sizeClass]"
     v-html="svg"
+    aria-hidden="true"
   />
 </template>

@@ -1,0 +1,35 @@
+<script setup lang="ts">
+import { provide, ref, type Ref } from 'vue'
+import type { IncremarkLocale } from '@incremark/shared'
+import { en } from '../index'
+import { LOCALE_KEY } from '../composables/useLocale'
+
+interface Props {
+  /** locale 对象 */
+  locale?: IncremarkLocale
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  locale: () => en
+})
+
+// 提供 locale 给子组件
+const localeRef: Ref<IncremarkLocale> = ref(props.locale)
+provide(LOCALE_KEY, localeRef)
+
+// 监听 locale 变化
+import { watch } from 'vue'
+watch(
+  () => props.locale,
+  (newLocale) => {
+    if (newLocale) {
+      localeRef.value = newLocale
+    }
+  },
+  { deep: true }
+)
+</script>
+
+<template>
+  <slot />
+</template>

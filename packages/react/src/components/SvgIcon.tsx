@@ -23,6 +23,7 @@ export const SvgIcon: React.FC<SvgIconProps> = ({
     <span
       className={`incremark-icon ${sizeClass || ''} ${className || ''}`.trim()}
       dangerouslySetInnerHTML={{ __html: svg }}
+      aria-hidden="true"
     />
   )
 }

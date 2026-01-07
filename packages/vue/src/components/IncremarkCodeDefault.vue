@@ -5,6 +5,7 @@ import { LucideCopy, LucideCopyCheck } from '@incremark/icons'
 import { isClipboardAvailable } from '@incremark/shared'
 import SvgIcon from './SvgIcon.vue'
 import { useShiki } from '../composables/useShiki'
+import { useLocale } from '../composables/useLocale'
 
 interface Props {
   node: Code
@@ -27,6 +28,9 @@ const highlightedHtml = ref('')
 
 const language = computed(() => props.node.lang || 'text')
 const code = computed(() => props.node.value)
+
+// 使用 i18n
+const { t } = useLocale()
 
 // 使用 Shiki 单例管理器
 const { isHighlighting, highlight } = useShiki(props.theme)
@@ -83,10 +87,11 @@ onUnmounted(() => {
   <div class="incremark-code">
     <div class="code-header">
       <span class="language">{{ language }}</span>
-      <button 
-        class="code-btn" 
-        @click="copyCode" 
+      <button
+        class="code-btn"
+        @click="copyCode"
         type="button"
+        :aria-label="copied ? t('code.copied') : t('code.copy')"
         :title="copied ? 'Copied!' : 'Copy'"
       >
         <SvgIcon :svg="copied ? LucideCopyCheck : LucideCopy" />

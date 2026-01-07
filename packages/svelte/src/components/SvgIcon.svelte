@@ -20,6 +20,6 @@
   }: Props = $props()
 </script>
 
-<span class="incremark-icon {sizeClass || ''} {className || ''}">
+<span class="incremark-icon {sizeClass || ''} {className || ''}" aria-hidden="true">
   {@html svg}
 </span>

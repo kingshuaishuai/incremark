@@ -23,4 +23,6 @@ export {
   IncremarkContainerProvider,
   type IncremarkContainerProviderProps
 } from './IncremarkContainerProvider'
+export { ConfigProvider } from './ConfigProvider'
+
 

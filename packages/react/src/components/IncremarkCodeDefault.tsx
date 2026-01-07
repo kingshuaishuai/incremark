@@ -4,6 +4,7 @@ import { LucideCopy, LucideCopyCheck } from '@incremark/icons'
 import { isClipboardAvailable } from '@incremark/shared'
 import { SvgIcon } from './SvgIcon'
 import { useShiki } from '../hooks/useShiki'
+import { useLocale } from '../hooks/useLocale'
 
 export interface IncremarkCodeDefaultProps {
   node: Code
@@ -26,6 +27,9 @@ export const IncremarkCodeDefault: React.FC<IncremarkCodeDefaultProps> = ({
 
   const language = node.lang || 'text'
   const code = node.value
+
+  // 使用 i18n
+  const { t } = useLocale()
 
   // 使用 Shiki 单例管理器
   const { isHighlighting, highlight } = useShiki(theme)
@@ -79,10 +83,11 @@ export const IncremarkCodeDefault: React.FC<IncremarkCodeDefaultProps> = ({
     <div className="incremark-code">
       <div className="code-header">
         <span className="language">{language}</span>
-        <button 
-          className="code-btn" 
-          onClick={copyCode} 
+        <button
+          className="code-btn"
+          onClick={copyCode}
           type="button"
+          aria-label={copied ? t('code.copied') : t('code.copy')}
           title={copied ? 'Copied!' : 'Copy'}
         >
           <SvgIcon svg={copied ? LucideCopyCheck : LucideCopy} />

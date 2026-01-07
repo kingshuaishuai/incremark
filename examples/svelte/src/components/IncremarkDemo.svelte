@@ -8,8 +8,10 @@
     IncremarkContent,
     AutoScrollContainer,
     ThemeProvider,
+    ConfigProvider,
     type DesignTokens,
-    type UseIncremarkOptions
+    type UseIncremarkOptions,
+    type IncremarkLocale
   } from '@incremark/svelte'
   import {
     BenchmarkPanel,
@@ -37,12 +39,15 @@
     sampleMarkdown: string
     /** 国际化消息 */
     t: Messages
+    /** Incremark locale */
+    locale?: IncremarkLocale
   }
 
   let {
     htmlEnabled,
     sampleMarkdown,
-    t
+    t,
+    locale
   }: Props = $props()
 
   // ============ 打字机配置 ============
@@ -330,23 +335,25 @@
   {/if}
 
   <main class="content" class:effect-none={typewriterEnabled && typewriterEffect === 'none'} class:effect-fade-in={typewriterEnabled && typewriterEffect === 'fade-in'} class:effect-typing={typewriterEnabled && typewriterEffect === 'typing'}>
-    <ThemeProvider theme={currentTheme}>
-      <AutoScrollContainer
-        bind:this={scrollContainerRef}
-        enabled={autoScrollEnabled}
-        class="scroll-container"
-      >
-        <IncremarkContent
-          content={mdContent}
-          isFinished={isFinished}
-          incremarkOptions={incremarkOptions}
-          components={useCustomComponents ? customComponents : {}}
-          {customContainers}
-          {customCodeBlocks}
-          {codeBlockConfigs}
-          showBlockStatus={true}
-        />
-      </AutoScrollContainer>
-    </ThemeProvider>
+    <ConfigProvider {locale}>
+      <ThemeProvider theme={currentTheme}>
+        <AutoScrollContainer
+          bind:this={scrollContainerRef}
+          enabled={autoScrollEnabled}
+          class="scroll-container"
+        >
+          <IncremarkContent
+            content={mdContent}
+            isFinished={isFinished}
+            incremarkOptions={incremarkOptions}
+            components={useCustomComponents ? customComponents : {}}
+            {customContainers}
+            {customCodeBlocks}
+            {codeBlockConfigs}
+            showBlockStatus={true}
+          />
+        </AutoScrollContainer>
+      </ThemeProvider>
+    </ConfigProvider>
   </main>
 </div>

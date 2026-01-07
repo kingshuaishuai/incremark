@@ -7,12 +7,12 @@
 // Hooks
 export { useIncremark, type UseIncremarkOptions, type UseIncremarkReturn, type TypewriterOptions, type TypewriterControls } from './hooks'
 export { useDevTools, type UseDevToolsOptions } from './hooks'
+export { useLocale, type UseLocaleReturn } from './hooks'
 export {
   useBlockTransformer,
   type UseBlockTransformerOptions,
   type UseBlockTransformerReturn
 } from './hooks'
-
 // Components
 export { Incremark, type IncremarkProps, IncremarkContent, type IncremarkContentProps } from './components'
 export { IncremarkRenderer, type IncremarkRendererProps } from './components'
@@ -29,6 +29,7 @@ export {
 export { IncremarkInline, type IncremarkInlineProps } from './components'
 export { IncremarkFootnotes } from './components'
 export { IncremarkContainerProvider, type IncremarkContainerProviderProps } from './components'
+export { ConfigProvider } from './components'
 export { ThemeProvider, type ThemeProviderProps } from './ThemeProvider'
 
 // Definitions Context
@@ -81,4 +82,11 @@ export {
   mergeTheme,
   applyTheme
 } from '@incremark/theme'
+
+// Re-export i18n utilities
+import { en as enShared, zhCN as zhCNShared } from '@incremark/shared'
+import type { IncremarkLocale } from '@incremark/shared'
+
+export { enShared as en, zhCNShared as zhCN }
+export type { IncremarkLocale }
 

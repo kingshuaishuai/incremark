@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
-import { IncremarkContent, AutoScrollContainer, ThemeProvider, type DesignTokens, type UseIncremarkOptions } from '@incremark/vue'
+import { IncremarkContent, AutoScrollContainer, ThemeProvider, ConfigProvider, type DesignTokens, type UseIncremarkOptions, type IncremarkLocale } from '@incremark/vue'
 
 import { BenchmarkPanel, CustomInputPanel, CustomHeading, CustomWarningContainer, CustomInfoContainer, CustomTipContainer, CustomEchartCodeBlock } from './index'
 import type { BenchmarkStats } from '../composables'
@@ -10,6 +10,7 @@ const props = defineProps<{
   htmlEnabled: boolean
   sampleMarkdown: string
   t: Messages
+  locale?: IncremarkLocale
 }>()
 
 // ============ 打字机配置 ============
@@ -285,20 +286,22 @@ defineExpose({
     />
 
     <main :class="['content', typewriterEnabled && `effect-${typewriterEffect}`]">
-      <ThemeProvider :theme="currentTheme">
-        <AutoScrollContainer ref="scrollContainerRef" :enabled="autoScrollEnabled" class="scroll-container">
-          <IncremarkContent
-            :content="mdContent"
-            :is-finished="isFinished"
-            :incremark-options="incremarkOptions"
-            :components="useCustomComponents ? customComponents : {}"
-            :custom-containers="customContainers"
-            :custom-code-blocks="customCodeBlocks"
-            :code-block-configs="codeBlockConfigs"
-            :show-block-status="true"
-          />
-        </AutoScrollContainer>
-      </ThemeProvider>
+      <ConfigProvider :locale="locale">
+        <ThemeProvider :theme="currentTheme">
+          <AutoScrollContainer ref="scrollContainerRef" :enabled="autoScrollEnabled" class="scroll-container">
+            <IncremarkContent
+              :content="mdContent"
+              :is-finished="isFinished"
+              :incremark-options="incremarkOptions"
+              :components="useCustomComponents ? customComponents : {}"
+              :custom-containers="customContainers"
+              :custom-code-blocks="customCodeBlocks"
+              :code-block-configs="codeBlockConfigs"
+              :show-block-status="true"
+            />
+          </AutoScrollContainer>
+        </ThemeProvider>
+      </ConfigProvider>
     </main>
   </div>
 </template>

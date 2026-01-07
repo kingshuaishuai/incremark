@@ -9,3 +9,5 @@ export type { UseDevToolsOptions } from './useDevTools'
 
 export { useBlockTransformer } from './useBlockTransformer'
 export type { UseBlockTransformerOptions, UseBlockTransformerReturn } from './useBlockTransformer'
+
+export { useLocale, type UseLocaleReturn } from './useLocale'

@@ -5,6 +5,7 @@
   import { isClipboardAvailable } from '@incremark/shared'
   import SvgIcon from './SvgIcon.svelte'
   import { useShiki } from '../stores/useShiki.svelte'
+  import { useLocale } from '../stores/useLocale.svelte'
 
   /**
    * 组件 Props
@@ -33,6 +34,9 @@
 
   // 使用 Shiki 单例管理器
   const shiki = useShiki(() => theme)
+
+  // 使用 i18n
+  const { t } = useLocale()
 
   // 计算属性
   const language = $derived(node.lang || 'text')
@@ -85,10 +89,11 @@
 <div class="incremark-code">
   <div class="code-header">
     <span class="language">{language}</span>
-    <button 
-      class="code-btn" 
-      onclick={copyCode} 
+    <button
+      class="code-btn"
+      onclick={copyCode}
       type="button"
+      aria-label={copied ? t('code.copied') : t('code.copy')}
       title={copied ? 'Copied!' : 'Copy'}
     >
       <SvgIcon svg={copied ? LucideCopyCheck : LucideCopy} />

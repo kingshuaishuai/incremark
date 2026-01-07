@@ -47,6 +47,9 @@ features:
   - icon: 🌐
     title: SSR Friendly
     details: Full support for Server-Side Rendering with Nuxt, Next.js, and SvelteKit.
+  - icon: ♿
+    title: i18n & Accessibility
+    details: Built-in multi-language support. WAI-ARIA compliant and screen reader friendly.
 ---
 
 ## Why Incremark?

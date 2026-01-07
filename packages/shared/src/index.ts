@@ -1,6 +1,6 @@
 /**
  * @incremark/shared
- * 
+ *
  * Vue 和 React 共享的工具函数和类型定义
  */
 
@@ -16,3 +16,6 @@ export { hasChunks, getStableText } from './text'
 // 环境检测
 export { isBrowser, isServer, isClipboardAvailable } from './env'
 
+// 国际化
+export { en, zhCN } from './locales'
+export type { IncremarkLocale } from './locales/types'

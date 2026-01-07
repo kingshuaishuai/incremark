@@ -41,7 +41,8 @@ Our future plans focus on enhancing the library's capabilities for building mode
 - [x] **Code Component Refactoring**: Decouple Mermaid and Default renderers to allow for better composition and customization.
 - [ ] **DevTools Rewrite**: Rebuilding DevTools using Svelte for better DX.
 - [ ] **sliceAST Optimization**: Further performance improvements for ultra-long documents.
-- [ ] **Accessibility (A11y)**: Enhancing screen reader support and ARIA standards.
+- [x] **Internationalization (i18n)**: Built-in multi-language support with ConfigProvider.
+- [x] **Accessibility (A11y)**: Enhanced screen reader support and ARIA standards.
 - [x] **SSR Support**: Optimization for Server-Side Rendering (Nuxt/Next.js).
 
 ### 🏗️ Big Vision: Incremental Chat UI Kit

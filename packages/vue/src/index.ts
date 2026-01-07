@@ -1,5 +1,5 @@
 // Composables
-export { useIncremark, useStreamRenderer, useDevTools, useBlockTransformer } from './composables'
+export { useIncremark, useStreamRenderer, useDevTools, useBlockTransformer, useLocale } from './composables'
 export { useProvideDefinations } from './composables/useProvideDefinations'
 export { useDefinationsContext } from './composables/useDefinationsContext'
 export type {
@@ -16,6 +16,7 @@ export type {
 export * from './components';
 
 export { default as ThemeProvider } from './ThemeProvider.vue'
+export { default as ConfigProvider } from './components/ConfigProvider.vue'
 
 // Re-export core types
 export type {
@@ -60,3 +61,10 @@ export {
   mergeTheme,
   applyTheme
 } from '@incremark/theme'
+
+// Re-export i18n utilities
+import { en as enShared, zhCN as zhCNShared } from '@incremark/shared'
+import type { IncremarkLocale } from '@incremark/shared'
+
+export { enShared as en, zhCNShared as zhCN }
+export type { IncremarkLocale }

@@ -11,6 +11,7 @@ export {
   type UseBlockTransformerOptions,
   type UseBlockTransformerReturn
 } from './stores/useBlockTransformer'
+export { useLocale, type UseLocaleReturn } from './stores/useLocale.svelte'
 
 // Context
 export { setDefinitionsContext, getDefinitionsContext, type DefinitionsContextValue } from './context/definitionsContext'
@@ -41,6 +42,7 @@ export {
 // Additional Components
 export { default as AutoScrollContainer } from './components/AutoScrollContainer.svelte'
 export { default as ThemeProvider } from './ThemeProvider.svelte'
+export { default as ConfigProvider } from './components/ConfigProvider.svelte'
 
 // Re-export core types
 export type {
@@ -85,4 +87,11 @@ export {
   mergeTheme,
   applyTheme
 } from '@incremark/theme'
+
+// Re-export i18n utilities
+import { en as enShared, zhCN as zhCNShared } from '@incremark/shared'
+import type { IncremarkLocale } from '@incremark/shared'
+
+export { enShared as en, zhCNShared as zhCN }
+export type { IncremarkLocale }
 

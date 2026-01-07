@@ -3,6 +3,7 @@ import type { Code } from 'mdast'
 import { GravityMermaid, LucideCode, LucideEye, LucideCopy, LucideCopyCheck } from '@incremark/icons'
 import { isClipboardAvailable } from '@incremark/shared'
 import { SvgIcon } from './SvgIcon'
+import { useLocale } from '../hooks/useLocale'
 
 export interface IncremarkCodeMermaidProps {
   node: Code
@@ -15,6 +16,10 @@ export const IncremarkCodeMermaid: React.FC<IncremarkCodeMermaidProps> = ({
   mermaidDelay = 500
 }) => {
   const [copied, setCopied] = useState(false)
+
+  // 使用 i18n
+  const { t } = useLocale()
+
   const [mermaidSvg, setMermaidSvg] = useState('')
   const [mermaidLoading, setMermaidLoading] = useState(false)
   const [mermaidViewMode, setMermaidViewMode] = useState<'preview' | 'source'>('preview')
@@ -112,14 +117,16 @@ export const IncremarkCodeMermaid: React.FC<IncremarkCodeMermaidProps> = ({
             onClick={toggleMermaidView}
             type="button"
             disabled={!mermaidSvg}
+            aria-label={mermaidViewMode === 'preview' ? t('mermaid.viewSource') : t('mermaid.preview')}
             title={mermaidViewMode === 'preview' ? 'View Source' : 'Preview'}
           >
             <SvgIcon svg={mermaidViewMode === 'preview' ? LucideCode : LucideEye} />
           </button>
-          <button 
-            className="code-btn" 
-            onClick={copyCode} 
+          <button
+            className="code-btn"
+            onClick={copyCode}
             type="button"
+            aria-label={copied ? t('mermaid.copied') : t('mermaid.copy')}
             title={copied ? 'Copied!' : 'Copy'}
           >
             <SvgIcon svg={copied ? LucideCopyCheck : LucideCopy} />

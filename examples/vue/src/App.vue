@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import 'katex/dist/katex.min.css'
 
 // 本地 composables 和组件
 import { useLocale } from './composables'
 import { IncremarkDemo } from './components'
+import { zhCN } from '@incremark/vue'
 
 // ============ 国际化 ============
 const { locale, t, sampleMarkdown, toggleLocale } = useLocale()
+
+// ============ Incremark Locale ============
+const incremarkLocale = computed(() => locale.value === 'zh' ? zhCN : undefined)
 
 // ============ HTML 模式 ============
 const htmlEnabled = ref(true)
@@ -37,11 +41,12 @@ watch([htmlEnabled, locale], () => {
       </div>
     </header>
 
-    <IncremarkDemo 
+    <IncremarkDemo
       :key="incremarkKey"
-      :html-enabled="htmlEnabled" 
-      :sample-markdown="sampleMarkdown" 
+      :html-enabled="htmlEnabled"
+      :sample-markdown="sampleMarkdown"
       :t="t"
+      :locale="incremarkLocale"
     />
   </div>
 </template>

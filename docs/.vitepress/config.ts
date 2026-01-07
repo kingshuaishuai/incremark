@@ -50,6 +50,7 @@ const en = {
             { text: 'Custom Components', link: '/features/custom-components' },
             { text: 'Custom Code Blocks', link: '/features/custom-codeblocks' },
             { text: 'Themes', link: '/features/themes' },
+            { text: 'i18n & Accessibility', link: '/features/i18n' },
             { text: 'Auto Scroll', link: '/features/auto-scroll' },
             { text: 'DevTools', link: '/features/devtools' }
           ]
@@ -125,6 +126,7 @@ const zh = {
             { text: '自定义组件', link: '/zh/features/custom-components' },
             { text: '自定义代码块', link: '/zh/features/custom-codeblocks' },
             { text: '主题', link: '/zh/features/themes' },
+            { text: '国际化与无障碍', link: '/zh/features/i18n' },
             { text: '自动滚动', link: '/zh/features/auto-scroll' },
             { text: '开发者工具', link: '/zh/features/devtools' }
           ]

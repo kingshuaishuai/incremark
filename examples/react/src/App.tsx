@@ -3,10 +3,17 @@ import 'katex/dist/katex.min.css'
 
 import { useLocale } from './hooks'
 import { IncremarkDemo } from './components'
+import { zhCN, type IncremarkLocale } from '@incremark/react'
 
 function App() {
   // ============ 国际化 ============
   const { locale, t, sampleMarkdown, toggleLocale } = useLocale()
+
+  // ============ Incremark Locale ============
+  const incremarkLocale = useMemo<IncremarkLocale | undefined>(
+    () => (locale === 'zh' ? zhCN : undefined),
+    [locale]
+  )
 
   // ============ HTML 模式 ============
   const [htmlEnabled, setHtmlEnabled] = useState(true)
@@ -39,8 +46,9 @@ function App() {
         key={incremarkKey}
         htmlEnabled={htmlEnabled}
         sampleMarkdown={sampleMarkdown}
-          t={t}
-        />
+        t={t}
+        locale={incremarkLocale}
+      />
     </div>
   )
 }
