@@ -62,3 +62,5 @@ ehthumbs.db
 # local temp files
 epx*
 temp-docs*
+
+benchmark-comparison

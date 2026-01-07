@@ -109,6 +109,10 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
     incremark: { time: 0, parseCount: 0, totalChars: 0 }
   })
 
+  const sleep = (ms: number = 0) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const nextTick = () => sleep(0);
+
   const handleRunBenchmark = useCallback(async () => {
     const content = currentMarkdown
 
@@ -167,6 +171,8 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t }: IncremarkDemoP
     setMdContent('')
     setIsFinished(false)
     setIsStreaming(true)
+
+    await nextTick();
 
     const chunks = currentMarkdown.match(/[\s\S]{1,20}/g) || []
 

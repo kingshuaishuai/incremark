@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { IncremarkContent, AutoScrollContainer, ThemeProvider, type DesignTokens, type UseIncremarkOptions } from '@incremark/vue'
 
 import { BenchmarkPanel, CustomInputPanel, CustomHeading, CustomWarningContainer, CustomInfoContainer, CustomTipContainer, CustomEchartCodeBlock } from './index'
@@ -47,6 +47,8 @@ async function simulateStream() {
   mdContent.value = ''
   isFinished.value = false
   isStreaming.value = true
+
+  await nextTick();
 
   const content = customInputMode.value && customMarkdown.value.trim()
     ? customMarkdown.value

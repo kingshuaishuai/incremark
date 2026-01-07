@@ -1,10 +1,11 @@
 /**
- * AST 构建器
+ * Micromark AST 构建器（稳定模式）
  *
- * 职责：
- * - 解析 Markdown 文本为 AST
- * - 将 AST 节点转换为 ParsedBlock
- * - 转换 HTML 节点为纯文本（当未启用 HTML 树转换时）
+ * 基于 micromark + mdast-util-from-markdown
+ * 特点：
+ * - 更稳定可靠
+ * - 支持 div 内嵌 markdown
+ * - 丰富的扩展生态
  */
 
 import { fromMarkdown } from 'mdast-util-from-markdown'
@@ -19,10 +20,12 @@ import type { Extension as MicromarkExtension } from 'micromark-util-types'
 import type { Extension as MdastExtension } from 'mdast-util-from-markdown'
 import type { Root, RootContent, HTML, Text, Paragraph, Parent as MdastParent } from 'mdast'
 
-import type { ParsedBlock, BlockStatus, ParserOptions, ContainerConfig } from '../../types'
+import type { ParsedBlock, BlockStatus, ContainerConfig } from '../../types'
 import { transformHtmlNodes, type HtmlTreeExtensionOptions } from '../../extensions/html-extension'
 import { micromarkReferenceExtension } from '../../extensions/micromark-reference-extension'
 import { gfmFootnoteIncremental } from '../../extensions/micromark-gfm-footnote-incremental'
+import type { IAstBuilder, EngineParserOptions } from './types'
+import { extractMicromarkExtensions } from './types'
 
 /**
  * 内联容器节点类型
@@ -47,23 +50,79 @@ function isInlineContainer(node: RootContent): boolean {
 }
 
 /**
- * AST 构建器
+ * Micromark AST 构建器
+ *
+ * 使用 micromark + mdast-util-from-markdown 解析 Markdown
+ * 适用于需要稳定性和高级特性的场景
  */
-export class AstBuilder {
-  private readonly options: ParserOptions
+export class MicromarkAstBuilder implements IAstBuilder {
+  private readonly options: EngineParserOptions
   readonly containerConfig: ContainerConfig | undefined
   private readonly htmlTreeConfig: HtmlTreeExtensionOptions | undefined
+  /** 缓存的扩展实例，避免每次 parse 都重新创建 */
+  private readonly cachedExtensions: MicromarkExtension[] = []
+  private readonly cachedMdastExtensions: MdastExtension[] = []
 
-  constructor(options: ParserOptions = {}) {
+  constructor(options: EngineParserOptions = {}) {
     this.options = options
     this.containerConfig = this.computeContainerConfig(options)
     this.htmlTreeConfig = this.computeHtmlTreeConfig(options)
+    // 初始化扩展实例
+    this.initExtensions()
+  }
+
+  /**
+   * 初始化并缓存扩展实例
+   */
+  private initExtensions(): void {
+    // 先添加 GFM（包含原始的脚注扩展）
+    if (this.options.gfm) {
+      this.cachedExtensions.push(gfm())
+      this.cachedMdastExtensions.push(...gfmFromMarkdown(), gfmFootnoteFromMarkdown())
+    }
+
+    // 如果启用了数学公式支持，添加 math 扩展
+    if (this.options.math) {
+      this.cachedExtensions.push(math())
+      this.cachedMdastExtensions.push(mathFromMarkdown())
+    }
+
+    // 如果启用了容器支持，自动添加 directive 扩展
+    if (this.containerConfig !== undefined) {
+      this.cachedExtensions.push(directive())
+      this.cachedMdastExtensions.push(directiveFromMarkdown())
+    }
+
+    // 处理统一插件
+    if (this.options.plugins) {
+      const { extensions, mdastExtensions } = extractMicromarkExtensions(this.options.plugins)
+      this.cachedExtensions.push(...extensions)
+      this.cachedMdastExtensions.push(...mdastExtensions)
+    }
+
+    // 如果用户传入了自定义扩展（旧 API），添加它们
+    if (this.options.extensions) {
+      this.cachedExtensions.push(...this.options.extensions)
+    }
+    if (this.options.mdastExtensions) {
+      this.cachedMdastExtensions.push(...this.options.mdastExtensions)
+    }
+
+    // 添加增量脚注扩展，覆盖 GFM 脚注的定义检查
+    // ⚠️ 必须在 micromarkReferenceExtension 之前添加
+    if (this.options.gfm) {
+      this.cachedExtensions.push(gfmFootnoteIncremental())
+    }
+
+    // 添加 reference 扩展（支持增量解析），覆盖 commonmark 的 labelEnd
+    // ⚠️ 必须最后添加，确保它能拦截 `]` 并正确处理脚注
+    this.cachedExtensions.push(micromarkReferenceExtension())
   }
 
   /**
    * 计算容器配置
    */
-  private computeContainerConfig(options: ParserOptions): ContainerConfig | undefined {
+  private computeContainerConfig(options: EngineParserOptions): ContainerConfig | undefined {
     const containers = options.containers
     if (!containers) return undefined
     return containers === true ? {} : containers
@@ -72,7 +131,7 @@ export class AstBuilder {
   /**
    * 计算 HTML 树配置
    */
-  private computeHtmlTreeConfig(options: ParserOptions): HtmlTreeExtensionOptions | undefined {
+  private computeHtmlTreeConfig(options: EngineParserOptions): HtmlTreeExtensionOptions | undefined {
     const htmlTree = options.htmlTree
     if (!htmlTree) return undefined
     return htmlTree === true ? {} : htmlTree
@@ -85,58 +144,19 @@ export class AstBuilder {
    * @returns AST
    */
   parse(text: string): Root {
-    const extensions: MicromarkExtension[] = []
-    const mdastExtensions: MdastExtension[] = []
-
-    // 先添加 GFM（包含原始的脚注扩展）
-    if (this.options.gfm) {
-      extensions.push(gfm())
-      mdastExtensions.push(...gfmFromMarkdown(), gfmFootnoteFromMarkdown())
-    }
-
-    // 如果启用了数学公式支持，添加 math 扩展
-    if (this.options.math) {
-      extensions.push(math())
-      mdastExtensions.push(mathFromMarkdown())
-    }
-
-    // 如果启用了容器支持，自动添加 directive 扩展
-    if (this.containerConfig !== undefined) {
-      extensions.push(directive())
-      mdastExtensions.push(directiveFromMarkdown())
-    }
-
-    // 如果用户传入了自定义扩展，添加它们
-    if (this.options.extensions) {
-      extensions.push(...this.options.extensions)
-    }
-    if (this.options.mdastExtensions) {
-      mdastExtensions.push(...this.options.mdastExtensions)
-    }
-
-    // 添加增量脚注扩展，覆盖 GFM 脚注的定义检查
-    // ⚠️ 必须在 micromarkReferenceExtension 之前添加
-    // 因为 micromarkReferenceExtension 会拦截 `]`，并将 `[^1]` 交给脚注扩展处理
-    if (this.options.gfm) {
-      extensions.push(gfmFootnoteIncremental())
-    }
-
-    // 添加 reference 扩展（支持增量解析），覆盖 commonmark 的 labelEnd
-    // ⚠️ 必须最后添加，确保它能拦截 `]` 并正确处理脚注
-    extensions.push(micromarkReferenceExtension())
-
-    // 生成 AST
-    let ast = fromMarkdown(text, { extensions, mdastExtensions })
+    // 直接使用缓存的扩展实例，避免每次都重新创建
+    const ast = fromMarkdown(text, {
+      extensions: this.cachedExtensions,
+      mdastExtensions: this.cachedMdastExtensions
+    })
 
     // 如果启用了 HTML 树转换，应用转换
     if (this.htmlTreeConfig) {
-      ast = transformHtmlNodes(ast, this.htmlTreeConfig)
+      return transformHtmlNodes(ast, this.htmlTreeConfig)
     } else {
       // 如果未启用 HTML 树，将 HTML 节点转换为纯文本
-      ast = this.convertHtmlToText(ast)
+      return this.convertHtmlToText(ast)
     }
-
-    return ast
   }
 
   /**
@@ -251,26 +271,29 @@ export class AstBuilder {
     generateBlockId: () => string
   ): ParsedBlock[] {
     const blocks: ParsedBlock[] = []
-    let currentOffset = startOffset
 
     for (const node of nodes) {
-      const nodeStart = node.position?.start?.offset ?? currentOffset
-      const nodeEnd = node.position?.end?.offset ?? currentOffset + 1
-      const nodeText = rawText.substring(nodeStart - startOffset, nodeEnd - startOffset)
+      // micromark 的 position.offset 是相对于传入文本的（从 0 开始）
+      const relativeStart = node.position?.start?.offset ?? 0
+      const relativeEnd = node.position?.end?.offset ?? 1
+
+      // 使用相对位置截取文本（直接用 relativeStart/End，因为 rawText 也是相对的）
+      const nodeText = rawText.substring(relativeStart, relativeEnd)
+
+      // 计算绝对位置（用于光标同步等场景）
+      const absoluteStart = startOffset + relativeStart
+      const absoluteEnd = startOffset + relativeEnd
 
       blocks.push({
         id: generateBlockId(),
         status,
         node,
-        startOffset: nodeStart,
-        endOffset: nodeEnd,
+        startOffset: absoluteStart,
+        endOffset: absoluteEnd,
         rawText: nodeText
       })
-
-      currentOffset = nodeEnd
     }
 
     return blocks
   }
 }
-

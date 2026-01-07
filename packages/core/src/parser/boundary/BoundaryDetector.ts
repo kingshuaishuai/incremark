@@ -223,6 +223,8 @@ class EmptyLineBoundaryChecker implements StabilityChecker {
 export class BoundaryDetector {
   private readonly containerConfig: ContainerConfig | undefined
   private readonly checkers: StabilityChecker[]
+  /** 缓存每一行结束时对应的 Context，避免重复计算 */
+  private contextCache: Map<number, BlockContext> = new Map()
 
   constructor(config: BoundaryDetectorConfig = {}) {
     this.containerConfig = config.containers
@@ -234,6 +236,18 @@ export class BoundaryDetector {
       new NewBlockBoundaryChecker(),
       new EmptyLineBoundaryChecker()
     ]
+  }
+
+  /**
+   * 清空上下文缓存
+   * 当 pendingStartLine 推进后调用，释放不再需要的缓存
+   */
+  clearContextCache(beforeLine: number): void {
+    for (const key of this.contextCache.keys()) {
+      if (key < beforeLine) {
+        this.contextCache.delete(key)
+      }
+    }
   }
 
   /**
@@ -252,7 +266,11 @@ export class BoundaryDetector {
   ): StableBoundaryResult {
     let stableLine = -1
     let stableContext: BlockContext = context
-    let tempContext = { ...context }
+
+    // 尝试从缓存获取 startLine - 1 的 context，如果匹配则直接用，否则用传入的 context
+    let tempContext = startLine > 0 && this.contextCache.has(startLine - 1)
+      ? { ...this.contextCache.get(startLine - 1)! }
+      : { ...context }
 
     for (let i = startLine; i < lines.length; i++) {
       const line = lines[i]
@@ -261,6 +279,9 @@ export class BoundaryDetector {
       const wasContainerDepth = tempContext.containerDepth
 
       tempContext = updateContext(line, tempContext, this.containerConfig)
+
+      // 写入缓存：第 i 行结束后的 context
+      this.contextCache.set(i, { ...tempContext })
 
       if (wasInFencedCode && !tempContext.inFencedCode) {
         if (i < lines.length - 1) {

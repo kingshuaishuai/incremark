@@ -4,9 +4,8 @@
 -->
 
 <script lang="ts">
-  import type { Component } from 'svelte'
   import { useIncremark, type UseIncremarkOptions } from '../stores/useIncremark'
-  import type { ComponentMap, IncremarkContentProps } from './types'
+  import type { IncremarkContentProps } from './types'
   import Incremark from './Incremark.svelte'
   import { get } from 'svelte/store'
 

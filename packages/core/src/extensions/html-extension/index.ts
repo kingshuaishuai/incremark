@@ -520,17 +520,169 @@ function hasChildren(node: RootContent | Root): node is Parent & RootContent {
 }
 
 /**
+ * 预处理：合并被空行分割的 HTML 节点
+ *
+ * CommonMark 规范中，HTML 块会在空行处被截断，导致：
+ * - `<div>\ncontent` 和 `</div>` 被分成独立的 HTML 节点
+ *
+ * 此函数通过追踪未闭合的标签，将分散的 HTML 节点合并回完整的片段
+ */
+function mergeFragmentedHtmlNodes(nodes: RootContent[]): RootContent[] {
+  const result: RootContent[] = []
+  let i = 0
+
+
+  while (i < nodes.length) {
+    const node = nodes[i]
+
+    if (!isHtmlNode(node)) {
+      result.push(node)
+      i++
+      continue
+    }
+
+    // 检测当前 HTML 节点中是否有未闭合的标签
+    const unclosedTags = findUnclosedTags(node.value)
+
+    if (unclosedTags.length === 0) {
+      // 没有未闭合标签，直接添加
+      result.push(node)
+      i++
+      continue
+    }
+
+    // 有未闭合标签，尝试向后查找闭合标签
+    const mergedParts: string[] = [node.value]
+    let j = i + 1
+    let currentUnclosed = [...unclosedTags]
+
+    while (j < nodes.length && currentUnclosed.length > 0) {
+      const nextNode = nodes[j]
+
+      if (isHtmlNode(nextNode)) {
+        // 检查这个节点是否包含我们需要的闭合标签
+        const closingInfo = checkClosingTags(nextNode.value, currentUnclosed)
+
+        if (closingInfo.hasRelevantClosing) {
+          mergedParts.push(nextNode.value)
+          currentUnclosed = closingInfo.remainingUnclosed
+
+          if (currentUnclosed.length === 0) {
+            // 所有标签都已闭合，停止合并
+            j++
+            break
+          }
+        } else {
+          // 这个 HTML 节点不包含我们需要的闭合标签
+          // 但可能是中间内容，也需要包含
+          mergedParts.push(nextNode.value)
+        }
+      } else {
+        // 非 HTML 节点（可能是 paragraph 等），停止合并
+        // 因为这意味着内容结构已经改变
+        break
+      }
+
+      j++
+    }
+
+    if (mergedParts.length > 1) {
+      // 成功合并了多个节点
+      const mergedValue = mergedParts.join('\n')
+      const mergedNode: HTML = {
+        type: 'html',
+        value: mergedValue
+      }
+      result.push(mergedNode)
+      i = j
+    } else {
+      // 无法合并，保留原节点
+      result.push(node)
+      i++
+    }
+  }
+
+  return result
+}
+
+/**
+ * 查找 HTML 内容中未闭合的标签
+ */
+function findUnclosedTags(html: string): string[] {
+  const tagStack: string[] = []
+
+  // 匹配所有标签
+  const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9-]*)[^>]*\/?>/g
+  let match
+
+  while ((match = tagRegex.exec(html)) !== null) {
+    const fullTag = match[0]
+    const tagName = match[1].toLowerCase()
+
+    // 跳过自闭合标签
+    if (VOID_ELEMENTS.includes(tagName) || fullTag.endsWith('/>')) {
+      continue
+    }
+
+    if (fullTag.startsWith('</')) {
+      // 闭合标签
+      const lastIndex = tagStack.lastIndexOf(tagName)
+      if (lastIndex !== -1) {
+        tagStack.splice(lastIndex, 1)
+      }
+    } else {
+      // 开标签
+      tagStack.push(tagName)
+    }
+  }
+
+  return tagStack
+}
+
+/**
+ * 检查 HTML 内容中是否包含指定标签的闭合标签
+ */
+function checkClosingTags(
+  html: string,
+  unclosedTags: string[]
+): { hasRelevantClosing: boolean; remainingUnclosed: string[] } {
+  const remaining = [...unclosedTags]
+  let hasRelevant = false
+
+  // 匹配闭合标签
+  const closeTagRegex = /<\/([a-zA-Z][a-zA-Z0-9-]*)\s*>/g
+  let match
+
+  while ((match = closeTagRegex.exec(html)) !== null) {
+    const tagName = match[1].toLowerCase()
+    const index = remaining.lastIndexOf(tagName)
+    if (index !== -1) {
+      remaining.splice(index, 1)
+      hasRelevant = true
+    }
+  }
+
+  return {
+    hasRelevantClosing: hasRelevant,
+    remainingUnclosed: remaining
+  }
+}
+
+/**
  * 处理 HTML 节点数组，将开始标签、内容、结束标签合并为结构化节点
  */
 function processHtmlNodesInArray(
   nodes: RootContent[],
   options: HtmlTreeExtensionOptions
 ): RootContent[] {
+  // 预处理：合并被空行分割的 HTML 节点
+  const mergedNodes = mergeFragmentedHtmlNodes(nodes)
+
   const result: RootContent[] = []
   let i = 0
   
-  while (i < nodes.length) {
-    const node = nodes[i]
+  while (i < mergedNodes.length) {
+    const node = mergedNodes[i]
     
     if (isHtmlNode(node)) {
       // 首先检测 HTML 内容类型
@@ -581,8 +733,8 @@ function processHtmlNodesInArray(
         let j = i + 1
         let foundClosing = false
         
-        while (j < nodes.length && depth > 0) {
-          const nextNode = nodes[j]
+        while (j < mergedNodes.length && depth > 0) {
+          const nextNode = mergedNodes[j]
           
           if (isHtmlNode(nextNode)) {
             const nextType = detectHtmlContentType(nextNode.value)

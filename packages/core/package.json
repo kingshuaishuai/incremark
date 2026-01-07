@@ -18,6 +18,14 @@
     "./utils": {
       "types": "./dist/utils/index.d.ts",
       "import": "./dist/utils/index.js"
+    },
+    "./engines/marked": {
+      "types": "./dist/engines/marked/index.d.ts",
+      "import": "./dist/engines/marked/index.js"
+    },
+    "./engines/micromark": {
+      "types": "./dist/engines/micromark/index.d.ts",
+      "import": "./dist/engines/micromark/index.js"
     }
   },
   "files": [
@@ -35,6 +43,7 @@
     "@types/lodash-es": "^4.17.12",
     "@types/mdast": "^4.0.0",
     "lodash-es": "^4.17.22",
+    "marked": "^17.0.1",
     "mdast-util-directive": "^3.0.0",
     "mdast-util-from-markdown": "^2.0.0",
     "mdast-util-gfm": "^3.0.0",

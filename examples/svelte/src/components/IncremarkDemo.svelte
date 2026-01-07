@@ -56,6 +56,10 @@
   let mdContent = $state('')
   let isFinished = $state(false)
 
+  const sleep = (ms: number = 0) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const nextTick = () => sleep(0);
+
   // ============ Incremark 配置（响应式） ============
   const incremarkOptions = $derived<UseIncremarkOptions>({
     gfm: true,
@@ -80,6 +84,8 @@
     mdContent = ''
     isFinished = false
     isStreaming = true
+
+    await nextTick();
 
     const content = customInputMode && customMarkdown.trim()
       ? customMarkdown

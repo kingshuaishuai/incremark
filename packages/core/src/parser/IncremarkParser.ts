@@ -6,14 +6,20 @@
  * 2. 识别"稳定边界"（如空行、标题等），将已完成的块标记为 completed
  * 3. 对于正在接收的块，每次重新解析，但只解析该块的内容
  * 4. 复杂嵌套节点（如列表、引用）作为整体处理，直到确认完成
+ *
+ * 引擎选择：
+ * - 默认使用 marked（极速模式），只打包 marked 依赖
+ * - 如需使用 micromark，通过 astBuilder 选项注入 MicromarkAstBuilder
+ *
+ * Tree-shaking 说明：
+ * - 默认只打包 marked 引擎
+ * - micromark 引擎需要从 '@incremark/core/engines/micromark' 单独导入
  */
 
 import type {
   Root,
-  RootContent,
   ParsedBlock,
   IncrementalUpdate,
-  ParserOptions,
   BlockContext,
   ParserState,
   DefinitionMap,
@@ -26,12 +32,40 @@ import {
 import { BoundaryDetector } from './boundary'
 import { DefinitionManager } from './manager'
 import { FootnoteManager } from './manager'
-import { AstBuilder } from './ast'
+import type { IAstBuilder, EngineParserOptions } from './ast/types'
+// 只默认导入 MarkedAstBuilder，实现 tree-shaking
+import { MarkedAstBuilder } from './ast/MarkedAstBuildter'
+import { MicromarkAstBuilder } from './ast/MicromarkAstBuilder'
+
+/**
+ * AST 构建器类型（用于注入）
+ */
+export type AstBuilderClass = new (options: EngineParserOptions) => IAstBuilder
+
+/**
+ * 扩展的解析器选项（支持注入自定义 AstBuilder）
+ */
+export interface IncremarkParserOptions extends EngineParserOptions {
+  /**
+   * 自定义 AST 构建器类
+   *
+   * 用于注入不同的引擎实现，实现 tree-shaking
+   *
+   * @example
+   * ```ts
+   * // 使用 micromark 引擎
+   * import { MicromarkAstBuilder } from '@incremark/core/engines/micromark'
+   * const parser = createIncremarkParser({
+   *   astBuilder: MicromarkAstBuilder
+   * })
+   * ```
+   */
+  astBuilder?: AstBuilderClass
+}
 
 // ============ 解析器类 ============
 
 export class IncremarkParser {
-  private buffer = ''
   private lines: string[] = []
   /** 行偏移量前缀和：lineOffsets[i] = 第i行起始位置的偏移量 */
   private lineOffsets: number[] = [0]
@@ -39,11 +73,11 @@ export class IncremarkParser {
   private pendingStartLine = 0
   private blockIdCounter = 0
   private context: BlockContext
-  private options: ParserOptions
+  private options: IncremarkParserOptions
   /** 边界检测器 */
   private readonly boundaryDetector: BoundaryDetector
   /** AST 构建器 */
-  private readonly astBuilder: AstBuilder
+  private readonly astBuilder: IAstBuilder
   /** Definition 管理器 */
   private readonly definitionManager: DefinitionManager
   /** Footnote 管理器 */
@@ -51,14 +85,18 @@ export class IncremarkParser {
   /** 上次 append 返回的 pending blocks，用于 getAst 复用 */
   private lastPendingBlocks: ParsedBlock[] = []
 
-  constructor(options: ParserOptions = {}) {
+  constructor(options: IncremarkParserOptions = {}) {
     this.options = {
       gfm: true,
       ...options
     }
     this.context = createInitialContext()
+
     // 初始化 AST 构建器
-    this.astBuilder = new AstBuilder(this.options)
+    // 默认使用 MarkedAstBuilder（极速模式），支持注入自定义构建器
+    const BuilderClass = options.astBuilder || MicromarkAstBuilder
+    this.astBuilder = new BuilderClass(this.options)
+
     // 初始化边界检测器
     this.boundaryDetector = new BoundaryDetector({ containers: this.astBuilder.containerConfig })
     // 初始化 Definition 和 Footnote 管理器
@@ -79,45 +117,45 @@ export class IncremarkParser {
   }
 
   /**
-   * 收集 AST 中的脚注引用（按出现顺序）
-   * 用于确定脚注的显示顺序
-   */
-  private collectFootnoteReferences(nodes: RootContent[]): void {
-    this.footnoteManager.collectReferences(nodes)
-  }
-
-  /**
    * 增量更新 lines 和 lineOffsets
-   * 只处理新增的内容，避免全量 split
+   * 优化策略：只 split 新增的 chunk，不拼接旧字符串，避免长行性能劣化
    */
-  private updateLines(): void {
+  private updateLines(chunk: string): void {
     const prevLineCount = this.lines.length
 
+    // 1. 初始化情况
     if (prevLineCount === 0) {
-      // 首次输入，直接 split
-      this.lines = this.buffer.split('\n')
+      this.lines = chunk.split('\n')
       this.lineOffsets = [0]
-      for (let i = 0; i < this.lines.length; i++) {
+      // 计算后续行的 offset
+      for (let i = 0; i < this.lines.length - 1; i++) {
         this.lineOffsets.push(this.lineOffsets[i] + this.lines[i].length + 1)
       }
       return
     }
 
-    // 找到最后一个不完整的行（可能被新 chunk 续上）
-    const lastLineStart = this.lineOffsets[prevLineCount - 1]
-    const textFromLastLine = this.buffer.slice(lastLineStart)
+    // 2. 增量更新情况
+    // 关键优化：只对 chunk 进行 split，不触碰 oldText
+    const chunkLines = chunk.split('\n')
+    const lastLineIndex = prevLineCount - 1
 
-    // 重新 split 最后一行及之后的内容
-    const newLines = textFromLastLine.split('\n')
+    // 步骤 A: 将 chunk 的第一部分追加到当前最后一行
+    // 注意：这一步只会改变最后一行的内容长度，不会改变它的【起始偏移量】
+    this.lines[lastLineIndex] += chunkLines[0]
 
-    // 替换最后一行并追加新行
-    this.lines.length = prevLineCount - 1
-    this.lineOffsets.length = prevLineCount
+    // 步骤 B: 如果 chunk 包含换行，处理新增的行
+    for (let i = 1; i < chunkLines.length; i++) {
+      // 这里的上一行（prevLine）可能是刚刚被追加过的 lastLine，也可能是 chunk 中间的新行
+      // 我们需要根据"上一行"的 offset 和 length 来计算"当前新行"的 offset
+      const prevLineIndex = this.lines.length - 1 // 总是取当前数组最后一行作为基准
+      const prevLineStart = this.lineOffsets[prevLineIndex]
+      const prevLineLength = this.lines[prevLineIndex].length
 
-    for (let i = 0; i < newLines.length; i++) {
-      this.lines.push(newLines[i])
-      const prevOffset = this.lineOffsets[this.lineOffsets.length - 1]
-      this.lineOffsets.push(prevOffset + newLines[i].length + 1)
+      // 计算新行的 offset = 上一行起始 + 上一行长度 + 1个换行符
+      const newOneOffset = prevLineStart + prevLineLength + 1
+
+      this.lineOffsets.push(newOneOffset)
+      this.lines.push(chunkLines[i])
     }
   }
 
@@ -145,8 +183,7 @@ export class IncremarkParser {
    * 追加新的 chunk 并返回增量更新
    */
   append(chunk: string): IncrementalUpdate {
-    this.buffer += chunk
-    this.updateLines()
+    this.updateLines(chunk)
 
     const { line: stableBoundary, contextAtLine } = this.findStableBoundary()
 
@@ -165,6 +202,7 @@ export class IncremarkParser {
       const stableOffset = this.getLineOffset(this.pendingStartLine)
 
       const ast = this.astBuilder.parse(stableText)
+      // 使用绝对偏移量，确保 Block 的位置信息正确
       const newBlocks = this.astBuilder.nodesToBlocks(ast.children, stableOffset, stableText, 'completed', () => this.generateBlockId())
 
       this.completedBlocks.push(...newBlocks)
@@ -172,6 +210,12 @@ export class IncremarkParser {
 
       // 更新 definitions 从新完成的 blocks
       this.updateDefinitionsFromCompletedBlocks(newBlocks)
+
+      // 增量收集脚注引用（只扫描新完成的 blocks）
+      this.footnoteManager.collectReferencesFromCompletedBlocks(newBlocks)
+
+      // 清理不再需要的上下文缓存
+      this.boundaryDetector.clearContextCache(this.pendingStartLine)
 
       // 直接使用 findStableBoundary 计算好的上下文，避免重复遍历
       this.context = contextAtLine
@@ -184,7 +228,7 @@ export class IncremarkParser {
       if (pendingText.trim()) {
         const pendingOffset = this.getLineOffset(this.pendingStartLine)
         const ast = this.astBuilder.parse(pendingText)
-
+        // 使用绝对偏移量，确保 Block 的位置信息正确
         update.pending = this.astBuilder.nodesToBlocks(ast.children, pendingOffset, pendingText, 'pending', () => this.generateBlockId())
       }
     }
@@ -197,13 +241,12 @@ export class IncremarkParser {
       children: [...this.completedBlocks.map((b) => b.node), ...update.pending.map((b) => b.node)]
     }
 
-    // 收集脚注引用顺序
-    this.collectFootnoteReferences(update.ast.children)
+    // 使用优化的脚注引用收集（只扫描 pending 部分）
+    update.footnoteReferenceOrder = this.footnoteManager.collectReferencesFromPending(update.pending)
 
     // 填充 definitions 和 footnote 相关数据
     update.definitions = this.getDefinitionMap()
     update.footnoteDefinitions = this.getFootnoteDefinitionMap()
-    update.footnoteReferenceOrder = this.getFootnoteReferenceOrder()
 
     // 触发状态变化回调
     this.emitChange(update.pending)
@@ -219,7 +262,7 @@ export class IncremarkParser {
       const state: ParserState = {
         completedBlocks: this.completedBlocks,
         pendingBlocks,
-        markdown: this.buffer,
+        markdown: this.lines.join('\n'),
         ast: {
           type: 'root',
           children: [
@@ -255,7 +298,7 @@ export class IncremarkParser {
       if (remainingText.trim()) {
         const remainingOffset = this.getLineOffset(this.pendingStartLine)
         const ast = this.astBuilder.parse(remainingText)
-
+        // 使用绝对偏移量，确保 Block 的位置信息正确
         const finalBlocks = this.astBuilder.nodesToBlocks(
           ast.children,
           remainingOffset,
@@ -269,6 +312,12 @@ export class IncremarkParser {
 
         // 更新 definitions 从最终完成的 blocks
         this.updateDefinitionsFromCompletedBlocks(finalBlocks)
+
+        // 增量收集脚注引用（只扫描新完成的 blocks）
+        this.footnoteManager.collectReferencesFromCompletedBlocks(finalBlocks)
+
+        // 清理不再需要的上下文缓存
+        this.boundaryDetector.clearContextCache(this.pendingStartLine)
       }
     }
 
@@ -280,9 +329,6 @@ export class IncremarkParser {
       type: 'root',
       children: this.completedBlocks.map((b) => b.node)
     }
-
-    // 收集脚注引用顺序
-    this.collectFootnoteReferences(update.ast.children)
 
     // 填充 definitions 和 footnote 相关数据
     update.definitions = this.getDefinitionMap()
@@ -313,8 +359,8 @@ export class IncremarkParser {
       ...this.lastPendingBlocks.map((b) => b.node)
     ]
 
-    // 收集脚注引用顺序
-    this.collectFootnoteReferences(children)
+    // 使用优化的脚注引用收集
+    this.footnoteManager.collectReferencesFromPending(this.lastPendingBlocks)
 
     return {
       type: 'root',
@@ -333,7 +379,7 @@ export class IncremarkParser {
    * 获取当前缓冲区内容
    */
   getBuffer(): string {
-    return this.buffer
+    return this.lines.join('\n')
   }
 
   /**
@@ -372,7 +418,6 @@ export class IncremarkParser {
    * 重置解析器状态
    */
   reset(): void {
-    this.buffer = ''
     this.lines = []
     this.lineOffsets = [0]
     this.completedBlocks = []
@@ -402,7 +447,24 @@ export class IncremarkParser {
 
 /**
  * 创建 Incremark 解析器实例
+ *
+ * @param options 解析器配置
+ * @param options.astBuilder 自定义 AST 构建器类（用于切换引擎）
+ * @param options.plugins 统一插件列表
+ *
+ * @example
+ * ```ts
+ * // 使用默认的 marked 引擎（极速模式）
+ * const parser = createIncremarkParser({ gfm: true, math: true })
+ *
+ * // 使用 micromark 引擎（需要单独导入，支持 tree-shaking）
+ * import { MicromarkAstBuilder } from '@incremark/core/engines/micromark'
+ * const parser = createIncremarkParser({
+ *   astBuilder: MicromarkAstBuilder,
+ *   gfm: true
+ * })
+ * ```
  */
-export function createIncremarkParser(options?: ParserOptions): IncremarkParser {
+export function createIncremarkParser(options?: IncremarkParserOptions): IncremarkParser {
   return new IncremarkParser(options)
 }
