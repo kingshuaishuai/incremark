@@ -8,7 +8,9 @@
 - [x] **BlockTransformer**: 跨框架打字机效果实现，确保渲染一致性。
 - [x] **语法完善**: 修复边界情况解析与渲染，增加更完善的 commonmark 测试用例。
 - [x] **增量解析**: 实现 O(N) 性能的状态感知解析引擎。
+- [x] **双引擎架构**: 支持 `marked`（极速流式优化）和 `micromark`（稳定 CommonMark 兼容）双引擎，支持 tree-shaking 优化。
 - [x] **Micromark 增强**: 提升 HTML 解析能力与稳定性。
+- [x] **Marked 增强**: 为 `marked` 扩展脚注、数学公式、自定义容器、内联 HTML 解析等功能。
 
 ### 🎨 设计系统与主题
 - [x] **@incremark/theme**: 统一各组件库样式，支持 DesignToken，并拆分为独立子包。
@@ -53,6 +55,12 @@
 
 ---
 
+### 🔌 插件系统
+- [x] **Micromark 扩展**: 完整支持 `micromark` 语法扩展。
+- [x] **mdast 扩展**: 完整支持 `mdast-util-from-markdown` AST 扩展。
+- [x] **Marked 扩展**: 为 `marked` 引擎提供自定义 Token 转换器。
+
+---
+
 ## 🔮 长期研究
-- [ ] **插件系统 2.0**: Extension 整合 micromark 与 mdast-util-from-markdown 提供自定义 Extension 方案。
 - [ ] **协作编辑**: 1. 基于 micromark 的 tiptap markdown 解析方案， 2. 基于 incremark 的增量追加方案。

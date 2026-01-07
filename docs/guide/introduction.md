@@ -15,8 +15,9 @@ This mismatch leads to:
 
 ## Key Features
 
-- ⚡️ **Incremental Parsing**: Never re-parse what hasn't changed.
-- 🚀 **Extreme Performance**: Handles massive streaming documents with ease.
+- ⚡️ **Extreme Performance**: Average ~6x faster than Streamdown, ~7x faster than ant-design-x, ~28x faster than markstream-vue.
+- 🔄 **Dual-Engine Architecture**: Marked with enhanced extensions for speed, or Micromark for strict CommonMark compliance.
+- 🚀 **O(n) Incremental Parsing**: Only parse what's new — 18KB document is 19x faster than traditional parsers.
 - ⌨️ **Built-in Typewriter**: Smooth character-by-character reveals that respect markdown structure.
 - 🧩 **Framework Agnostic**: Core logic is shared; connectors for Vue, React, and Svelte.
 - 🎨 **Themable**: Tailored for modern, dark-mode-first interfaces.

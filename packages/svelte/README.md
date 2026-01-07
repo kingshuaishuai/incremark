@@ -1,17 +1,16 @@
 # @incremark/svelte
 
-Incremark 的 Svelte 5 集成库，提供高性能的流式 Markdown 渲染组件。
+Incremark 的 Svelte 5 集成库。
 
 🇨🇳 中文 | **[🇺🇸 English](./README.en.md)**
 
-## 核心优势
+## 特性
 
-- 📦 **开箱即用** - 提供 `IncremarkContent` 组件和 `useIncremark` store
-- ⚡ **极致性能** - 增量解析 O(n) 复杂度，双引擎可选
-- ⌨️ **打字机效果** - 内置多种动画效果（淡入、打字机）
-- 🎨 **高度可定制** - 支持自定义组件、代码块、容器
-- 🎯 **Svelte 5 Runes** - 使用最新的 Svelte 5 语法
-- 📜 **自动滚动** - 内置 AutoScrollContainer 组件
+- 📦 **开箱即用** - 提供 `useIncremark` store 和 `<Incremark>` 组件
+- ⌨️ **打字机效果** - 内置 `useBlockTransformer` 实现逐字符显示
+- 🎨 **可定制** - 支持自定义渲染组件
+- ⚡ **高性能** - 使用 Svelte 5 Runes 优化性能
+- 🔧 **DevTools** - 内置开发者工具
 
 ## 安装
 
@@ -21,55 +20,22 @@ pnpm add @incremark/core @incremark/svelte
 
 ## 快速开始
 
-### 推荐方式：IncremarkContent 组件
+**1. 引入样式**
 
-```svelte
-<script lang="ts">
-  import { IncremarkContent } from '@incremark/svelte'
-  import '@incremark/svelte/style.css'
-
-  let content = $state('')
-  let isFinished = $state(false)
-
-  // 处理 AI 流式输出
-  async function handleStream(stream: AsyncIterable<string>) {
-    content = ''
-    isFinished = false
-    
-    for await (const chunk of stream) {
-      content += chunk
-    }
-    
-    isFinished = true
-  }
-</script>
-
-<button onclick={() => handleStream(stream)}>开始</button>
-<IncremarkContent 
-  {content} 
-  {isFinished}
-  incremarkOptions={{
-    gfm: true,
-    math: true,
-    containers: true,
-    htmlTree: true
-  }}
-/>
+```ts
+import '@incremark/svelte/style.css'
 ```
 
-### 进阶方式：useIncremark Store
+**2. 在组件中使用**
 
 ```svelte
-<script lang="ts">
+<script>
   import { useIncremark, Incremark } from '@incremark/svelte'
   import '@incremark/svelte/style.css'
 
-  const { blocks, append, finalize, reset } = useIncremark({ 
-    gfm: true,
-    math: true
-  })
+  const { blocks, append, finalize, reset } = useIncremark({ gfm: true })
 
-  async function handleStream(stream: AsyncIterable<string>) {
+  async function handleStream(stream) {
     reset()
     for await (const chunk of stream) {
       append(chunk)
@@ -78,197 +44,48 @@ pnpm add @incremark/core @incremark/svelte
   }
 </script>
 
-<button onclick={() => handleStream(stream)}>开始</button>
-<Incremark blocks={$blocks} />
+<button on:click={handleStream}>开始</button>
+<Incremark {blocks} />
 ```
 
-## IncremarkContent 组件
+## API
 
-声明式的一体化组件，推荐在大多数场景使用。
+### useIncremark(options)
 
-### Props
+核心 store。
 
-```ts
-interface IncremarkContentProps {
-  // 输入（二选一）
-  content?: string                       // 累积的 Markdown 字符串
-  stream?: () => AsyncGenerator<string>  // 异步生成器函数
+**返回值：**
 
-  // 状态
-  isFinished?: boolean                   // 流结束标志（content 模式必需）
+| 属性 | 类型 | 说明 |
+|------|------|------|
+| `markdown` | `Writable<string>` | 完整 Markdown |
+| `blocks` | `Readable<Block[]>` | 所有块 |
+| `completedBlocks` | `Writable<Block[]>` | 已完成块 |
+| `pendingBlocks` | `Writable<Block[]>` | 待处理块 |
+| `isLoading` | `Writable<boolean>` | 是否正在加载 |
+| `append` | `Function` | 追加内容 |
+| `finalize` | `Function` | 完成解析 |
+| `reset` | `Function` | 重置状态 |
+| `render` | `Function` | 一次性渲染（reset + append + finalize） |
 
-  // 配置
-  incremarkOptions?: {
-    gfm?: boolean              // GFM 支持
-    math?: boolean             // 数学公式
-    htmlTree?: boolean         // HTML 结构化解析
-    containers?: boolean       // ::: 容器语法
-    typewriter?: {             // 打字机效果
-      enabled?: boolean
-      charsPerTick?: number | [number, number]
-      tickInterval?: number
-      effect?: 'none' | 'fade-in' | 'typing'
-      cursor?: string
-    }
-  }
+### useBlockTransformer(sourceBlocks, options)
 
-  // 自定义渲染
-  components?: ComponentMap                          // 自定义组件
-  customContainers?: Record<string, Component>       // 自定义容器
-  customCodeBlocks?: Record<string, Component>       // 自定义代码块
-  codeBlockConfigs?: Record<string, CodeBlockConfig>
+打字机效果 store。作为解析器和渲染器之间的中间层，控制内容的逐步显示。
 
-  // 样式
-  showBlockStatus?: boolean    // 显示 block 状态边框
-  pendingClass?: string        // pending block 的 CSS 类
-}
-```
-
-### 示例：启用打字机效果
+## 自定义组件
 
 ```svelte
-<IncremarkContent 
-  {content} 
-  {isFinished}
-  incremarkOptions={{
-    gfm: true,
-    typewriter: {
-      enabled: true,
-      charsPerTick: [1, 3],
-      tickInterval: 30,
-      effect: 'fade-in'
-    }
-  }}
-/>
-```
+<script>
+  import { useIncremark, Incremark } from '@incremark/svelte'
+  import MyCode from './MyCode.svelte'
 
-### 示例：自定义组件
-
-```svelte
-<script lang="ts">
-  import CustomHeading from './CustomHeading.svelte'
-  import WarningContainer from './WarningContainer.svelte'
-  import EchartsCodeBlock from './EchartsCodeBlock.svelte'
+  const { blocks } = useIncremark()
 </script>
 
-<IncremarkContent 
-  {content} 
-  {isFinished}
-  components={{ heading: CustomHeading }}
-  customContainers={{ warning: WarningContainer }}
-  customCodeBlocks={{ echarts: EchartsCodeBlock }}
-  codeBlockConfigs={{ echarts: { takeOver: true } }}
-/>
+<Incremark {blocks} components={{ code: MyCode }} />
 ```
 
-## 主题系统
-
-```svelte
-<script lang="ts">
-  import { ThemeProvider, IncremarkContent } from '@incremark/svelte'
-</script>
-
-<!-- 内置主题 -->
-<ThemeProvider theme="dark">
-  <IncremarkContent {content} {isFinished} />
-</ThemeProvider>
-
-<!-- 自定义主题 -->
-<ThemeProvider theme={{ color: { brand: { primary: '#8b5cf6' } } }}>
-  <IncremarkContent {content} {isFinished} />
-</ThemeProvider>
-```
-
-## 自动滚动
-
-```svelte
-<script lang="ts">
-  import { AutoScrollContainer, IncremarkContent } from '@incremark/svelte'
-
-  let scrollContainer: { scrollToBottom: () => void }
-  let autoScrollEnabled = $state(true)
-</script>
-
-<AutoScrollContainer 
-  bind:this={scrollContainer} 
-  enabled={autoScrollEnabled}
-  threshold={50}
-  behavior="smooth"
->
-  <IncremarkContent {content} {isFinished} />
-</AutoScrollContainer>
-
-<button onclick={() => scrollContainer?.scrollToBottom()}>
-  滚动到底部
-</button>
-```
-
-## useIncremark API
-
-```ts
-const {
-  // 状态（Svelte stores）
-  markdown,           // Writable<string> - 完整 Markdown
-  blocks,             // Readable<Block[]> - 所有块
-  completedBlocks,    // Writable<Block[]> - 已完成块
-  pendingBlocks,      // Writable<Block[]> - 待处理块
-  isLoading,          // Writable<boolean> - 是否加载中
-  isDisplayComplete,  // Readable<boolean> - 显示是否完成
-  
-  // 方法
-  append,             // (chunk: string) => IncrementalUpdate
-  finalize,           // () => IncrementalUpdate
-  reset,              // () => void
-  render,             // (content: string) => IncrementalUpdate
-  
-  // 打字机控制
-  typewriter: {
-    enabled,          // Writable<boolean> - 是否启用
-    isProcessing,     // Readable<boolean> - 是否处理中
-    skip,             // () => void - 跳过动画
-    setOptions        // (options) => void - 更新配置
-  }
-} = useIncremark(options)
-```
-
-## Svelte 5 Runes 语法
-
-本库使用 Svelte 5 的 Runes 语法：
-
-```svelte
-<script lang="ts">
-  import { IncremarkContent } from '@incremark/svelte'
-
-  // 使用 $state 管理响应式状态
-  let content = $state('')
-  let isFinished = $state(false)
-
-  // 使用 $derived 计算派生状态
-  let charCount = $derived(content.length)
-</script>
-
-<IncremarkContent {content} {isFinished} />
-<p>字符数: {charCount}</p>
-```
-
-## 数学公式支持
-
-内置支持，只需启用 `math: true`：
-
-```svelte
-<IncremarkContent 
-  {content} 
-  {isFinished}
-  incremarkOptions={{ math: true }}
-/>
-```
-
-引入 KaTeX 样式：
-
-```ts
-import 'katex/dist/katex.min.css'
-```
-
-## License
+## 许可证
 
 MIT
+

@@ -1,15 +1,18 @@
 # @incremark/core
 
-Incremental Markdown parser core library.
+High-performance incremental Markdown parser core library, designed specifically for AI streaming output scenarios.
 
 **[🇨🇳 中文](./README.md)** | 🇺🇸 English
 
-## Features
+## Core Advantages
 
-- 🚀 **Incremental Parsing** - Only parse new content, completed blocks are never re-processed
-- 🔄 **Streaming Friendly** - Designed for AI streaming output scenarios
-- 🎯 **Smart Boundary Detection** - Accurate Markdown block boundary recognition
-- 📦 **Framework Agnostic** - Works with any frontend framework
+- 🚀 **O(n) Complexity** - Incremental parsing, each character parsed at most once
+- ⚡ **Dual-Engine Architecture** - Choice between Marked (fast) and Micromark (stable)
+- 🔄 **Stream-Friendly** - Designed for AI streaming output scenarios
+- ⌨️ **Typewriter Effect** - Built-in BlockTransformer for character-by-character display
+- 🎯 **Smart Boundary Detection** - Accurately identifies Markdown block boundaries
+- 📦 **Tree-shaking** - Only bundles Marked engine by default, load on demand
+- 🔌 **Rich Extensions** - Support for footnotes, math formulas, custom containers, HTML parsing
 
 ## Installation
 
@@ -22,7 +25,11 @@ pnpm add @incremark/core
 ```ts
 import { createIncremarkParser } from '@incremark/core'
 
-const parser = createIncremarkParser({ gfm: true })
+const parser = createIncremarkParser({
+  gfm: true,
+  math: true,
+  containers: true
+})
 
 // Simulate streaming input
 parser.append('# Hello\n')
@@ -34,6 +41,45 @@ console.log(parser.getCompletedBlocks())
 console.log(parser.getAst())
 ```
 
+## Dual-Engine Architecture
+
+### Marked Engine (Default)
+
+Fast mode, optimized for streaming scenarios:
+
+```ts
+import { createIncremarkParser } from '@incremark/core'
+
+// Uses Marked engine by default
+const parser = createIncremarkParser({ gfm: true, math: true })
+```
+
+**Features:**
+- 🚀 Ultra-fast parsing, ideal for real-time AI chat
+- 🔧 Custom extensions for footnotes, math, containers, inline HTML
+- 📦 Tree-shaking friendly, default bundle only includes Marked
+
+### Micromark Engine
+
+Stable mode, strict CommonMark compliance:
+
+```ts
+import { createIncremarkParser } from '@incremark/core'
+import { MicromarkAstBuilder } from '@incremark/core/engines/micromark'
+
+// Use Micromark engine
+const parser = createIncremarkParser({
+  astBuilder: MicromarkAstBuilder,
+  gfm: true,
+  math: true
+})
+```
+
+**Features:**
+- ✅ 100% CommonMark compatible
+- 🔌 Rich micromark/mdast plugin ecosystem
+- 🛡️ Battle-tested stability
+
 ## API
 
 ### createIncremarkParser(options)
@@ -42,10 +88,11 @@ Create a parser instance.
 
 ```ts
 interface ParserOptions {
-  gfm?: boolean              // Enable GFM
-  containers?: boolean       // Enable ::: containers
-  extensions?: Extension[]   // micromark extensions
-  mdastExtensions?: Extension[]  // mdast extensions
+  gfm?: boolean                    // Enable GFM (tables, task lists, etc.)
+  math?: boolean                   // Enable math formulas ($..$ and $$..$$)
+  containers?: boolean             // Enable ::: container syntax
+  htmlTree?: boolean               // Enable HTML structured parsing
+  astBuilder?: AstBuilderClass     // Custom AST builder (for engine switching)
 }
 ```
 
@@ -55,56 +102,118 @@ Append content, returns incremental update.
 
 ### parser.finalize()
 
-Complete parsing.
+Complete parsing, mark remaining pending content as completed.
 
 ### parser.reset()
 
-Reset state.
+Reset parser state.
 
 ### parser.render(content)
 
-Render complete Markdown at once (reset + append + finalize).
+One-time render complete Markdown (reset + append + finalize).
 
 ```ts
 const update = parser.render('# Hello World')
-console.log(update.completed) // completed blocks
+console.log(update.completed) // Completed blocks
 ```
 
-### parser.getBuffer()
+### parser.getAst()
 
-Get current buffer content.
+Get complete AST (mdast format).
 
 ### parser.getCompletedBlocks()
 
 Get completed blocks.
 
-### parser.getPendingBlocks()
+### parser.getBuffer()
 
-Get pending blocks.
+Get current buffer content.
 
-### parser.getAst()
+## BlockTransformer
 
-Get complete AST.
+Typewriter effect controller, serves as middleware between parser and renderer.
+
+### Basic Usage
+
+```ts
+import { createBlockTransformer, defaultPlugins } from '@incremark/core'
+
+const transformer = createBlockTransformer({
+  charsPerTick: 2,        // Display 2 characters per tick
+  tickInterval: 50,       // Every 50ms
+  effect: 'fade-in',      // Animation effect: none | fade-in | typing
+  plugins: defaultPlugins,
+  onChange: (displayBlocks) => {
+    render(displayBlocks)
+  }
+})
+
+// Push source blocks
+transformer.push(sourceBlocks)
+
+// Skip animation
+transformer.skip()
+
+// Reset
+transformer.reset()
+
+// Destroy
+transformer.destroy()
+```
+
+### Configuration Options
+
+```ts
+interface TransformerOptions {
+  charsPerTick?: number | [number, number]  // Characters per tick (supports random range)
+  tickInterval?: number                      // Interval in ms
+  effect?: 'none' | 'fade-in' | 'typing'    // Animation effect
+  cursor?: string                            // Cursor character (typing effect)
+  plugins?: TransformerPlugin[]              // Plugin list
+  onChange?: (blocks: DisplayBlock[]) => void
+}
+```
 
 ## Type Definitions
 
 ```ts
 interface ParsedBlock {
   id: string
-  status: 'pending' | 'stable' | 'completed'
+  status: 'pending' | 'completed'
   node: RootContent
   startOffset: number
   endOffset: number
   rawText: string
 }
+
+interface IncrementalUpdate {
+  completed: ParsedBlock[]
+  pending: ParsedBlock[]
+  ast: Root
+  definitions: DefinitionMap
+  footnoteDefinitions: FootnoteDefinitionMap
+  footnoteReferenceOrder: string[]
+}
 ```
+
+## Performance Comparison
+
+Based on benchmark tests with 38 real Markdown documents:
+
+| Comparison | Average Advantage |
+|------------|-------------------|
+| vs Streamdown | ~**6.1x faster** |
+| vs ant-design-x | ~**7.2x faster** |
+| vs markstream-vue | ~**28.3x faster** |
+
+The longer the document, the greater the advantage (O(n) vs O(n²)).
 
 ## Framework Integration
 
 - Vue: [@incremark/vue](../vue)
 - React: [@incremark/react](../react)
+- Svelte: [@incremark/svelte](../svelte)
 
 ## License
 
 MIT
-

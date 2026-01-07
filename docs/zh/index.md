@@ -1,12 +1,5 @@
 ---
 layout: home
-title: Incremark - 高性能流式 Markdown 渲染器
-description: 专为 AI 流式输出设计的增量式 Markdown 解析器，极致性能体验，支持逐字符动画与跨框架集成。
-head:
-  - - meta
-    - name: keywords
-      content: markdown, streaming, incremental, parser, ai, chatgpt, llm, typewriter, performance, vue, react, svelte
-
 
 hero:
   name: Incremark

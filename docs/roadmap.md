@@ -8,7 +8,9 @@ Our future plans focus on enhancing the library's capabilities for building mode
 - [x] **BlockTransformer**: Cross-framework architecture for consistent typewriter effects.
 - [x] **Syntax Refinement**: Enhanced boundary parsing, commonmark compliance, and edge-case rendering.
 - [x] **Incremental Engine**: State-aware parsing for $O(N)$ performance.
+- [x] **Dual-Engine Architecture**: Support for both `marked` (fast, streaming-optimized) and `micromark` (stable, CommonMark-compliant) engines with tree-shaking optimization.
 - [x] **Micromark Enhancement**: Improved HTML parsing and stability.
+- [x] **Marked Enhancement**: Extended `marked` with footnotes, math, custom containers, and inline HTML parsing support.
 
 ### 🎨 Design System & Theme
 - [x] **@incremark/theme**: Unified styles with DesignToken support in a separate package.
@@ -36,7 +38,7 @@ Our future plans focus on enhancing the library's capabilities for building mode
 ## 🚀 Upcoming Features
 
 ### 🛠️ Markdown & Tooling
-- [ ] **Code Component Refactoring**: Decouple Mermaid and Default renderers to allow for better composition and customization.
+- [x] **Code Component Refactoring**: Decouple Mermaid and Default renderers to allow for better composition and customization.
 - [ ] **DevTools Rewrite**: Rebuilding DevTools using Svelte for better DX.
 - [ ] **sliceAST Optimization**: Further performance improvements for ultra-long documents.
 - [ ] **Accessibility (A11y)**: Enhancing screen reader support and ARIA standards.
@@ -53,6 +55,12 @@ A comprehensive set of pre-built UI components powered by the Incremark engine.
 
 ---
 
+### 🔌 Plugin System
+- [x] **Micromark Extensions**: Full support for `micromark` syntax extensions.
+- [x] **mdast Extensions**: Full support for `mdast-util-from-markdown` AST extensions.
+- [x] **Marked Extensions**: Custom token transformers for the `marked` engine.
+
+---
+
 ## 🔮 Long-term Research
-- [ ] **Plugin System 2.0**: Extension integration with `micromark` and `mdast-util-from-markdown` to providing a complete customization solution.
 - [ ] **Collaborative Editing**: Researching solutions including: 1. Tiptap markdown parsing based on `micromark`, 2. Incremental appending scheme based on `incremark`.

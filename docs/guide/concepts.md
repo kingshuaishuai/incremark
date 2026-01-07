@@ -2,6 +2,17 @@
 
 Understanding how Incremark works will help you build high-performance, flicker-free AI chat applications.
 
+## Dual-Engine Architecture
+
+Incremark supports two parsing engines, allowing you to choose based on your needs:
+
+| Engine | Characteristics | Best For |
+|--------|----------------|----------|
+| **marked** (default) | Extremely fast, streaming-optimized | Real-time AI chat, performance-critical scenarios |
+| **micromark** | CommonMark compliant, rich plugin ecosystem | Complex extensions, strict spec compliance |
+
+Both engines share the same incremental parsing layer and produce identical mdast output, ensuring consistent behavior regardless of which engine you choose.
+
 ## Incremental Parsing Flow
 
 Traditional Markdown parsers (like `marked` or `markdown-it`) are designed for static documents. In a streaming context, they must re-parse the entire document from scratch every time a new character is received.
