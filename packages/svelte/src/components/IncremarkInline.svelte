@@ -69,10 +69,10 @@
     return (node as unknown as MathNode).type === 'inlineMath'
   }
 
-  // 获取 definitions context（可能不存在）
-  // 使用 $derived 来确保响应式
+  // 获取 definitions context
   const context = getDefinitionsContext()
-  const definations = $derived(context?.definations ?? {});
+  // 解构 store 以便使用 $ 语法订阅
+  const { definations } = context
 
 
   /**

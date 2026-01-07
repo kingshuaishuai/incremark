@@ -3,7 +3,6 @@
  * @description Svelte 5 DevTools 一行接入
  */
 
-import { onMount, onDestroy } from 'svelte'
 import { createDevTools, type DevToolsOptions } from '@incremark/devtools'
 import type { UseIncremarkReturn } from './useIncremark'
 
@@ -55,14 +54,16 @@ export function useDevTools(
     })
   })
 
-  onMount(() => {
+  // 使用 $effect 处理挂载和卸载
+  $effect(() => {
     devtools.mount()
-  })
 
-  onDestroy(() => {
-    devtools.unmount()
-    // 清理回调
-    incremark.parser.setOnChange(undefined)
+    // 返回清理函数
+    return () => {
+      devtools.unmount()
+      // 清理回调
+      incremark.parser.setOnChange(undefined)
+    }
   })
 
   return devtools

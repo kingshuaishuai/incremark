@@ -4,26 +4,22 @@
 -->
 
 <script lang="ts">
-  import type { Readable } from 'svelte/store'
-  import type { FootnoteDefinition, RootContent } from 'mdast'
+  import type { RootContent } from 'mdast'
   import { getDefinitionsContext } from '../context/definitionsContext'
   import IncremarkRenderer from './IncremarkRenderer.svelte'
 
-
   const context = getDefinitionsContext()
-  const footnoteDefinitions = $derived(context?.footnoteDefinitions ?? {});
-  const footnoteReferenceOrder = $derived(context?.footnoteReferenceOrder ?? []);
+  // 解构 store 以便使用 $ 语法订阅
+  const { footnoteDefinitions, footnoteReferenceOrder } = context
 
   /**
    * 按引用顺序排列的脚注列表
    * 只显示已有定义的脚注
    */
   const orderedFootnotes = $derived.by(() => {
-    if (!footnoteReferenceOrder || !footnoteDefinitions) {
-      return []
-    }
     const order = $footnoteReferenceOrder
     const definitions = $footnoteDefinitions
+    
     return order
       .map(identifier => ({
         identifier,
