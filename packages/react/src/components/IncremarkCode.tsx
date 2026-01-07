@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React from 'react'
 import type { Code } from 'mdast'
-import { useShiki } from '../hooks/useShiki'
+import { IncremarkCodeMermaid } from './IncremarkCodeMermaid'
+import { IncremarkCodeDefault, type IncremarkCodeDefaultProps } from './IncremarkCodeDefault'
 
 export interface IncremarkCodeProps {
   node: Code
@@ -18,6 +19,8 @@ export interface IncremarkCodeProps {
   blockStatus?: 'pending' | 'stable' | 'completed'
   /** 代码块配置映射，key 为代码语言名称 */
   codeBlockConfigs?: Record<string, { takeOver?: boolean }>
+  /** 默认代码块渲染组件（当不是 mermaid 且没有自定义组件时使用） */
+  defaultCodeComponent?: React.ComponentType<IncremarkCodeDefaultProps>
 }
 
 export const IncremarkCode: React.FC<IncremarkCodeProps> = ({
@@ -28,23 +31,12 @@ export const IncremarkCode: React.FC<IncremarkCodeProps> = ({
   mermaidDelay = 500,
   customCodeBlocks,
   blockStatus = 'completed',
-  codeBlockConfigs
+  codeBlockConfigs,
+  defaultCodeComponent: DefaultCodeComponent = IncremarkCodeDefault
 }) => {
-  const [copied, setCopied] = useState(false)
-  const [highlightedHtml, setHighlightedHtml] = useState('')
-  const [mermaidSvg, setMermaidSvg] = useState('')
-  const [mermaidLoading, setMermaidLoading] = useState(false)
-  const [mermaidViewMode, setMermaidViewMode] = useState<'preview' | 'source'>('preview')
-
-  const mermaidRef = useRef<any>(null)
-  const mermaidTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
   const language = node.lang || 'text'
   const code = node.value
   const isMermaid = language === 'mermaid'
-
-  // 使用 Shiki 单例管理器
-  const { isHighlighting, highlight } = useShiki(theme)
 
   // 检查是否有自定义代码块组件
   const CustomCodeBlock = React.useMemo(() => {
@@ -66,92 +58,7 @@ export const IncremarkCode: React.FC<IncremarkCodeProps> = ({
 
     return component
   }, [customCodeBlocks, language, blockStatus, codeBlockConfigs])
-  
-  const toggleMermaidView = useCallback(() => {
-    setMermaidViewMode(prev => prev === 'preview' ? 'source' : 'preview')
-  }, [])
 
-  const copyCode = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(code)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // 复制失败静默处理
-    }
-  }, [code])
-
-  const doRenderMermaid = useCallback(async () => {
-    if (!code) return
-
-    try {
-      if (!mermaidRef.current) {
-        const mermaidModule = await import('mermaid')
-        mermaidRef.current = mermaidModule.default
-        mermaidRef.current.initialize({
-          startOnLoad: false,
-          theme: 'dark',
-          securityLevel: 'loose',
-          suppressErrorRendering: true
-        })
-      }
-
-      const mermaid = mermaidRef.current
-      const id = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2)}`
-      const { svg } = await mermaid.render(id, code)
-      setMermaidSvg(svg)
-    } catch {
-      setMermaidSvg('')
-    } finally {
-      setMermaidLoading(false)
-    }
-  }, [code])
-
-  const scheduleRenderMermaid = useCallback(() => {
-    if (!isMermaid || !code) return
-
-    if (mermaidTimerRef.current) {
-      clearTimeout(mermaidTimerRef.current)
-    }
-
-    setMermaidLoading(true)
-    mermaidTimerRef.current = setTimeout(() => {
-      doRenderMermaid()
-    }, mermaidDelay)
-  }, [isMermaid, code, mermaidDelay, doRenderMermaid])
-
-  const doHighlight = useCallback(async () => {
-    if (isMermaid) {
-      scheduleRenderMermaid()
-      return
-    }
-
-    if (!code || disableHighlight) {
-      setHighlightedHtml('')
-      return
-    }
-
-    try {
-      const html = await highlight(code, language, fallbackTheme)
-      setHighlightedHtml(html)
-    } catch {
-      // Shiki 不可用或加载失败
-      setHighlightedHtml('')
-    }
-  }, [code, language, fallbackTheme, disableHighlight, isMermaid, highlight, scheduleRenderMermaid])
-
-  useEffect(() => {
-    doHighlight()
-  }, [doHighlight])
-  
-  useEffect(() => {
-    return () => {
-      if (mermaidTimerRef.current) {
-        clearTimeout(mermaidTimerRef.current)
-      }
-    }
-  }, [])
-  
   // 自定义代码块组件
   if (CustomCodeBlock) {
     const config = codeBlockConfigs?.[language]
@@ -164,63 +71,24 @@ export const IncremarkCode: React.FC<IncremarkCodeProps> = ({
       />
     )
   }
-  
+
+  // Mermaid 图表
   if (isMermaid) {
     return (
-      <div className="incremark-mermaid">
-        <div className="mermaid-header">
-          <span className="language">MERMAID</span>
-          <div className="mermaid-actions">
-            <button 
-              className="code-btn" 
-              onClick={toggleMermaidView} 
-              type="button"
-              disabled={!mermaidSvg}
-            >
-              {mermaidViewMode === 'preview' ? '源码' : '预览'}
-            </button>
-            <button className="code-btn" onClick={copyCode} type="button">
-              {copied ? '✓ 已复制' : '复制'}
-            </button>
-          </div>
-        </div>
-        <div className="mermaid-content">
-          {mermaidLoading && !mermaidSvg ? (
-            <div className="mermaid-loading">
-              <pre className="mermaid-source-code">{code}</pre>
-            </div>
-          ) : mermaidViewMode === 'source' ? (
-            <pre className="mermaid-source-code">{code}</pre>
-          ) : mermaidSvg ? (
-            <div className="mermaid-svg" dangerouslySetInnerHTML={{ __html: mermaidSvg }} />
-          ) : (
-            <pre className="mermaid-source-code">{code}</pre>
-          )}
-        </div>
-      </div>
+      <IncremarkCodeMermaid
+        node={node}
+        mermaidDelay={mermaidDelay}
+      />
     )
   }
-  
+
+  // 默认代码块渲染
   return (
-    <div className="incremark-code">
-      <div className="code-header">
-        <span className="language">{language}</span>
-        <button className="code-btn" onClick={copyCode} type="button">
-          {copied ? '✓ 已复制' : '复制'}
-        </button>
-      </div>
-      <div className="code-content">
-        {isHighlighting && !highlightedHtml ? (
-          <div className="code-loading">
-            <pre><code>{code}</code></pre>
-          </div>
-        ) : highlightedHtml ? (
-          <div className="shiki-wrapper" dangerouslySetInnerHTML={{ __html: highlightedHtml }} />
-        ) : (
-          <pre className="code-fallback"><code>{code}</code></pre>
-        )}
-      </div>
-    </div>
+    <DefaultCodeComponent
+      node={node}
+      theme={theme}
+      fallbackTheme={fallbackTheme}
+      disableHighlight={disableHighlight}
+    />
   )
 }
-

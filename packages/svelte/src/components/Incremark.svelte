@@ -88,6 +88,7 @@
           <!-- 使用 IncremarkRenderer，传递 customContainers 和 customCodeBlocks -->
           <IncremarkRenderer
             node={(block as ParsedBlock).node}
+            {components}
             customContainers={customContainers}
             customCodeBlocks={customCodeBlocks}
             codeBlockConfigs={codeBlockConfigs}
@@ -106,6 +107,7 @@
           <!-- 使用 IncremarkRenderer，传递 customContainers 和 customCodeBlocks -->
           <IncremarkRenderer
             node={(block as ParsedBlock).node}
+            {components}
             customContainers={customContainers}
             customCodeBlocks={customCodeBlocks}
             codeBlockConfigs={codeBlockConfigs}

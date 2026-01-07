@@ -107,6 +107,7 @@ export const IncremarkRenderer: React.FC<IncremarkRendererProps> = ({
         customCodeBlocks={customCodeBlocks}
         codeBlockConfigs={codeBlockConfigs}
         blockStatus={blockStatus}
+        defaultCodeComponent={components?.['code'] as any}
       />
     )
   }

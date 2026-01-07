@@ -23,6 +23,8 @@
   interface Props {
     /** 要渲染的节点 */
     node: RootContent | ContainerNode
+    /** 自定义组件映射，key 为节点类型 */
+    components?: Record<string, any>
     customContainers?: Record<string, any>
     customCodeBlocks?: Record<string, any>
     codeBlockConfigs?: Record<string, { takeOver?: boolean }>
@@ -31,6 +33,7 @@
 
   let {
     node,
+    components,
     customContainers,
     customCodeBlocks,
     codeBlockConfigs,
@@ -95,6 +98,7 @@
     customCodeBlocks={customCodeBlocks}
     codeBlockConfigs={codeBlockConfigs}
     blockStatus={blockStatus}
+    defaultCodeComponent={components?.['code']}
   />
 {:else}
   <!-- 其他节点：使用对应组件 -->

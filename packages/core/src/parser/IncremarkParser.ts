@@ -35,7 +35,6 @@ import { FootnoteManager } from './manager'
 import type { IAstBuilder, EngineParserOptions } from './ast/types'
 // 只默认导入 MarkedAstBuilder，实现 tree-shaking
 import { MarkedAstBuilder } from './ast/MarkedAstBuildter'
-import { MicromarkAstBuilder } from './ast/MicromarkAstBuilder'
 
 /**
  * AST 构建器类型（用于注入）
@@ -94,7 +93,7 @@ export class IncremarkParser {
 
     // 初始化 AST 构建器
     // 默认使用 MarkedAstBuilder（极速模式），支持注入自定义构建器
-    const BuilderClass = options.astBuilder || MicromarkAstBuilder
+    const BuilderClass = options.astBuilder || MarkedAstBuilder
     this.astBuilder = new BuilderClass(this.options)
 
     // 初始化边界检测器

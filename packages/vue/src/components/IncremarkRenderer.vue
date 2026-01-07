@@ -87,6 +87,7 @@ function isHtmlNode(node: ExtendedRootContent): node is HTML {
     :custom-code-blocks="customCodeBlocks"
     :code-block-configs="codeBlockConfigs"
     :block-status="blockStatus"
+    :default-code-component="components?.['code']"
   />
   <!-- 其他节点：使用对应组件 -->
   <component v-else :is="getComponent((node as RootContent).type)" :node="node as RootContent" />

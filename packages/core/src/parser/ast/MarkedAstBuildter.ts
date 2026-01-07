@@ -12,12 +12,10 @@ import { lexer, Lexer, type Tokens, type Token, type MarkedExtension } from 'mar
 import type {
   Root,
   RootContent,
-  PhrasingContent,
-  HTML,
-  Parent
+  PhrasingContent
 } from 'mdast'
 import type { ParsedBlock, BlockStatus, ContainerConfig } from '../../types'
-import { parseHtmlFragment, transformHtmlNodes, type HtmlTreeExtensionOptions } from '../../extensions/html-extension'
+import { transformHtmlNodes, type HtmlTreeExtensionOptions } from '../../extensions/html-extension'
 import type { IAstBuilder, EngineParserOptions } from './types'
 import { extractMarkedExtensions } from './types'
 
