@@ -1,7 +1,7 @@
 {
   "name": "@incremark/icons",
   "version": "0.2.7",
-  "description": "Incremark 图标库 - 提供 SVG 图标供 Vue、React、Svelte 使用",
+  "description": "Incremark icons - SVG icon library for Vue, React, and Svelte components.",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -30,7 +30,11 @@
   "keywords": [
     "incremark",
     "icons",
-    "svg"
+    "svg",
+    "vue",
+    "react",
+    "svelte",
+    "markdown"
   ],
   "license": "MIT",
   "repository": {

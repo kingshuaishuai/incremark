@@ -1,7 +1,7 @@
 {
   "name": "@incremark/shared",
   "version": "0.2.7",
-  "description": "Incremark 共享工具包 - Vue 和 React 共享的逻辑",
+  "description": "Incremark shared utilities - Common logic and i18n support for Vue, React, and Svelte.",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -32,7 +32,11 @@
   "keywords": [
     "incremark",
     "shared",
-    "utils"
+    "utils",
+    "i18n",
+    "locales",
+    "markdown",
+    "streaming"
   ],
   "license": "MIT",
   "repository": {

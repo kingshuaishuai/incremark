@@ -27,6 +27,14 @@
     "tsup": "^8.0.0",
     "typescript": "^5.3.0"
   },
+  "keywords": [
+    "incremark",
+    "devtools",
+    "debugging",
+    "markdown",
+    "developer-tools",
+    "streaming"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/kingshuaishuai/incremark.git",

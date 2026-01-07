@@ -76,7 +76,9 @@
     "llm",
     "mdast",
     "high-performance",
-    "typewriter"
+    "typewriter",
+    "micromark",
+    "marked"
   ],
   "license": "MIT",
   "repository": {

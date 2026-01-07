@@ -62,7 +62,9 @@
     "ai",
     "chatgpt",
     "llm",
-    "typewriter"
+    "typewriter",
+    "i18n",
+    "a11y"
   ],
   "license": "MIT",
   "repository": {

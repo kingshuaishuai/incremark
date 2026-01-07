@@ -1,7 +1,7 @@
 {
   "name": "@incremark/colors",
   "version": "0.2.7",
-  "description": "Incremark 颜色生成工具 - 自动生成色阶和主题色",
+  "description": "Incremark color utilities - Automatic color palette and theme color generation.",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -21,10 +21,12 @@
     "dev": "tsup --watch"
   },
   "keywords": [
+    "incremark",
     "colors",
     "palette",
     "theme",
-    "color-generation"
+    "color-generation",
+    "design-system"
   ],
   "license": "MIT",
   "repository": {

@@ -44,11 +44,14 @@
   "keywords": [
     "markdown",
     "react",
+    "react18",
     "streaming",
     "ai",
     "chatgpt",
     "llm",
-    "typewriter"
+    "typewriter",
+    "i18n",
+    "a11y"
   ],
   "repository": {
     "type": "git",
