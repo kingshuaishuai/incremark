@@ -129,10 +129,8 @@ export function useIncremark(optionsInput: MaybeRefOrGetter<UseIncremarkOptions>
   // 如果没有配置打字机或未启用打字机：解析完成即显示完成
   // 如果启用打字机：解析完成 + 动画完成
   const isDisplayComplete = computed(() => {
-    console.log("计算属性变更")
     // 没有配置打字机，或者打字机未启用：只需判断是否 finalized
     if (!toValue(optionsInput).typewriter || !typewriter.enabled.value) {
-      console.log('isDisplayComplete', isFinalized.value)
       return isFinalized.value
     }
     // 启用了打字机：需要 finalize + 动画完成

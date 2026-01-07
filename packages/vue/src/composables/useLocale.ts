@@ -1,8 +1,11 @@
-import { inject, provide, computed, type Ref, type ComputedRef } from 'vue'
+import { inject, computed, type Ref, type ComputedRef, type InjectionKey } from 'vue'
 import type { IncremarkLocale } from '@incremark/shared'
 import { en } from '../index'
 
-const LOCALE_KEY = Symbol(' incremark-locale')
+/**
+ * Locale 注入 key，用于 provide/inject
+ */
+const LOCALE_KEY: InjectionKey<Ref<IncremarkLocale>> = Symbol('incremark-locale')
 
 /**
  * Vue 国际化 Hook
@@ -16,7 +19,7 @@ export interface UseLocaleReturn {
  * 使用 locale
  */
 export function useLocale(): UseLocaleReturn {
-  const locale = inject<Ref<IncremarkLocale>>(LOCALE_KEY)
+  const locale = inject(LOCALE_KEY)
 
   if (!locale) {
     // 如果没有提供 locale，使用默认的英文

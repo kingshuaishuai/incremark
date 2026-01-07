@@ -20,14 +20,6 @@ export interface CodeBlockConfig {
   takeOver?: boolean
 }
 
-/**
- * 代码块配置
- */
-export interface CodeBlockConfig {
-  /** 是否从一开始就接管渲染，而不是等到 completed 状态 */
-  takeOver?: boolean
-}
-
 const props = withDefaults(
   defineProps<{
     /** 要渲染的块列表（来自 useIncremark 的 blocks） */
