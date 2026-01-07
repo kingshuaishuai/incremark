@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import type { Code } from 'mdast'
 import { LucideCopy, LucideCopyCheck } from '@incremark/icons'
+import { isClipboardAvailable } from '@incremark/shared'
 import { SvgIcon } from './SvgIcon'
 import { useShiki } from '../hooks/useShiki'
 
@@ -29,15 +30,31 @@ export const IncremarkCodeDefault: React.FC<IncremarkCodeDefaultProps> = ({
   // 使用 Shiki 单例管理器
   const { isHighlighting, highlight } = useShiki(theme)
 
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const copyCode = useCallback(async () => {
+    if (!isClipboardAvailable()) return
+
     try {
       await navigator.clipboard.writeText(code)
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current)
+      }
+      copyTimeoutRef.current = setTimeout(() => setCopied(false), 2000)
     } catch {
       // 复制失败静默处理
     }
   }, [code])
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const doHighlight = useCallback(async () => {
     if (!code || disableHighlight) {

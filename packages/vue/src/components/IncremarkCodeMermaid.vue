@@ -2,6 +2,7 @@
 import type { Code } from 'mdast'
 import { computed, ref, onUnmounted, shallowRef, watch } from 'vue'
 import { GravityMermaid, LucideCode, LucideEye, LucideCopy, LucideCopyCheck } from '@incremark/icons'
+import { isClipboardAvailable } from '@incremark/shared'
 import SvgIcon from './SvgIcon.vue'
 
 interface Props {
@@ -82,20 +83,32 @@ async function doRenderMermaid() {
 // 监听代码变化，重新渲染
 watch(code, scheduleRenderMermaid, { immediate: true })
 
-// 组件卸载时清理 Mermaid 定时器
+// 组件卸载时清理定时器
 onUnmounted(() => {
   if (mermaidTimer) {
     clearTimeout(mermaidTimer)
   }
+  if (copyTimeoutId) {
+    clearTimeout(copyTimeoutId)
+  }
 })
 
 const copied = ref(false)
+let copyTimeoutId: ReturnType<typeof setTimeout> | null = null
 
 async function copyCode() {
+  if (!isClipboardAvailable()) return
+
   try {
     await navigator.clipboard.writeText(code.value)
     copied.value = true
-    setTimeout(() => {
+
+    // 清理之前的定时器
+    if (copyTimeoutId) {
+      clearTimeout(copyTimeoutId)
+    }
+
+    copyTimeoutId = setTimeout(() => {
       copied.value = false
     }, 2000)
   } catch {

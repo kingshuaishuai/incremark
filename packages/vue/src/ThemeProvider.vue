@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import type { DesignTokens } from '@incremark/theme'
 import { applyTheme } from '@incremark/theme'
+import { isServer } from '@incremark/shared'
 
 /**
  * 主题配置，可以是：
@@ -24,8 +25,9 @@ const containerRef = ref<HTMLElement>()
 watch(
   () => props.theme,
   (theme) => {
+    if (isServer()) return
+
     if (containerRef.value) {
-      // 应用主题到容器元素
       applyTheme(containerRef.value, theme)
     }
   },

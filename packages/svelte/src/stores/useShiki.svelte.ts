@@ -76,7 +76,20 @@ class ShikiManager {
   }
 }
 
-const shikiManager = ShikiManager.getInstance()
+// ============ 延迟初始化单例 ============
+
+let shikiManagerInstance: ShikiManager | null = null
+
+/**
+ * 获取 ShikiManager 单例（延迟初始化）
+ * 避免模块加载时立即创建实例，支持 SSR
+ */
+function getShikiManager(): ShikiManager {
+  if (!shikiManagerInstance) {
+    shikiManagerInstance = ShikiManager.getInstance()
+  }
+  return shikiManagerInstance
+}
 
 // ============ Svelte 5 Composable ============
 
@@ -95,23 +108,24 @@ export function useShiki(themeGetter: () => string) {
     // 关键：每次执行时通过 Getter 获取最新的主题
     const currentTheme = themeGetter() as BundledTheme;
     const currentFallback = fallbackTheme as BundledTheme;
-    
+
     isHighlighting = true;
 
     try {
-      const info = await shikiManager.getHighlighter(currentTheme);
+      const manager = getShikiManager()
+      const info = await manager.getHighlighter(currentTheme);
 
       // 按需加载语言
       if (!info.loadedLanguages.has(lang as BundledLanguage) && lang !== 'text') {
-        await shikiManager.loadLanguage(currentTheme, lang as BundledLanguage);
+        await manager.loadLanguage(currentTheme, lang as BundledLanguage);
       }
 
       // 按需加载主题
       if (!info.loadedThemes.has(currentTheme)) {
-        await shikiManager.loadTheme(currentTheme);
+        await manager.loadTheme(currentTheme);
       }
 
-      return await shikiManager.codeToHtml(currentTheme, code, lang as BundledLanguage, currentFallback);
+      return await manager.codeToHtml(currentTheme, code, lang as BundledLanguage, currentFallback);
     } finally {
       isHighlighting = false;
     }

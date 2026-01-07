@@ -44,6 +44,9 @@ features:
   - icon: 🎨
     title: 高度可定制
     details: 支持自定义渲染组件、扩展语法（GFM、数学公式、Mermaid 等）。
+  - icon: 🌐
+    title: SSR 友好
+    details: 完整支持服务端渲染，兼容 Nuxt、Next.js 和 SvelteKit。
 ---
 
 ## 为什么选择 Incremark？

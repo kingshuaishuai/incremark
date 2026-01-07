@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import type { Code } from 'mdast'
 import { GravityMermaid, LucideCode, LucideEye, LucideCopy, LucideCopyCheck } from '@incremark/icons'
+import { isClipboardAvailable } from '@incremark/shared'
 import { SvgIcon } from './SvgIcon'
 
 export interface IncremarkCodeMermaidProps {
@@ -20,6 +21,7 @@ export const IncremarkCodeMermaid: React.FC<IncremarkCodeMermaidProps> = ({
 
   const mermaidRef = useRef<any>(null)
   const mermaidTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const code = node.value
 
@@ -28,10 +30,16 @@ export const IncremarkCodeMermaid: React.FC<IncremarkCodeMermaidProps> = ({
   }, [])
 
   const copyCode = useCallback(async () => {
+    if (!isClipboardAvailable()) return
+
     try {
       await navigator.clipboard.writeText(code)
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current)
+      }
+      copyTimeoutRef.current = setTimeout(() => setCopied(false), 2000)
     } catch {
       // 复制失败静默处理
     }
@@ -84,6 +92,9 @@ export const IncremarkCodeMermaid: React.FC<IncremarkCodeMermaidProps> = ({
     return () => {
       if (mermaidTimerRef.current) {
         clearTimeout(mermaidTimerRef.current)
+      }
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current)
       }
     }
   }, [])

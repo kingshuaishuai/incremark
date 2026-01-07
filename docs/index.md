@@ -44,6 +44,9 @@ features:
   - icon: 🎨
     title: Highly Customizable
     details: Support for custom components and extended syntax (GFM, Math, Mermaid, etc.).
+  - icon: 🌐
+    title: SSR Friendly
+    details: Full support for Server-Side Rendering with Nuxt, Next.js, and SvelteKit.
 ---
 
 ## Why Incremark?

@@ -6,6 +6,7 @@
 <script lang="ts">
   import type { DesignTokens } from '@incremark/theme'
   import { applyTheme } from '@incremark/theme'
+  import { isBrowser } from '@incremark/shared'
 
   /**
    * 组件 Props
@@ -37,7 +38,9 @@
   // 在 Svelte 5 中，$effect 会自动追踪在 effect 内部访问的响应式值
   // 直接访问 theme prop 和 containerRef，确保都被追踪
   $effect(() => {
-    // 在 effect 内部直接访问 theme prop，确保被追踪
+    // SSR 环境检查
+    if (!isBrowser()) return
+
     if (containerRef) {
       applyTheme(containerRef, theme)
     }

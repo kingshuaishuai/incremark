@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { Code } from 'mdast'
+  import { onDestroy } from 'svelte'
   import { GravityMermaid, LucideCode, LucideEye, LucideCopy, LucideCopyCheck } from '@incremark/icons'
+  import { isClipboardAvailable } from '@incremark/shared'
   import SvgIcon from './SvgIcon.svelte'
 
   /**
@@ -65,14 +67,20 @@
     }
   }
 
+  let copyTimeoutId: ReturnType<typeof setTimeout> | null = null
+
   /**
    * 复制代码
    */
   async function copyCode() {
+    if (!isClipboardAvailable()) return
+
     try {
       await navigator.clipboard.writeText(code)
       copied = true
-      setTimeout(() => { copied = false }, 2000)
+
+      if (copyTimeoutId) clearTimeout(copyTimeoutId)
+      copyTimeoutId = setTimeout(() => { copied = false }, 2000)
     } catch { /* 静默处理 */ }
   }
 
@@ -82,11 +90,15 @@
     if (mermaidTimer) clearTimeout(mermaidTimer)
     mermaidLoading = true
     mermaidTimer = setTimeout(doRenderMermaid, mermaidDelay)
-    
+
     // 返回清理函数
     return () => {
       if (mermaidTimer) clearTimeout(mermaidTimer)
     }
+  })
+
+  onDestroy(() => {
+    if (copyTimeoutId) clearTimeout(copyTimeoutId)
   })
 </script>
 

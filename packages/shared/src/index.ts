@@ -13,3 +13,6 @@ export { extractTagName, isHtmlNode, isHtmlWrapperNode, processHtmlNodes, type H
 // 文本处理
 export { hasChunks, getStableText } from './text'
 
+// 环境检测
+export { isBrowser, isServer, isClipboardAvailable } from './env'
+

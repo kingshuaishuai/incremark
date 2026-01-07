@@ -42,7 +42,7 @@ Our future plans focus on enhancing the library's capabilities for building mode
 - [ ] **DevTools Rewrite**: Rebuilding DevTools using Svelte for better DX.
 - [ ] **sliceAST Optimization**: Further performance improvements for ultra-long documents.
 - [ ] **Accessibility (A11y)**: Enhancing screen reader support and ARIA standards.
-- [ ] **SSR Support**: Optimization for Server-Side Rendering (Nuxt/Next.js).
+- [x] **SSR Support**: Optimization for Server-Side Rendering (Nuxt/Next.js).
 
 ### 🏗️ Big Vision: Incremental Chat UI Kit
 A comprehensive set of pre-built UI components powered by the Incremark engine.

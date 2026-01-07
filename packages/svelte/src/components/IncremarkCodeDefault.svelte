@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { Code } from 'mdast'
+  import { onDestroy } from 'svelte'
   import { LucideCopy, LucideCopyCheck } from '@incremark/icons'
+  import { isClipboardAvailable } from '@incremark/shared'
   import SvgIcon from './SvgIcon.svelte'
   import { useShiki } from '../stores/useShiki.svelte'
 
@@ -53,16 +55,26 @@
     }
   }
 
+  let copyTimeoutId: ReturnType<typeof setTimeout> | null = null
+
   /**
    * 复制代码
    */
   async function copyCode() {
+    if (!isClipboardAvailable()) return
+
     try {
       await navigator.clipboard.writeText(code)
       copied = true
-      setTimeout(() => { copied = false }, 2000)
+
+      if (copyTimeoutId) clearTimeout(copyTimeoutId)
+      copyTimeoutId = setTimeout(() => { copied = false }, 2000)
     } catch { /* 静默处理 */ }
   }
+
+  onDestroy(() => {
+    if (copyTimeoutId) clearTimeout(copyTimeoutId)
+  })
 
   // 监听代码、主题、语言变化并重新渲染
   $effect(() => {

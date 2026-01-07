@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { Code } from 'mdast'
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { LucideCopy, LucideCopyCheck } from '@incremark/icons'
+import { isClipboardAvailable } from '@incremark/shared'
 import SvgIcon from './SvgIcon.vue'
 import { useShiki } from '../composables/useShiki'
 
@@ -49,17 +50,33 @@ async function doHighlight() {
 // 监听代码变化，重新高亮
 watch([code, () => props.theme], doHighlight, { immediate: true })
 
+let copyTimeoutId: ReturnType<typeof setTimeout> | null = null
+
 async function copyCode() {
+  if (!isClipboardAvailable()) return
+
   try {
     await navigator.clipboard.writeText(code.value)
     copied.value = true
-    setTimeout(() => {
+
+    // 清理之前的定时器
+    if (copyTimeoutId) {
+      clearTimeout(copyTimeoutId)
+    }
+
+    copyTimeoutId = setTimeout(() => {
       copied.value = false
     }, 2000)
   } catch {
     // 复制失败静默处理
   }
 }
+
+onUnmounted(() => {
+  if (copyTimeoutId) {
+    clearTimeout(copyTimeoutId)
+  }
+})
 </script>
 
 <template>

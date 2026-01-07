@@ -133,11 +133,22 @@ class ShikiManager {
   }
 }
 
-// ============ 导出单例 ============
+// ============ 延迟初始化单例 ============
 
-const shikiManager = ShikiManager.getInstance()
+let shikiManagerInstance: ShikiManager | null = null
 
-export { shikiManager, ShikiManager }
+/**
+ * 获取 ShikiManager 单例（延迟初始化）
+ * 避免模块加载时立即创建实例，支持 SSR
+ */
+function getShikiManager(): ShikiManager {
+  if (!shikiManagerInstance) {
+    shikiManagerInstance = ShikiManager.getInstance()
+  }
+  return shikiManagerInstance
+}
+
+export { getShikiManager, ShikiManager }
 
 // ============ Vue 组合式函数 ============
 
@@ -156,7 +167,7 @@ export function useShiki(theme: string) {
    */
   async function getHighlighter(): Promise<HighlighterInfo> {
     if (!highlighterInfo.value) {
-      highlighterInfo.value = await shikiManager.getHighlighter(theme as BundledTheme)
+      highlighterInfo.value = await getShikiManager().getHighlighter(theme as BundledTheme)
     }
     return highlighterInfo.value!
   }
@@ -170,17 +181,19 @@ export function useShiki(theme: string) {
     try {
       const info = await getHighlighter()
 
+      const manager = getShikiManager()
+
       // 按需加载语言
       if (!info.loadedLanguages.has(lang as BundledLanguage) && lang !== 'text') {
-        await shikiManager.loadLanguage(theme as BundledTheme, lang as BundledLanguage)
+        await manager.loadLanguage(theme as BundledTheme, lang as BundledLanguage)
       }
 
       // 按需加载主题
       if (!info.loadedThemes.has(theme as BundledTheme)) {
-        await shikiManager.loadTheme(theme as BundledTheme)
+        await manager.loadTheme(theme as BundledTheme)
       }
 
-      return await shikiManager.codeToHtml(theme as BundledTheme, code, lang as BundledLanguage, fallbackTheme as BundledTheme)
+      return await manager.codeToHtml(theme as BundledTheme, code, lang as BundledLanguage, fallbackTheme as BundledTheme)
     } catch (e) {
       throw e
     } finally {
