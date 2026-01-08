@@ -1,6 +1,6 @@
 {
   "name": "@incremark/vue",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "High-performance streaming markdown renderer for Vue 3 ecosystem.",
   "type": "module",
   "main": "./dist/index.js",
