@@ -58,20 +58,42 @@
   // 解构 store 以便使用 $ 语法订阅
   const { footnoteReferenceOrder } = context
 
-  // 如果传入了 incremark，则从中获取 stores 并在顶层订阅
-  // 否则使用直接传入的 props 值
-  const blocksFromIncremark = incremark?.blocks
-  const displayCompleteFromIncremark = incremark?.isDisplayComplete
+  // 获取 incremark 的 stores（使用 getter 访问以保持响应性）
+  const blocksStore = $derived(incremark?.blocks)
+  const displayCompleteStore = $derived(incremark?.isDisplayComplete)
+
+  // 订阅 stores 的值
+  let blocksFromStore = $state<RenderableBlock[]>([])
+  let displayCompleteFromStore = $state(false)
+
+  // 使用 effect 订阅 blocks store
+  $effect(() => {
+    if (blocksStore) {
+      const unsubscribe = blocksStore.subscribe((value) => {
+        blocksFromStore = value
+      })
+      return unsubscribe
+    }
+  })
+
+  // 使用 effect 订阅 displayComplete store
+  $effect(() => {
+    if (displayCompleteStore) {
+      const unsubscribe = displayCompleteStore.subscribe((value) => {
+        displayCompleteFromStore = value
+      })
+      return unsubscribe
+    }
+  })
 
   // 计算最终要渲染的 blocks
-  // 如果使用 incremark，订阅其 blocks store；否则使用直接传入的 blocks 数组
   const renderBlocks = $derived<RenderableBlock[]>(
-    blocksFromIncremark ? $blocksFromIncremark : (blocks ?? [])
+    blocksStore ? blocksFromStore : (blocks ?? [])
   )
 
   // 计算是否显示完成
   const displayComplete = $derived(
-    displayCompleteFromIncremark ? $displayCompleteFromIncremark : isDisplayComplete
+    displayCompleteStore ? displayCompleteFromStore : isDisplayComplete
   )
 </script>
 

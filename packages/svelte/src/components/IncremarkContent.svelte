@@ -8,6 +8,7 @@
   import type { IncremarkContentProps } from './types'
   import Incremark from './Incremark.svelte'
   import { get } from 'svelte/store'
+  import { untrack } from 'svelte'
 
   let {
     stream,
@@ -22,16 +23,17 @@
     showBlockStatus = false
   }: IncremarkContentProps = $props()
 
-  // 合并默认选项（初始化时使用）
-  const initialOptions: UseIncremarkOptions = {
-    gfm: true,
-    htmlTree: true,
-    containers: true,
-    math: true,
-    ...incremarkOptions
-  }
-
-  const { blocks, append, finalize, render, reset, isDisplayComplete, markdown, typewriter } = useIncremark(initialOptions)
+  // 创建稳定的 incremark 实例
+  // 使用 untrack 读取初始值，因为 useIncremark 只需初始化一次
+  // 后续的配置更新通过 typewriter.setOptions 在 $effect 中处理
+  const incremarkInstance = untrack(() => useIncremark({
+    gfm: incremarkOptions?.gfm ?? true,
+    htmlTree: incremarkOptions?.htmlTree ?? true,
+    containers: incremarkOptions?.containers ?? true,
+    math: incremarkOptions?.math ?? true,
+    typewriter: incremarkOptions?.typewriter
+  }))
+  const { blocks, append, finalize, render, reset, isDisplayComplete, markdown, typewriter } = incremarkInstance
 
   // 监听 incremarkOptions 的变化，更新 typewriter 配置
   $effect(() => {
