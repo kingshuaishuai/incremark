@@ -39,6 +39,7 @@ const en = {
     nav: [
       { text: 'Guide', link: '/guide/quick-start' },
       { text: 'Features', link: '/features/basic-usage' },
+      { text: 'Advanced', link: '/advanced/architecture' },
       { text: 'API', link: '/api/' },
       { text: 'Examples', link: '/examples/openai' },
       { text: 'Roadmap', link: '/roadmap' },
@@ -50,6 +51,7 @@ const en = {
           text: 'Getting Started',
           items: [
             { text: 'Introduction', link: '/guide/introduction' },
+            { text: 'Why Incremark', link: '/guide/why-incremark' },
             { text: 'Quick Start', link: '/guide/quick-start' },
             { text: 'Core Concepts', link: '/guide/concepts' },
             { text: 'Comparison', link: '/guide/comparison' }
@@ -79,6 +81,7 @@ const en = {
           text: 'Advanced',
           items: [
             { text: 'Architecture', link: '/advanced/architecture' },
+            { text: 'Engines', link: '/advanced/engines' },
             { text: 'Extensions', link: '/advanced/extensions' }
           ]
         }
@@ -94,14 +97,6 @@ const en = {
           ]
         }
       ],
-      '/migration/': [
-        {
-          text: 'Migration',
-          items: [
-            { text: 'v0 to v1', link: '/migration/v0-to-v1' }
-          ]
-        }
-      ]
     },
     search: {
       provider: 'local',
@@ -163,6 +158,7 @@ const zh = {
     nav: [
       { text: '指南', link: '/zh/guide/quick-start' },
       { text: '功能', link: '/zh/features/basic-usage' },
+      { text: '进阶', link: '/zh/advanced/architecture' },
       { text: 'API', link: '/zh/api/' },
       { text: '示例', link: '/zh/examples/openai' },
       { text: '路线图', link: '/zh/roadmap' },
@@ -174,6 +170,7 @@ const zh = {
           text: '快速开始',
           items: [
             { text: '介绍', link: '/zh/guide/introduction' },
+            { text: '为什么选择 Incremark', link: '/zh/guide/why-incremark' },
             { text: '快速上手', link: '/zh/guide/quick-start' },
             { text: '核心概念', link: '/zh/guide/concepts' },
             { text: '方案对比', link: '/zh/guide/comparison' }
@@ -203,6 +200,7 @@ const zh = {
           text: '进阶',
           items: [
             { text: '架构原理', link: '/zh/advanced/architecture' },
+            { text: '双引擎', link: '/zh/advanced/engines' },
             { text: '扩展功能', link: '/zh/advanced/extensions' }
           ]
         }
@@ -218,14 +216,6 @@ const zh = {
           ]
         }
       ],
-      '/zh/migration/': [
-        {
-          text: '迁移',
-          items: [
-            { text: 'v0 到 v1', link: '/zh/migration/v0-to-v1' }
-          ]
-        }
-      ]
     },
     outlineTitle: '页面导航',
     docFooter: {
