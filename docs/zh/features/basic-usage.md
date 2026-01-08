@@ -39,7 +39,7 @@ interface IncremarkContentProps {
 interface UseIncremarkOptions {
   // 解析器选项
   gfm?: boolean              // GFM 支持（表格、任务列表等）
-  math?: boolean             // 数学公式支持
+  math?: boolean | MathOptions // 数学公式支持
   htmlTree?: boolean         // HTML 片段解析
   containers?: boolean       // ::: 容器语法
 
@@ -52,7 +52,27 @@ interface UseIncremarkOptions {
     cursor?: string
   }
 }
+
+interface MathOptions {
+  // 启用 TeX 风格的 \(...\) 和 \[...\] 语法
+  tex?: boolean
+}
 ```
+
+### 数学公式配置
+
+默认情况下，`math: true` 只支持 `$...$` 和 `$$...$$` 语法。
+
+如果需要支持 TeX/LaTeX 风格的 `\(...\)` 和 `\[...\]` 分隔符，可以开启 **tex** 选项：
+
+```ts
+// 启用 TeX 风格分隔符
+const options = {
+  math: { tex: true }
+}
+```
+
+这在处理学术论文或某些 AI 工具输出时非常有用。
 
 ## 进阶：使用 `useIncremark`
 

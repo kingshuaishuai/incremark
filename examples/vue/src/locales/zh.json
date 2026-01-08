@@ -37,6 +37,11 @@
   "effectTyping": "光标",
   "autoScroll": "📜 自动滚动",
   "scrollPaused": "已暂停",
-  "htmlMode": "🌐 HTML 渲染"
+  "htmlMode": "🌐 HTML 渲染",
+  "mathTex": "🔢 TeX",
+  "texTooltip": "启用 TeX 风格分隔符 \\(...\\) 和 \\[...\\]",
+  "engineMarked": "⚡ Marked",
+  "engineMicromark": "🔧 Micromark",
+  "engineTooltip": "切换解析引擎（切换后将重置内容）"
 }
 

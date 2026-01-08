@@ -100,17 +100,43 @@ export interface ParserState {
 }
 
 /**
+ * 数学公式配置选项
+ */
+export interface MathOptions {
+  /**
+   * 启用 TeX 风格的公式分隔符 (default: `false`)
+   *
+   * 开启后同时支持：
+   * - 行内公式：\(...\)
+   * - 块级公式：\[...\]
+   *
+   * 这是 LaTeX/TeX 原生语法，MathJax 和 KaTeX 都支持。
+   * 开启此选项可以兼容从 LaTeX 文档或学术 AI 工具输出的内容。
+   *
+   * @example
+   * ```ts
+   * // 启用 TeX 风格分隔符
+   * const parser = createIncremarkParser({
+   *   math: { tex: true }
+   * })
+   * ```
+   */
+  tex?: boolean
+}
+
+/**
  * 解析器配置
  */
 export interface ParserOptions {
   /** 启用 GFM 扩展（表格、任务列表等） */
   gfm?: boolean
   /**
-   * 启用数学公式支持（$..$ 行内公式和 $$...$$ 块级公式）
+   * 启用数学公式支持
    * - false/undefined: 禁用（默认）
-   * - true: 启用数学公式解析
+   * - true: 启用数学公式解析（仅支持 $...$ 和 $$...$$ 语法）
+   * - MathOptions: 启用并配置额外选项（如 LaTeX 风格的 \(...\) 和 \[...\] 语法）
    */
-  math?: boolean
+  math?: boolean | MathOptions
   /**
    * 启用 ::: 容器语法支持（用于边界检测）
    * - false: 禁用（默认）

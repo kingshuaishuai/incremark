@@ -39,7 +39,7 @@ interface IncremarkContentProps {
 interface UseIncremarkOptions {
   // Parser Options
   gfm?: boolean              // GFM support (tables, tasklists, etc.)
-  math?: boolean             // Math formula support
+  math?: boolean | MathOptions // Math formula support
   htmlTree?: boolean         // HTML fragment parsing
   containers?: boolean       // ::: container syntax
 
@@ -52,7 +52,27 @@ interface UseIncremarkOptions {
     cursor?: string
   }
 }
+
+interface MathOptions {
+  // Enable TeX style \(...\) and \[...\] syntax
+  tex?: boolean
+}
 ```
+
+### Math Configuration
+
+By default, `math: true` only supports `$...$` and `$$...$$` syntax.
+
+If you need to support TeX/LaTeX style `\(...\)` and `\[...\]` delimiters, enable the **tex** option:
+
+```ts
+// Enable TeX style delimiters
+const options = {
+  math: { tex: true }
+}
+```
+
+This is useful when processing academic papers or outputs from certain AI tools.
 
 ## Advanced: Using `useIncremark`
 

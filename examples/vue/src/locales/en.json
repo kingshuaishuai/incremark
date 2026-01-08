@@ -37,6 +37,11 @@
   "effectTyping": "Cursor",
   "autoScroll": "📜 Auto Scroll",
   "scrollPaused": "Paused",
-  "htmlMode": "🌐 HTML Render"
+  "htmlMode": "🌐 HTML Render",
+  "mathTex": "🔢 TeX",
+  "texTooltip": "Enable TeX style delimiters \\(...\\) and \\[...\\]",
+  "engineMarked": "⚡ Marked",
+  "engineMicromark": "🔧 Micromark",
+  "engineTooltip": "Switch parser engine (content will be reset)"
 }
 

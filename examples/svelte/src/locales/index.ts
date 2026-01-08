@@ -50,6 +50,11 @@ export interface Messages {
   autoScroll: string
   scrollPaused: string
   htmlMode: string
+  mathTex: string
+  texTooltip: string
+  engineMarked: string
+  engineMicromark: string
+  engineTooltip: string
 }
 
 export const messages: Record<Locale, Messages> = {

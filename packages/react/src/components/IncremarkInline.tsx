@@ -7,7 +7,22 @@ import {
   isHtmlNode
 } from '@incremark/shared'
 import { IncremarkHtmlElement, type HtmlElementNode } from './IncremarkHtmlElement'
+import { IncremarkMath } from './IncremarkMath'
 import { useDefinitions } from '../contexts/DefinitionsContext'
+
+// Math 节点类型
+interface MathNode {
+  type: 'math' | 'inlineMath'
+  value: string
+}
+
+/**
+ * 类型守卫：检查是否是 inlineMath 节点
+ * inlineMath 是 mdast-util-math 扩展的类型，不在标准 PhrasingContent 中
+ */
+function isInlineMath(node: PhrasingContent): node is PhrasingContent & MathNode {
+  return (node as unknown as MathNode).type === 'inlineMath'
+}
 
 export interface IncremarkInlineProps {
   nodes: PhrasingContent[]
@@ -74,6 +89,11 @@ export const IncremarkInline: React.FC<IncremarkInlineProps> = ({ nodes }) => {
             )
           }
           return <React.Fragment key={i}>{(node as TextNodeWithChunks).value}</React.Fragment>
+        }
+
+        // 行内公式（inlineMath）
+        if (isInlineMath(node)) {
+          return <IncremarkMath key={i} node={node as unknown as MathNode} />
         }
 
         // htmlElement 节点（结构化的 HTML 元素）

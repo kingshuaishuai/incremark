@@ -12,7 +12,6 @@ import { fromMarkdown } from 'mdast-util-from-markdown'
 import { gfmFromMarkdown } from 'mdast-util-gfm'
 import { gfm } from 'micromark-extension-gfm'
 import { gfmFootnoteFromMarkdown } from 'mdast-util-gfm-footnote'
-import { math } from 'micromark-extension-math'
 import { mathFromMarkdown } from 'mdast-util-math'
 import { directive } from 'micromark-extension-directive'
 import { directiveFromMarkdown } from 'mdast-util-directive'
@@ -20,7 +19,8 @@ import type { Extension as MicromarkExtension } from 'micromark-util-types'
 import type { Extension as MdastExtension } from 'mdast-util-from-markdown'
 import type { Root, RootContent, HTML, Text, Paragraph, Parent as MdastParent } from 'mdast'
 
-import type { ParsedBlock, BlockStatus, ContainerConfig } from '../../types'
+import type { ParsedBlock, BlockStatus, ContainerConfig, MathOptions } from '../../types'
+import { math } from '../../extensions/micromark-extension-math'
 import { transformHtmlNodes, type HtmlTreeExtensionOptions } from '../../extensions/html-extension'
 import { micromarkReferenceExtension } from '../../extensions/micromark-reference-extension'
 import { gfmFootnoteIncremental } from '../../extensions/micromark-gfm-footnote-incremental'
@@ -83,7 +83,15 @@ export class MicromarkAstBuilder implements IAstBuilder {
 
     // 如果启用了数学公式支持，添加 math 扩展
     if (this.options.math) {
-      this.cachedExtensions.push(math())
+      // 解析 math 配置
+      const mathOptions: MathOptions = typeof this.options.math === 'object'
+        ? this.options.math
+        : {}
+
+      this.cachedExtensions.push(math({
+        singleDollarTextMath: true,
+        tex: mathOptions.tex ?? false,
+      }))
       this.cachedMdastExtensions.push(mathFromMarkdown())
     }
 
@@ -295,5 +303,33 @@ export class MicromarkAstBuilder implements IAstBuilder {
     }
 
     return blocks
+  }
+
+  /**
+   * 更新配置选项
+   *
+   * 注意：由于 micromark 的扩展是在 constructor 中缓存的，
+   * 更新配置需要重新初始化扩展。
+   *
+   * @param options 部分配置选项
+   */
+  updateOptions(options: Partial<EngineParserOptions>): void {
+    // 合并选项
+    Object.assign(this.options, options)
+
+    // 更新容器配置
+    if ('containers' in options) {
+      ;(this as any).containerConfig = this.computeContainerConfig(this.options)
+    }
+
+    // 更新 HTML Tree 配置
+    if ('htmlTree' in options) {
+      ;(this as any).htmlTreeConfig = this.computeHtmlTreeConfig(this.options)
+    }
+
+    // 重新初始化扩展（因为扩展是缓存的）
+    this.cachedExtensions.length = 0
+    this.cachedMdastExtensions.length = 0
+    this.initExtensions()
   }
 }

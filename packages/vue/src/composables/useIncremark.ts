@@ -1,7 +1,7 @@
 import { ref, shallowRef, computed, markRaw, watch, toValue, type ComputedRef, type MaybeRefOrGetter } from 'vue'
 import {
   createIncremarkParser,
-  type ParserOptions,
+  type IncremarkParserOptions,
   type ParsedBlock,
   type IncrementalUpdate,
   type Root,
@@ -29,7 +29,7 @@ export interface TypewriterOptions {
   plugins?: TransformerPlugin[]
 }
 
-export interface UseIncremarkOptions extends ParserOptions {
+export interface UseIncremarkOptions extends IncremarkParserOptions {
   /** 打字机配置，传入即创建 transformer（可通过 enabled 控制是否启用） */
   typewriter?: TypewriterOptions
 }
@@ -201,17 +201,29 @@ export function useIncremark(optionsInput: MaybeRefOrGetter<UseIncremarkOptions>
     transformer?.reset()
   }
 
-  // 监听 parser 相关 options 变化，重建 parser（排除 typewriter 配置）
+  // 监听 parser 相关 options 变化，动态更新配置（排除 typewriter 配置）
   // 使用 JSON.stringify 比较，避免 deep watch 对新对象的误触发
+  // 注意：astBuilder 是类，需要单独处理
   watch(
     () => {
-      const { typewriter: _, ...parserOptions } = toValue(optionsInput)
-      return JSON.stringify(parserOptions)
+      const opts = toValue(optionsInput)
+      const { typewriter: _, astBuilder, ...parserOptions } = opts
+      // astBuilder 用名称标识，因为它是类不能 JSON.stringify
+      return JSON.stringify(parserOptions) + '|' + (astBuilder?.name ?? 'default')
     },
     () => {
-      const { typewriter: _, ...parserOptions } = toValue(optionsInput)
-      parser = createParser(parserOptions)
-      reset()
+      // 使用 updateOptions 动态更新配置（包括引擎切换），不需要重建 parser
+      const opts = toValue(optionsInput)
+      const { typewriter: _, ...parserOptions } = opts
+      parser.updateOptions(parserOptions)
+      // 同步 Vue 状态
+      completedBlocks.value = []
+      pendingBlocks.value = []
+      markdown.value = ''
+      isLoading.value = false
+      isFinalized.value = false
+      footnoteReferenceOrder.value = []
+      transformer?.reset()
     }
   )
 

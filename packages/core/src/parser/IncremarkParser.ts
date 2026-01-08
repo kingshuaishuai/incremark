@@ -76,7 +76,7 @@ export class IncremarkParser {
   /** 边界检测器 */
   private readonly boundaryDetector: BoundaryDetector
   /** AST 构建器 */
-  private readonly astBuilder: IAstBuilder
+  private astBuilder: IAstBuilder
   /** Definition 管理器 */
   private readonly definitionManager: DefinitionManager
   /** Footnote 管理器 */
@@ -441,6 +441,45 @@ export class IncremarkParser {
     this.reset()
     this.append(content)
     return this.finalize()
+  }
+
+  /**
+   * 更新解析器配置（动态更新，不需要重建 parser 实例）
+   *
+   * 注意：更新配置后会自动调用 reset() 重置状态
+   *
+   * @param options 部分配置选项
+   *
+   * @example
+   * ```ts
+   * // 动态启用 TeX 数学公式语法
+   * parser.updateOptions({ math: { tex: true } })
+   *
+   * // 禁用 GFM
+   * parser.updateOptions({ gfm: false })
+   *
+   * // 切换引擎
+   * import { MicromarkAstBuilder } from '@incremark/core/engines/micromark'
+   * parser.updateOptions({ astBuilder: MicromarkAstBuilder })
+   * ```
+   */
+  updateOptions(options: Partial<IncremarkParserOptions>): void {
+    // 重置状态
+    this.reset()
+
+    // 合并选项
+    Object.assign(this.options, options)
+
+    if (options.astBuilder) {
+      const BuilderClass = options.astBuilder
+      if (!(this.astBuilder instanceof BuilderClass)) {
+        this.astBuilder = new BuilderClass(this.options)
+      } else {
+        this.astBuilder.updateOptions(options)
+      }
+    } else {
+      this.astBuilder.updateOptions(options)
+    }
   }
 }
 

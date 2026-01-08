@@ -13,6 +13,7 @@
     type UseIncremarkOptions,
     type IncremarkLocale
   } from '@incremark/svelte'
+  import { MicromarkAstBuilder } from '@incremark/core/engines/micromark'
   import {
     BenchmarkPanel,
     CustomInputPanel,
@@ -57,6 +58,12 @@
   let typewriterRandomStep = $state(true)
   let typewriterEffect = $state<'none' | 'fade-in' | 'typing'>('typing')
 
+  // ============ 数学公式配置 ============
+  let mathTexEnabled = $state(false)
+
+  // ============ 引擎配置 ============
+  let engineType = $state<'marked' | 'micromark'>('marked')
+
   // ============ 内容状态 ============
   let mdContent = $state('')
   let isFinished = $state(false)
@@ -68,9 +75,10 @@
   // ============ Incremark 配置（响应式） ============
   const incremarkOptions = $derived<UseIncremarkOptions>({
     gfm: true,
-    math: true,
+    math: mathTexEnabled ? { tex: true } : true,
     htmlTree: htmlEnabled,
     containers: true,
+    astBuilder: engineType === 'micromark' ? MicromarkAstBuilder : undefined,
     typewriter: {
       enabled: typewriterEnabled,
       charsPerTick: typewriterRandomStep
@@ -80,6 +88,20 @@
       effect: typewriterEffect,
       cursor: '|'
     }
+  })
+
+  // ============ 解析器配置变化时重置内容 ============
+  // 当引擎或 math 配置变化时，重置 demo 的本地状态
+  let isFirstRender = true
+  $effect(() => {
+    // 订阅配置变化
+    engineType
+    mathTexEnabled
+    if (isFirstRender) {
+      isFirstRender = false
+      return
+    }
+    reset()
   })
 
   // ============ 流式输出 ============
@@ -272,6 +294,15 @@
       <input type="checkbox" bind:checked={autoScrollEnabled} />
       {t.autoScroll}
     </label>
+    <label class="checkbox tex-toggle" title={t.texTooltip}>
+      <input type="checkbox" bind:checked={mathTexEnabled} />
+      {t.mathTex}
+    </label>
+
+    <select bind:value={engineType} class="engine-select" title={t.engineTooltip}>
+      <option value="marked">{t.engineMarked}</option>
+      <option value="micromark">{t.engineMicromark}</option>
+    </select>
 
     <select bind:value={themeMode} class="theme-select">
       <option value="default">Light Theme</option>

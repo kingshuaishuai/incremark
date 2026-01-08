@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useRef } from 'react'
 import {
   createIncremarkParser,
-  type ParserOptions,
+  type IncremarkParserOptions,
   type ParsedBlock,
   type IncrementalUpdate,
   type Root,
@@ -30,7 +30,7 @@ export interface TypewriterOptions {
   plugins?: TransformerPlugin[]
 }
 
-export interface UseIncremarkOptions extends ParserOptions {
+export interface UseIncremarkOptions extends IncremarkParserOptions {
   /** 打字机配置，传入即创建 transformer（可通过 enabled 控制是否启用） */
   typewriter?: TypewriterOptions
 }
@@ -244,6 +244,28 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
     [parser, setFootnoteReferenceOrder]
   )
 
+  /**
+   * 更新解析器配置（动态更新，不需要重建 parser 实例）
+   *
+   * 注意：更新配置后会自动重置状态
+   *
+   * @param newOptions 部分配置选项（包括 astBuilder，可以动态切换引擎）
+   */
+  const updateOptions = useCallback(
+    (newOptions: Partial<IncremarkParserOptions>): void => {
+      parser.updateOptions(newOptions)
+      // parser.updateOptions 内部已经调用了 reset()，我们只需要同步 React 状态
+      setCompletedBlocks([])
+      setPendingBlocks([])
+      setMarkdown('')
+      setIsLoading(false)
+      setIsFinalized(false)
+      setFootnoteReferenceOrder([])
+      transformer?.reset()
+    },
+    [parser, transformer, setFootnoteReferenceOrder]
+  )
+
   return {
     /** 已收集的完整 Markdown 字符串 */
     markdown,
@@ -276,6 +298,8 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
     reset,
     /** 一次性渲染（reset + append + finalize） */
     render,
+    /** 更新解析器配置（动态更新，不需要重建实例） */
+    updateOptions,
     /** 解析器实例 */
     parser,
     /** 打字机控制 */

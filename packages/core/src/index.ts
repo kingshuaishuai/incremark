@@ -43,6 +43,8 @@ export type {
   IncrementalUpdate,
   BlockStatus,
   AstNode,
+  // 数学公式配置
+  MathOptions,
   // mdast 类型（用户处理 AST 时需要）
   Root,
   RootContent

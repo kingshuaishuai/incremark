@@ -55,7 +55,7 @@ export interface ExplicitDefinitionToken {
 
 /**
  * 块级数学公式 Token
- * 用于解析 $$...$$ 格式
+ * 用于解析 $$...$$ 和 \[...\] 格式
  */
 export interface BlockMathToken {
   type: 'blockMath'
@@ -65,7 +65,7 @@ export interface BlockMathToken {
 
 /**
  * 行内数学公式 Token
- * 用于解析 $...$ 格式
+ * 用于解析 $...$ 和 \(...\) 格式
  */
 export interface InlineMathToken {
   type: 'inlineMath'

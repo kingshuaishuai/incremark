@@ -6,7 +6,7 @@
 import { writable, derived, type Writable, type Readable } from 'svelte/store'
 import {
   createIncremarkParser,
-  type ParserOptions,
+  type IncremarkParserOptions,
   type ParsedBlock,
   type IncrementalUpdate,
   type Root,
@@ -39,7 +39,7 @@ export interface TypewriterOptions {
 /**
  * useIncremark 选项
  */
-export interface UseIncremarkOptions extends ParserOptions {
+export interface UseIncremarkOptions extends IncremarkParserOptions {
   /** 打字机配置，传入即创建 transformer（可通过 enabled 控制是否启用） */
   typewriter?: TypewriterOptions
 }
@@ -108,6 +108,8 @@ export interface UseIncremarkReturn {
   reset: () => void
   /** 一次性渲染（reset + append + finalize） */
   render: (content: string) => IncrementalUpdate
+  /** 更新解析器配置（动态更新，不需要重建 parser 实例） */
+  updateOptions: (options: Partial<IncremarkParserOptions>) => void
   /** 解析器实例 */
   parser: ReturnType<typeof createIncremarkParser>
   /** 打字机控制 */
@@ -299,6 +301,25 @@ export function useIncremark(options: UseIncremarkOptions = {}): UseIncremarkRet
     return update
   }
 
+  /**
+   * 更新解析器配置（动态更新，不需要重建 parser 实例）
+   *
+   * 注意：更新配置后会自动重置状态
+   *
+   * @param newOptions - 部分配置选项（包括 astBuilder，可以动态切换引擎）
+   */
+  function updateOptions(newOptions: Partial<IncremarkParserOptions>): void {
+    parser.updateOptions(newOptions)
+    // 同步 Svelte 状态
+    completedBlocks.set([])
+    pendingBlocks.set([])
+    markdown.set('')
+    isLoading.set(false)
+    isFinalized.set(false)
+    footnoteReferenceOrder.set([])
+    transformer?.reset()
+  }
+
   return {
     markdown,
     completedBlocks,
@@ -314,6 +335,7 @@ export function useIncremark(options: UseIncremarkOptions = {}): UseIncremarkRet
     abort,
     reset,
     render,
+    updateOptions,
     parser,
     typewriter
   }

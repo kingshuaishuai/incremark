@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import {
   IncremarkContent,
   AutoScrollContainer,
@@ -9,6 +9,7 @@ import {
   type UseIncremarkOptions,
   type IncremarkLocale
 } from '@incremark/react'
+import { MicromarkAstBuilder } from '@incremark/core/engines/micromark'
 
 import {
   BenchmarkPanel,
@@ -41,6 +42,12 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t, locale }: Increm
   const [typewriterRandomStep, setTypewriterRandomStep] = useState(true)
   const [typewriterEffect, setTypewriterEffect] = useState<'none' | 'fade-in' | 'typing'>('typing')
 
+  // ============ 数学公式配置 ============
+  const [mathTexEnabled, setMathTexEnabled] = useState(false)
+
+  // ============ 引擎配置 ============
+  const [engineType, setEngineType] = useState<'marked' | 'micromark'>('marked')
+
   // ============ 内容状态 ============
   const [mdContent, setMdContent] = useState('')
   const [isFinished, setIsFinished] = useState(false)
@@ -48,9 +55,10 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t, locale }: Increm
   // ============ Incremark 配置（响应式） ============
   const incremarkOptions = useMemo<UseIncremarkOptions>(() => ({
     gfm: true,
-    math: true,
+    math: mathTexEnabled ? { tex: true } : true,
     htmlTree: htmlEnabled,
     containers: true,
+    astBuilder: engineType === 'micromark' ? MicromarkAstBuilder : undefined,
     typewriter: {
       enabled: typewriterEnabled,
       charsPerTick: typewriterRandomStep
@@ -60,7 +68,20 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t, locale }: Increm
       effect: typewriterEffect,
       cursor: '|'
     }
-  }), [htmlEnabled, typewriterEnabled, typewriterSpeed, typewriterInterval, typewriterRandomStep, typewriterEffect])
+  }), [htmlEnabled, typewriterEnabled, typewriterSpeed, typewriterInterval, typewriterRandomStep, typewriterEffect, mathTexEnabled, engineType])
+
+  // ============ 引擎切换时重置内容并重建组件 ============
+  // 注意：只有 engineType 变化需要重建组件，math 等配置可以通过 updateOptions 动态更新
+  const isFirstRenderRef = useRef(true)
+  useEffect(() => {
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false
+      return
+    }
+    // 引擎切换时重置内容
+    setMdContent('')
+    setIsFinished(false)
+  }, [engineType])
 
   // ============ 状态 ============
   const [isStreaming, setIsStreaming] = useState(false)
@@ -246,6 +267,15 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t, locale }: Increm
           <input type="checkbox" checked={autoScrollEnabled} onChange={(e) => setAutoScrollEnabled(e.target.checked)} />
           {t.autoScroll}
         </label>
+        <label className="checkbox math-tex-toggle" title={t.texTooltip}>
+          <input type="checkbox" checked={mathTexEnabled} onChange={(e) => setMathTexEnabled(e.target.checked)} />
+          {t.mathTex}
+        </label>
+
+        <select value={engineType} onChange={(e) => setEngineType(e.target.value as 'marked' | 'micromark')} className="engine-select" title={t.engineTooltip}>
+          <option value="marked">{t.engineMarked}</option>
+          <option value="micromark">{t.engineMicromark}</option>
+        </select>
 
         <select value={themeMode} onChange={(e) => setThemeMode(e.target.value as 'default' | 'dark' | 'custom')} className="theme-select">
           <option value="default">Light Theme</option>

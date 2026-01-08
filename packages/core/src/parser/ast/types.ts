@@ -42,6 +42,12 @@ export interface IAstBuilder {
     status: BlockStatus,
     generateBlockId: () => string
   ): ParsedBlock[]
+
+  /**
+   * 更新配置选项（动态更新，不需要重建实例）
+   * @param options 部分配置选项
+   */
+  updateOptions(options: Partial<EngineParserOptions>): void
 }
 
 /**

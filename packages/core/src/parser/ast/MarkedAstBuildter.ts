@@ -121,10 +121,15 @@ export class MarkedAstBuilder implements IAstBuilder {
     const inlineExts: any[] = [optimisticRefExt.tokenizer, ...userInlineExts]
     const inlineStartExts: any[] = [optimisticRefExt.start, ...userInlineStartExts]
 
-    // Math 扩展（仅当 options.math 为 true 时启用）
+    // Math 扩展（仅当 options.math 启用时）
     if (this.options.math) {
-      const blockMathExt = createBlockMathExtension()
-      const inlineMathExt = createInlineMathExtension()
+      // 解析 math 配置
+      const mathOptions = typeof this.options.math === 'object'
+        ? this.options.math
+        : {}
+
+      const blockMathExt = createBlockMathExtension(mathOptions)
+      const inlineMathExt = createInlineMathExtension(mathOptions)
       blockExts.unshift(blockMathExt.tokenizer)
       blockStartExts.unshift(blockMathExt.start)
       inlineExts.unshift(inlineMathExt.tokenizer)
@@ -419,6 +424,40 @@ export class MarkedAstBuilder implements IAstBuilder {
     }
 
     return blocks
+  }
+
+  /**
+   * 更新配置选项
+   * @param options 部分配置选项
+   */
+  updateOptions(options: Partial<EngineParserOptions>): void {
+    // 合并选项
+    Object.assign(this.options, options)
+
+    // 更新容器配置
+    if ('containers' in options) {
+      ;(this as any).containerConfig = typeof options.containers === 'object'
+        ? options.containers
+        : (options.containers === true ? {} : undefined)
+    }
+
+    // 更新 HTML Tree 配置
+    if ('htmlTree' in options) {
+      ;(this as any).htmlTreeOptions = typeof options.htmlTree === 'object'
+        ? options.htmlTree
+        : (options.htmlTree === true ? {} : undefined)
+    }
+
+    // 更新用户扩展（如果有）
+    if (options.plugins || options.markedExtensions) {
+      this.userExtensions.length = 0
+      if (options.plugins) {
+        this.userExtensions.push(...extractMarkedExtensions(options.plugins))
+      }
+      if (options.markedExtensions) {
+        this.userExtensions.push(...options.markedExtensions)
+      }
+    }
   }
 }
 

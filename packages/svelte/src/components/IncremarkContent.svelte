@@ -23,17 +23,47 @@
     showBlockStatus = false
   }: IncremarkContentProps = $props()
 
-  // 创建稳定的 incremark 实例
-  // 使用 untrack 读取初始值，因为 useIncremark 只需初始化一次
-  // 后续的配置更新通过 typewriter.setOptions 在 $effect 中处理
+  // 创建 incremark 实例（只创建一次）
   const incremarkInstance = untrack(() => useIncremark({
     gfm: incremarkOptions?.gfm ?? true,
     htmlTree: incremarkOptions?.htmlTree ?? true,
     containers: incremarkOptions?.containers ?? true,
     math: incremarkOptions?.math ?? true,
+    astBuilder: incremarkOptions?.astBuilder,
     typewriter: incremarkOptions?.typewriter
   }))
-  const { blocks, append, finalize, render, reset, isDisplayComplete, markdown, typewriter } = incremarkInstance
+
+  // 解构出需要的方法和状态
+  const { blocks, append, finalize, render, reset, updateOptions, isDisplayComplete, markdown, typewriter } = incremarkInstance
+
+  // 计算 parser 配置的稳定 key（用于检测变化）
+  // astBuilder 用名称标识，因为它是类不能 JSON.stringify
+  function getConfigKey() {
+    const { typewriter: _, astBuilder, ...parserOptions } = incremarkOptions ?? {}
+    return JSON.stringify(parserOptions) + '|' + (astBuilder?.name ?? 'default')
+  }
+
+  // 监听 parser 配置变化，使用 updateOptions 动态更新（不重建实例）
+  let prevConfigKey = getConfigKey()
+  let isFirstRender = true
+  $effect(() => {
+    const currentConfigKey = getConfigKey()
+    if (isFirstRender) {
+      isFirstRender = false
+      return
+    }
+    if (prevConfigKey !== currentConfigKey) {
+      prevConfigKey = currentConfigKey
+      // 使用 updateOptions 动态更新配置（包括引擎切换）
+      updateOptions({
+        gfm: incremarkOptions?.gfm ?? true,
+        htmlTree: incremarkOptions?.htmlTree ?? true,
+        containers: incremarkOptions?.containers ?? true,
+        math: incremarkOptions?.math ?? true,
+        astBuilder: incremarkOptions?.astBuilder
+      })
+    }
+  })
 
   // 监听 incremarkOptions 的变化，更新 typewriter 配置
   $effect(() => {

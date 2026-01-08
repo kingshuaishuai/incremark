@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import { IncremarkContent, AutoScrollContainer, ThemeProvider, ConfigProvider, type DesignTokens, type UseIncremarkOptions, type IncremarkLocale } from '@incremark/vue'
+import { MicromarkAstBuilder } from '@incremark/core/engines/micromark'
 
 import { BenchmarkPanel, CustomInputPanel, CustomHeading, CustomWarningContainer, CustomInfoContainer, CustomTipContainer, CustomEchartCodeBlock } from './index'
 import type { BenchmarkStats } from '../composables'
@@ -20,6 +21,12 @@ const typewriterInterval = ref(30)
 const typewriterRandomStep = ref(true)
 const typewriterEffect = ref<'none' | 'fade-in' | 'typing'>('typing')
 
+// ============ 数学公式配置 ============
+const mathTexEnabled = ref(false)
+
+// ============ 引擎配置 ============
+const engineType = ref<'marked' | 'micromark'>('marked')
+
 // ============ 内容状态 ============
 const mdContent = ref('')
 const isFinished = ref(false)
@@ -27,9 +34,10 @@ const isFinished = ref(false)
 // ============ Incremark 配置（响应式） ============
 const incremarkOptions = computed<UseIncremarkOptions>(() => ({
   gfm: true,
-  math: true,
+  math: mathTexEnabled.value ? { tex: true } : true,
   htmlTree: props.htmlEnabled,
   containers: true,
+  astBuilder: engineType.value === 'micromark' ? MicromarkAstBuilder : undefined,
   typewriter: {
     enabled: typewriterEnabled.value,
     charsPerTick: typewriterRandomStep.value
@@ -77,6 +85,12 @@ function reset() {
   mdContent.value = ''
   isFinished.value = false
 }
+
+// ============ 解析器配置变化时重置内容 ============
+// 当引擎或 math 配置变化时，重置 demo 的本地状态
+watch([engineType, mathTexEnabled], () => {
+  reset()
+})
 
 // ============ 自动滚动 ============
 const autoScrollEnabled = ref(true)
@@ -237,6 +251,15 @@ defineExpose({
         <input type="checkbox" v-model="autoScrollEnabled" />
         {{ t.autoScroll }}
       </label>
+      <label class="checkbox tex-toggle" :title="t.texTooltip">
+        <input type="checkbox" v-model="mathTexEnabled" />
+        {{ t.mathTex }}
+      </label>
+
+      <select v-model="engineType" class="engine-select" :title="t.engineTooltip">
+        <option value="marked">{{ t.engineMarked }}</option>
+        <option value="micromark">{{ t.engineMicromark }}</option>
+      </select>
 
       <select v-model="themeMode" class="theme-select">
         <option value="default">Light Theme</option>

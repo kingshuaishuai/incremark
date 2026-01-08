@@ -11,6 +11,7 @@ export default defineConfig({
   plugins: [svelte()],
   resolve: {
     alias: {
+      '@incremark/core/engines/micromark': resolve(__dirname, '../../packages/core/src/engines/micromark/index.ts'),
       '@incremark/core': resolve(__dirname, '../../packages/core/src/index.ts'),
       '@incremark/svelte': resolve(__dirname, '../../packages/svelte/src/index.ts'),
       '@incremark/devtools': resolve(__dirname, '../../packages/devtools/src/index.ts'),
