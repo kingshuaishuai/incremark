@@ -22,17 +22,19 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
+    "@antfu/utils": "^9.3.0",
     "@incremark/core": "workspace:*",
     "@incremark/devtools": "workspace:*",
     "@incremark/icons": "workspace:*",
     "@incremark/shared": "workspace:*",
     "@incremark/theme": "workspace:*",
-    "shiki": "^3.20.0"
+    "shiki": "^3.20.0",
+    "shiki-stream": "^0.1.4"
   },
   "peerDependencies": {
-    "vue": "^3.3.0",
+    "katex": "^0.16.0",
     "mermaid": "^10.0.0 || ^11.0.0",
-    "katex": "^0.16.0"
+    "vue": "^3.5.26"
   },
   "peerDependenciesMeta": {
     "mermaid": {
@@ -43,13 +45,15 @@
     }
   },
   "devDependencies": {
+    "@shikijs/core": "^3.21.0",
+    "@types/lodash-es": "^4.17.12",
     "@types/mdast": "^4.0.0",
     "@vue/compiler-sfc": "^3.4.0",
     "esbuild-plugin-vue3": "^0.4.2",
     "tsup": "^8.0.0",
     "typescript": "^5.3.0",
-    "vue-tsc": "^2.2.12",
-    "vue": "^3.4.0"
+    "vue": "^3.5.26",
+    "vue-tsc": "^2.2.12"
   },
   "keywords": [
     "markdown",

@@ -7,6 +7,8 @@ interface HighlighterInfo {
   loadedThemes: Set<BundledTheme>
 }
 
+export type { HighlighterInfo }
+
 // ============ 单例管理器 ============
 class ShikiManager {
   private static instance: ShikiManager | null = null
@@ -91,6 +93,8 @@ function getShikiManager(): ShikiManager {
   return shikiManagerInstance
 }
 
+export { getShikiManager, ShikiManager }
+
 // ============ Svelte 5 Composable ============
 
 /**
@@ -99,7 +103,26 @@ function getShikiManager(): ShikiManager {
  */
 export function useShiki(themeGetter: () => string) {
   // 使用 Svelte 5 的原生响应式状态
-  let isHighlighting = $state(false);
+  let isHighlighting = $state(false)
+  let isReady = $state(false)
+  let highlighterInfo = $state<HighlighterInfo | null>(null)
+
+  /**
+   * 初始化 highlighter（预加载）
+   */
+  async function initHighlighter(): Promise<void> {
+    if (isReady) return
+
+    try {
+      const currentTheme = themeGetter() as BundledTheme
+      const info = await getShikiManager().getHighlighter(currentTheme)
+      highlighterInfo = info
+      isReady = true
+    } catch (e) {
+      console.warn('Failed to initialize Shiki highlighter:', e)
+      throw e
+    }
+  }
 
   /**
    * 高亮代码
@@ -114,6 +137,11 @@ export function useShiki(themeGetter: () => string) {
     try {
       const manager = getShikiManager()
       const info = await manager.getHighlighter(currentTheme);
+
+      if (!highlighterInfo) {
+        highlighterInfo = info
+        isReady = true
+      }
 
       // 按需加载语言
       if (!info.loadedLanguages.has(lang as BundledLanguage) && lang !== 'text') {
@@ -134,6 +162,9 @@ export function useShiki(themeGetter: () => string) {
   return {
     // 使用 getter 暴露只读状态，保持 UI 响应
     get isHighlighting() { return isHighlighting },
+    get isReady() { return isReady },
+    get highlighterInfo() { return highlighterInfo },
+    initHighlighter,
     highlight
   };
 }

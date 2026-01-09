@@ -31,7 +31,7 @@ export function useDevTools(
     devtoolsRef.current = devtools
 
     // 设置 parser 的 onChange 回调
-    incremark.parser.setOnChange((state) => {
+    incremark.parser.setOnChange((state: any) => {
       const blocks = [
         ...state.completedBlocks,
         ...state.pendingBlocks

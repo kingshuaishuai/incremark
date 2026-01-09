@@ -4,7 +4,7 @@
  */
 
 import { createDevTools, type DevToolsOptions } from '@incremark/devtools'
-import type { UseIncremarkReturn } from './useIncremark'
+import type { UseIncremarkReturn } from './useIncremark.svelte.ts'
 
 /**
  * useDevTools 选项
@@ -38,7 +38,7 @@ export function useDevTools(
   const devtools = createDevTools(options)
 
   // 设置 parser 的 onChange 回调
-  incremark.parser.setOnChange((state) => {
+  incremark.parser.setOnChange((state: any) => {
     const blocks = [
       ...state.completedBlocks,
       ...state.pendingBlocks

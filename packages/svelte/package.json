@@ -27,12 +27,14 @@
     "dev": "svelte-package -i src -o dist -w --tsconfig tsconfig.json"
   },
   "dependencies": {
+    "@antfu/utils": "^9.3.0",
     "@incremark/core": "workspace:*",
     "@incremark/devtools": "workspace:*",
     "@incremark/icons": "workspace:*",
     "@incremark/shared": "workspace:*",
     "@incremark/theme": "workspace:*",
-    "shiki": "^3.20.0"
+    "shiki": "^3.20.0",
+    "shiki-stream": "^0.1.4"
   },
   "peerDependencies": {
     "svelte": "^5.0.0",
@@ -48,6 +50,7 @@
     }
   },
   "devDependencies": {
+    "@shikijs/core": "^3.21.0",
     "@types/mdast": "^4.0.0",
     "@sveltejs/package": "^2.4.0",
     "@sveltejs/vite-plugin-svelte": "^4.0.0",

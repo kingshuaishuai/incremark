@@ -53,6 +53,29 @@ export function isFootnoteDefinitionNode(node: RootContent): node is FootnoteDef
 }
 
 /**
+ * 从 AST 节点中收集脚注引用标识符
+ *
+ * @param node 起始节点
+ * @returns 脚注引用标识符列表（按出现顺序，去重）
+ */
+export function collectFootnoteReferences(node: RootContent): string[] {
+  const references: string[] = []
+  const seen = new Set<string>()
+
+  traverseAst(node, (n) => {
+    if (n.type === 'footnoteReference' && 'identifier' in n) {
+      const identifier = n.identifier as string
+      if (!seen.has(identifier)) {
+        seen.add(identifier)
+        references.push(identifier)
+      }
+    }
+  })
+
+  return references
+}
+
+/**
  * AST 节点遍历器
  * 深度优先遍历 AST 节点
  *

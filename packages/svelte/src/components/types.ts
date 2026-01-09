@@ -5,7 +5,7 @@
 
 import type { Component } from 'svelte'
 import type { ParsedBlock } from '@incremark/core'
-import type { UseIncremarkOptions } from '../stores/useIncremark'
+import type { UseIncremarkOptions } from '../stores/useIncremark.svelte.ts'
 
 /**
  * 组件映射类型

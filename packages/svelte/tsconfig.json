@@ -5,12 +5,13 @@
     "paths": {},
     "outDir": "./dist",
     "rootDir": "./src",
+    "emitDeclarationOnly": true,
     "declaration": true,
     "declarationMap": true,
-    "noEmit": false,
     "jsx": "preserve",
     "jsxImportSource": "svelte",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true
   },
   "include": ["src/**/*", "src/svelte-runes.d.ts"],
   "exclude": ["node_modules", "dist"]

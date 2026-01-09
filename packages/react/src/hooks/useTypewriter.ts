@@ -12,6 +12,8 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import {
   createBlockTransformer,
   defaultPlugins,
+  mathPlugin,
+  collectFootnoteReferences,
   type RootContent,
   type ParsedBlock,
   type DisplayBlock,
@@ -37,6 +39,12 @@ export interface UseTypewriterReturn {
   transformer: BlockTransformer<RootContent> | null
   /** 所有动画是否已完成（队列为空且没有正在处理的 block） */
   isAnimationComplete: boolean
+  /**
+   * 脚注引用顺序（所有动画完成后才返回）
+   * 用于控制脚注的显示时机：只有当所有 blocks 的打字机动画都完成后才显示脚注
+   * 动画进行中时返回空数组
+   */
+  displayedFootnoteReferenceOrder: string[]
 }
 
 /**
@@ -77,16 +85,13 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
       tickInterval: twOptions.tickInterval ?? 30,
       effect: twOptions.effect ?? 'none',
       pauseOnHidden: twOptions.pauseOnHidden ?? true,
-      plugins: twOptions.plugins ?? defaultPlugins,
+      // 默认插件 + 数学公式插件（数学公式应该整体显示，不参与打字机逐字符效果）
+      plugins: twOptions.plugins ?? [...defaultPlugins, mathPlugin],
       onChange: (blocks) => {
         // 直接更新 displayBlocks 状态
         setDisplayBlocks(blocks as DisplayBlock<RootContent>[])
         setIsTypewriterProcessing(transformerRef.current?.isProcessing() ?? false)
         setIsTypewriterPaused(transformerRef.current?.isPausedState() ?? false)
-        // 有 blocks 正在处理时，动画未完成
-        if (transformerRef.current?.isProcessing()) {
-          setIsAnimationComplete(false)
-        }
       },
       onAllComplete: () => {
         // 所有动画完成
@@ -97,32 +102,29 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
 
   const transformer = transformerRef.current
 
-  // 转换为 SourceBlock 格式
+  // 转换为 SourceBlock 格式（包含 completed 和 pending）
   const sourceBlocks = useMemo(
-    () =>
-      completedBlocks.map((block) => ({
+    () => [
+      ...completedBlocks.map((block) => ({
         id: block.id,
         node: block.node,
         status: block.status as BlockStatus
       })),
-    [completedBlocks]
+      ...pendingBlocks.map((block) => ({
+        id: block.id,
+        node: block.node,
+        status: block.status as BlockStatus
+      }))
+    ],
+    [completedBlocks, pendingBlocks]
   )
 
   // 推送 blocks 到 transformer
   useEffect(() => {
     if (!transformer) return
 
+    // 直接推送所有 blocks（包括 pending）
     transformer.push(sourceBlocks)
-
-    // 更新正在显示的 block
-    const displayBlocks = transformer.getDisplayBlocks()
-    const currentDisplaying = displayBlocks.find((b) => !b.isDisplayComplete)
-    if (currentDisplaying) {
-      const updated = sourceBlocks.find((b) => b.id === currentDisplaying.id)
-      if (updated) {
-        transformer.update(updated)
-      }
-    }
 
     setIsTypewriterProcessing(transformer.isProcessing())
     setIsTypewriterPaused(transformer.isPausedState())
@@ -172,6 +174,48 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
       return block
     })
   }, [completedBlocks, pendingBlocks, typewriterEnabled, typewriterEffect, displayBlocks])
+
+  /**
+   * 脚注引用顺序（所有动画完成后才返回）
+   * 用于控制脚注的显示时机：只有当所有 blocks 的打字机动画都完成后才显示脚注
+   */
+  const displayedFootnoteReferenceOrder = useMemo(() => {
+    // 未启用打字机：返回所有脚注引用（从原始 blocks 中提取）
+    if (!typewriterEnabled || !transformer) {
+      const references: string[] = []
+      const seen = new Set<string>()
+      for (const block of [...completedBlocks, ...pendingBlocks]) {
+        const blockRefs = collectFootnoteReferences(block.node)
+        for (const ref of blockRefs) {
+          if (!seen.has(ref)) {
+            seen.add(ref)
+            references.push(ref)
+          }
+        }
+      }
+      return references
+    }
+
+    // 启用打字机：只有所有动画完成后才返回脚注引用
+    // 如果还有动画在进行中，返回空数组
+    if (!isAnimationComplete) {
+      return []
+    }
+
+    // 所有动画完成，返回全部脚注引用
+    const references: string[] = []
+    const seen = new Set<string>()
+    for (const db of displayBlocks) {
+      const blockRefs = collectFootnoteReferences(db.displayNode)
+      for (const ref of blockRefs) {
+        if (!seen.has(ref)) {
+          seen.add(ref)
+          references.push(ref)
+        }
+      }
+    }
+    return references
+  }, [typewriterEnabled, transformer, isAnimationComplete, completedBlocks, pendingBlocks, displayBlocks])
 
   // 打字机控制
   const skip = useCallback(() => {
@@ -239,6 +283,7 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
     blocks,
     typewriter: typewriterControls,
     transformer,
-    isAnimationComplete
+    isAnimationComplete,
+    displayedFootnoteReferenceOrder
   }
 }

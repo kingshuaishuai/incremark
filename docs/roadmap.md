@@ -45,6 +45,10 @@ Our future plans focus on enhancing the library's capabilities for building mode
 - [x] **Accessibility (A11y)**: Enhanced screen reader support and ARIA standards.
 - [x] **SSR Support**: Optimization for Server-Side Rendering (Nuxt/Next.js).
 
+### ⚡ Performance Optimization
+- [x] **Shiki Stream Optimization**: Improve streaming code highlighting performance across all frameworks.
+- [x] **Block Component Rendering**: Optimize block-level component rendering performance, reduce unnecessary re-renders.
+
 ### 🏗️ Big Vision: Incremental Chat UI Kit
 A comprehensive set of pre-built UI components powered by the Incremark engine.
 

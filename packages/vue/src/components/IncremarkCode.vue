@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Code } from 'mdast'
 import type { Component } from 'vue'
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 
 import type { CodeBlockConfig } from './Incremark.vue'
 import IncremarkCodeMermaid from './IncremarkCodeMermaid.vue'
@@ -83,7 +83,7 @@ const isMermaid = computed(() => language.value === 'mermaid')
     :mermaid-delay="mermaidDelay"
   />
 
-  <!-- 默认代码块渲染（支持用户自定义） -->
+  <!-- 默认代码块渲染（支持用户自定义，使用 stream 高亮）-->
   <component
     v-else
     :is="defaultCodeComponent"
@@ -91,5 +91,6 @@ const isMermaid = computed(() => language.value === 'mermaid')
     :theme="theme"
     :fallback-theme="fallbackTheme"
     :disable-highlight="disableHighlight"
+    :block-status="blockStatus"
   />
 </template>

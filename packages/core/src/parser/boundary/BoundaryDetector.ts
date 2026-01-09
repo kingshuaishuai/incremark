@@ -278,6 +278,23 @@ export class BoundaryDetector {
       const wasInContainer = tempContext.inContainer
       const wasContainerDepth = tempContext.containerDepth
 
+      // ⚠️ 关键修复：在 updateContext 之前检查明确的块边界
+      // 如果当前行是代码块 fence 开始、新标题开始或分割线，且前一行不在 fenced code 中
+      // 则应该标记前一个 block 为完成（即使在最后一行）
+      const prevLine = i > 0 ? lines[i - 1] : ''
+      const isSetextUnderline = i > 0 && isSetextHeadingUnderline(line, prevLine)
+      const hasExplicitBlockBoundary =
+        detectFenceStart(line) ||  // 代码块 fence 开始
+        isHeading(line) ||          // 新标题开始
+        isThematicBreak(line)       // 分割线
+
+      // ⚠️ 排除 Setext 下划线，因为它应该被视为标题的一部分，而不是独立块边界
+      if (!wasInFencedCode && !wasInContainer && hasExplicitBlockBoundary && !isSetextUnderline) {
+        // 前一个 block 已完成，可以标记为稳定边界
+        stableLine = i - 1
+        stableContext = { ...tempContext }
+      }
+
       tempContext = updateContext(line, tempContext, this.containerConfig)
 
       // 写入缓存：第 i 行结束后的 context
@@ -378,7 +395,8 @@ export class BoundaryDetector {
     }
 
     // 最后一行不稳定（可能还有更多内容）
-    if (lineIndex >= lines.length - 1) {
+    const isLastLine = lineIndex >= lines.length - 1
+    if (isLastLine) {
       return -1
     }
 

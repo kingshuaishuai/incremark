@@ -17,13 +17,22 @@ export interface SourceBlock<T = unknown> {
 
 /**
  * 显示用的 Block（转换后）
+ *
+ * 注意：DisplayBlock 的 status 含义与 SourceBlock 不同：
+ * - SourceBlock.status: 表示**解析器**的状态（解析是否完成）
+ * - DisplayBlock.status: 表示**打字机动画**的状态（动画是否完成）
+ *
+ * 在打字机模式下：
+ * - 即使解析器已完成（SourceBlock.status = 'completed'），
+ *   如果打字机动画还在进行中，DisplayBlock.status 仍然是 'pending'
+ * - 只有打字机动画完成后，DisplayBlock.status 才变成 'completed'
  */
 export interface DisplayBlock<T = unknown> extends SourceBlock<T> {
   /** 用于显示的 AST 节点（可能是截断的） */
   displayNode: RootContent
   /** 显示进度 0-1 */
   progress: number
-  /** 是否已完成显示 */
+  /** 是否已完成显示（打字机动画是否完成） */
   isDisplayComplete: boolean
 }
 

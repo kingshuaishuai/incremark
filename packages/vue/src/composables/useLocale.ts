@@ -1,6 +1,6 @@
-import { inject, computed, type Ref, type ComputedRef, type InjectionKey } from 'vue'
+import { inject, computed, ref, type Ref, type ComputedRef, type InjectionKey } from 'vue'
 import type { IncremarkLocale } from '@incremark/shared'
-import { en } from '../index'
+import { zhCN } from '@incremark/shared'
 
 /**
  * Locale 注入 key，用于 provide/inject
@@ -19,22 +19,8 @@ export interface UseLocaleReturn {
  * 使用 locale
  */
 export function useLocale(): UseLocaleReturn {
-  const locale = inject(LOCALE_KEY)
-
-  if (!locale) {
-    // 如果没有提供 locale，使用默认的英文
-    const defaultLocale = en
-    const t = computed(() => (key: string) => {
-      const keys = key.split('.')
-      let value: any = defaultLocale
-      for (const k of keys) {
-        value = value?.[k]
-      }
-      return value || key
-    })
-
-    return { t }
-  }
+  // 使用 inject 的默认值，如果没有 provider 则使用中文
+  const locale = inject(LOCALE_KEY, ref(zhCN))
 
   const t = computed(() => (key: string) => {
     const keys = key.split('.')

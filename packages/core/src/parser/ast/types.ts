@@ -34,13 +34,14 @@ export interface IAstBuilder {
 
   /**
    * 将 AST 节点转换为 ParsedBlock
+   * @param generateBlockId - 接收 block 的 startOffset 参数，用于生成稳定的 id
    */
   nodesToBlocks(
     nodes: RootContent[],
     startOffset: number,
     rawText: string,
     status: BlockStatus,
-    generateBlockId: () => string
+    generateBlockId: (startOffset: number) => string
   ): ParsedBlock[]
 
   /**

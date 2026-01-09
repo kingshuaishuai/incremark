@@ -5,10 +5,10 @@
 
 <script lang="ts">
   import type { Component } from 'svelte'
-  import type { RootContent, ParsedBlock } from '@incremark/core'
+  import type { RootContent } from '@incremark/core'
 
-  import { getDefinitionsContext } from '../context/definitionsContext'
-  import type { UseIncremarkReturn } from '../stores/useIncremark'
+  import { getDefinitionsContext } from '../context/definitionsContext.svelte.ts'
+  import type { UseIncremarkReturn } from '../stores/useIncremark.svelte.ts'
   import type { ComponentMap, RenderableBlock } from './types'
 
   // 导入组件
@@ -55,46 +55,19 @@
   }: Props = $props()
 
   const context = getDefinitionsContext()
-  // 解构 store 以便使用 $ 语法订阅
-  const { footnoteReferenceOrder } = context
 
-  // 获取 incremark 的 stores（使用 getter 访问以保持响应性）
-  const blocksStore = $derived(incremark?.blocks)
-  const displayCompleteStore = $derived(incremark?.isDisplayComplete)
-
-  // 订阅 stores 的值
-  let blocksFromStore = $state<RenderableBlock[]>([])
-  let displayCompleteFromStore = $state(false)
-
-  // 使用 effect 订阅 blocks store
-  $effect(() => {
-    if (blocksStore) {
-      const unsubscribe = blocksStore.subscribe((value) => {
-        blocksFromStore = value
-      })
-      return unsubscribe
-    }
-  })
-
-  // 使用 effect 订阅 displayComplete store
-  $effect(() => {
-    if (displayCompleteStore) {
-      const unsubscribe = displayCompleteStore.subscribe((value) => {
-        displayCompleteFromStore = value
-      })
-      return unsubscribe
-    }
-  })
-
-  // 计算最终要渲染的 blocks
+  // 计算最终要渲染的 blocks（优先使用 incremark 对象）
   const renderBlocks = $derived<RenderableBlock[]>(
-    blocksStore ? blocksFromStore : (blocks ?? [])
+    incremark ? incremark.blocks : (blocks ?? [])
   )
 
   // 计算是否显示完成
   const displayComplete = $derived(
-    displayCompleteStore ? displayCompleteFromStore : isDisplayComplete
+    incremark ? incremark.isDisplayComplete : isDisplayComplete
   )
+
+  // 获取脚注引用顺序
+  const footnoteOrder = $derived(context.getFootnoteReferenceOrder())
 </script>
 
 <div class="incremark">
@@ -117,7 +90,7 @@
   {/each}
 
   <!-- 脚注列表（仅在内容完全显示后显示） -->
-  {#if displayComplete && $footnoteReferenceOrder.length > 0}
+  {#if displayComplete && footnoteOrder.length > 0}
     <IncremarkFootnotes />
   {/if}
 </div>

@@ -4,7 +4,6 @@ import {
   AutoScrollContainer,
   ThemeProvider,
   ConfigProvider,
-  type AutoScrollContainerRef,
   type DesignTokens,
   type UseIncremarkOptions,
   type IncremarkLocale
@@ -86,7 +85,6 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t, locale }: Increm
   // ============ 状态 ============
   const [isStreaming, setIsStreaming] = useState(false)
   const [autoScrollEnabled, setAutoScrollEnabled] = useState(true)
-  const scrollContainerRef = useRef<AutoScrollContainerRef>(null)
   const [customInputMode, setCustomInputMode] = useState(false)
   const [customMarkdown, setCustomMarkdown] = useState('')
 
@@ -200,10 +198,29 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t, locale }: Increm
 
     const chunks = currentMarkdown.match(/[\s\S]{1,20}/g) || []
 
+    // 性能监测
+    const updateTimes: number[] = []
+    console.log(`[Perf] Starting stream with ${chunks.length} chunks`)
+
     for (const chunk of chunks) {
+      const start = performance.now()
       setMdContent(prev => prev + chunk)
+      await nextTick() // 等待 DOM 更新完成
+      const elapsed = performance.now() - start
+      updateTimes.push(elapsed)
       await new Promise((r) => setTimeout(r, 30))
     }
+
+    // 输出性能统计
+    const avg = updateTimes.reduce((a, b) => a + b, 0) / updateTimes.length
+    const max = Math.max(...updateTimes)
+    const min = Math.min(...updateTimes)
+    console.log(`[Perf] Stream completed:`)
+    console.log(`  - Chunks: ${chunks.length}`)
+    console.log(`  - Avg update: ${avg.toFixed(2)}ms`)
+    console.log(`  - Min update: ${min.toFixed(2)}ms`)
+    console.log(`  - Max update: ${max.toFixed(2)}ms`)
+    console.log(`  - Updates > 16ms (frame drop): ${updateTimes.filter(t => t > 16).length}`)
 
     setIsFinished(true)
     setIsStreaming(false)
@@ -332,7 +349,7 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t, locale }: Increm
       <main className={typewriterEnabled ? `content effect-${typewriterEffect}` : 'content'}>
         <ConfigProvider locale={locale}>
           <ThemeProvider theme={currentTheme}>
-            <AutoScrollContainer ref={scrollContainerRef} enabled={autoScrollEnabled} className="scroll-container">
+            <AutoScrollContainer enabled={autoScrollEnabled} className="scroll-container">
               <IncremarkContent
                 content={mdContent}
                 isFinished={isFinished}

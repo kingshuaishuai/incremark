@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import {
   createIncremarkParser,
   type IncremarkParserOptions,
@@ -143,6 +143,12 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
   const [isLoading, setIsLoading] = useState(false)
   const [isFinalized, setIsFinalized] = useState(false)
 
+  // AST（使用 state 以支持动态更新）
+  const [ast, setAst] = useState<Root>({
+    type: 'root',
+    children: []
+  })
+
   /**
    * 处理解析器更新结果（统一 append 和 finalize 的更新逻辑）
    */
@@ -150,26 +156,39 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
     (update: IncrementalUpdate, isFinalize: boolean): void => {
       setMarkdown(parser.getBuffer())
 
+      // 处理被更新的 blocks（需要移除的旧 blocks）
+      if (update.updated.length > 0) {
+        const idsToRemove = new Set(update.updated.map((b) => b.id))
+        setCompletedBlocks((prev) => prev.filter((b) => !idsToRemove.has(b.id)))
+      }
+
       if (update.completed.length > 0) {
         setCompletedBlocks((prev) => [...prev, ...update.completed])
       }
       setPendingBlocks(update.pending)
 
       if (isFinalize) {
+        // 如果还有 pending blocks，则将它们添加到 completed blocks 中
+        if (update.pending.length > 0) {
+          setCompletedBlocks((prev) => [...prev, ...update.pending])
+          setPendingBlocks([])
+        }
         setIsLoading(false)
         setIsFinalized(true)
       } else {
         setIsLoading(true)
       }
 
-      // 更新脚注引用顺序
+      // 更新脚注引用顺序（解析器的完整顺序）
       setFootnoteReferenceOrder(update.footnoteReferenceOrder)
+      // 注意：这里不再直接调用 setFootnoteReferenceOrder
+      // 脚注显示顺序由下面的 useEffect 根据打字机状态来控制
     },
     [parser, setFootnoteReferenceOrder]
   )
 
   // 使用 useTypewriter hook 管理打字机效果
-  const { blocks, typewriter, transformer, isAnimationComplete } = useTypewriter({
+  const { blocks, typewriter, transformer, isAnimationComplete, displayedFootnoteReferenceOrder } = useTypewriter({
     typewriter: options.typewriter,
     completedBlocks,
     pendingBlocks
@@ -187,18 +206,10 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
     return isFinalized && isAnimationComplete
   }, [options.typewriter, typewriter.enabled, isFinalized, isAnimationComplete])
 
-  // 计算 AST
-  const ast = useMemo<Root>(
-    () => ({
-      type: 'root',
-      children: [...completedBlocks.map((b) => b.node), ...pendingBlocks.map((b) => b.node)]
-    }),
-    [completedBlocks, pendingBlocks]
-  )
-
   const append = useCallback(
     (chunk: string): IncrementalUpdate => {
       const update = parser.append(chunk)
+      setAst(update.ast)
       handleUpdate(update, false)
       return update
     },
@@ -223,6 +234,7 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
     setIsLoading(false)
     setIsFinalized(false)
     setFootnoteReferenceOrder([])
+    setAst({ type: 'root', children: [] })
 
     // 重置 transformer
     transformer?.reset()
@@ -237,6 +249,7 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
       setPendingBlocks([])
       setIsLoading(false)
       setIsFinalized(true)
+      // render 是一次性渲染，不经过打字机，直接设置脚注顺序
       setFootnoteReferenceOrder(update.footnoteReferenceOrder)
 
       return update
@@ -261,9 +274,19 @@ export function useIncremark(options: UseIncremarkOptions = {}) {
       setIsLoading(false)
       setIsFinalized(false)
       setFootnoteReferenceOrder([])
+      setAst({ type: 'root', children: [] })
       transformer?.reset()
     },
     [parser, transformer, setFootnoteReferenceOrder]
+  )
+
+  // 监听打字机的 displayedFootnoteReferenceOrder 变化，更新脚注显示
+  // 这确保脚注只在引用所在的 block 动画完成后才显示
+  useEffect(
+    () => {
+      setFootnoteReferenceOrder(displayedFootnoteReferenceOrder)
+    },
+    [displayedFootnoteReferenceOrder, setFootnoteReferenceOrder]
   )
 
   return {

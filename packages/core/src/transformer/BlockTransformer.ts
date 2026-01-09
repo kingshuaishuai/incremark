@@ -93,12 +93,50 @@ export class BlockTransformer<T = unknown> {
 
   /**
    * 推入新的 blocks
-   * 会自动过滤已存在的 blocks
+   *
+   * 逻辑：
+   * 1. 移除不在传入列表中的旧 blocks（处理容器增量解析等场景）
+   * 2. 如果 block ID 不存在，添加到 pending
+   * 3. 如果 block ID 已存在且内容变化，更新对应位置的 block
    */
   push(blocks: SourceBlock<T>[]): void {
+    const inputIds = new Set(blocks.map(b => b.id))
     const existingIds = this.getAllBlockIds()
 
-    // 找出新增的 blocks
+    // ============ 第一步：移除不在传入列表中的旧 blocks ============
+    // 这主要处理容器增量解析的情况：容器内部的内容先被添加为独立 blocks，
+    // 然后整个容器被添加时，内部 blocks 不再单独返回，需要移除它们
+    let hasRemovals = false
+
+    // 检查 completedBlocks
+    const completedBefore = this.state.completedBlocks.length
+    this.state.completedBlocks = this.state.completedBlocks.filter(b => inputIds.has(b.id))
+    if (this.state.completedBlocks.length < completedBefore) {
+      hasRemovals = true
+    }
+
+    // 检查 currentBlock
+    if (this.state.currentBlock && !inputIds.has(this.state.currentBlock.id)) {
+      this.state.currentBlock = null
+      this.state.currentProgress = 0
+      this.chunks = []
+      this.clearCache()
+      hasRemovals = true
+    }
+
+    // 检查 pendingBlocks
+    const pendingBefore = this.state.pendingBlocks.length
+    this.state.pendingBlocks = this.state.pendingBlocks.filter(b => inputIds.has(b.id))
+    if (this.state.pendingBlocks.length < pendingBefore) {
+      hasRemovals = true
+    }
+
+    // 如果有移除，需要重新启动处理（如果 currentBlock 被移除了）
+    if (hasRemovals && !this.state.currentBlock && this.state.pendingBlocks.length > 0) {
+      this.startIfNeeded()
+    }
+
+    // ============ 第二步：找出新增的 blocks ============
     const newBlocks = blocks.filter((b) => !existingIds.has(b.id))
 
     if (newBlocks.length > 0) {
@@ -106,15 +144,59 @@ export class BlockTransformer<T = unknown> {
       this.startIfNeeded()
     }
 
-    // 如果当前正在显示的 block 内容更新了（pending block 变化）
-    if (this.state.currentBlock) {
-      const updated = blocks.find((b) => b.id === this.state.currentBlock!.id)
-      if (updated && updated.node !== this.state.currentBlock.node) {
-        // 使用统一的方法处理内容变化
-        this.handleContentChange(this.state.currentBlock.node, updated.node, true)
-        // 更新引用
-        this.state.currentBlock = updated
+    // ============ 第三步：检查已存在 blocks 的内容更新 ============
+    for (const block of blocks) {
+      // 跳过新增的 blocks（已经处理过了）
+      if (!existingIds.has(block.id)) continue
+
+      // 检查 currentBlock
+      if (this.state.currentBlock?.id === block.id) {
+        // 检查 currentBlock 是否已经完成
+        const total = this.getTotalChars()
+        const isComplete = this.state.currentProgress >= total
+
+        if (isComplete) {
+          // currentBlock 已经完成，直接移到 completedBlocks
+          this.state.completedBlocks.push(block)
+          this.state.currentBlock = null
+          this.state.currentProgress = 0
+          this.chunks = []
+          this.clearCache()
+          this.processNext()
+        } else if (this.state.currentBlock.node !== block.node) {
+          // currentBlock 还在处理中，内容变化，使用 handleContentChange 处理
+          this.handleContentChange(this.state.currentBlock.node, block.node, true)
+          // 更新引用
+          this.state.currentBlock = block
+        }
+        continue
       }
+
+      // 检查 completedBlocks
+      const completedIndex = this.state.completedBlocks.findIndex(b => b.id === block.id)
+      if (completedIndex !== -1) {
+        if (this.state.completedBlocks[completedIndex].node !== block.node) {
+          // 内容变化，直接替换
+          this.state.completedBlocks[completedIndex] = block
+          this.emit()
+        }
+        continue
+      }
+
+      // 检查 pendingBlocks
+      const pendingIndex = this.state.pendingBlocks.findIndex(b => b.id === block.id)
+      if (pendingIndex !== -1) {
+        if (this.state.pendingBlocks[pendingIndex].node !== block.node) {
+          // 内容变化，直接替换
+          this.state.pendingBlocks[pendingIndex] = block
+        }
+        continue
+      }
+    }
+
+    // 如果有移除，触发更新
+    if (hasRemovals) {
+      this.emit()
     }
   }
 
@@ -126,6 +208,24 @@ export class BlockTransformer<T = unknown> {
       // 使用统一的方法处理内容变化
       this.handleContentChange(this.state.currentBlock.node, block.node, false)
       this.state.currentBlock = block
+      return
+    }
+
+    // 检查是否是已完成的 block
+    const completedIndex = this.state.completedBlocks.findIndex(b => b.id === block.id)
+    if (completedIndex !== -1) {
+      // 更新已完成的 block
+      this.state.completedBlocks[completedIndex] = block
+      this.emit()
+      return
+    }
+
+    // 检查是否是 pending blocks
+    const pendingIndex = this.state.pendingBlocks.findIndex(b => b.id === block.id)
+    if (pendingIndex !== -1) {
+      // 更新 pending block
+      this.state.pendingBlocks[pendingIndex] = block
+      return
     }
   }
 
@@ -192,25 +292,31 @@ export class BlockTransformer<T = unknown> {
   /**
    * 获取用于渲染的 display blocks
    * 优化：使用缓存的 displayNode，避免重复遍历已稳定的节点
+   *
+   * 注意：DisplayBlock 的 status 表示的是**打字机动画状态**，而不是解析器的状态：
+   * - 'completed': 打字机动画已完成，内容已完全显示
+   * - 'pending': 打字机动画还在进行中，内容还在逐字显示
    */
   getDisplayBlocks(): DisplayBlock<T>[] {
     const result: DisplayBlock<T>[] = []
 
-    // 已完成的 blocks
+    // 已完成动画的 blocks（打字机动画已完成）
     for (const block of this.state.completedBlocks) {
       result.push({
         ...block,
+        // 打字机动画已完成，状态为 completed
+        status: 'completed',
         displayNode: block.node,
         progress: 1,
         isDisplayComplete: true
       })
     }
 
-    // 当前正在显示的 block
+    // 当前正在显示的 block（打字机动画进行中）
     if (this.state.currentBlock) {
       // 使用缓存的字符数
       const total = this.getTotalChars()
-      
+
       // 如果进度变化了或缓存无效，更新缓存的 displayNode
       if (this.state.currentProgress !== this.cachedProgress || !this.cachedDisplayNode) {
         this.updateCachedDisplayNode()
@@ -218,6 +324,8 @@ export class BlockTransformer<T = unknown> {
 
       result.push({
         ...this.state.currentBlock,
+        // 打字机动画进行中，状态为 pending
+        status: 'pending',
         displayNode: this.cachedDisplayNode || { type: 'paragraph', children: [] },
         progress: total > 0 ? this.state.currentProgress / total : 1,
         isDisplayComplete: false

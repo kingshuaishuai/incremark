@@ -28,13 +28,16 @@
     "react": ">=18.0.0"
   },
   "dependencies": {
+    "@antfu/utils": "^9.3.0",
     "@incremark/devtools": "workspace:*",
     "@incremark/icons": "workspace:*",
     "@incremark/shared": "workspace:*",
     "@incremark/theme": "workspace:*",
-    "shiki": "^3.20.0"
+    "shiki": "^3.20.0",
+    "shiki-stream": "^0.1.4"
   },
   "devDependencies": {
+    "@shikijs/core": "^3.21.0",
     "@types/mdast": "^4.0.0",
     "@types/react": "^18.2.0",
     "react": "^18.2.0",

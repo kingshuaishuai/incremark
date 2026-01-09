@@ -1,6 +1,6 @@
 import { createContext, useMemo, type ReactNode } from 'react'
 import type { IncremarkLocale } from '@incremark/shared'
-import { en } from '../index'
+import { zhCN } from '@incremark/shared'
 
 interface LocaleContextType {
   locale: IncremarkLocale
@@ -13,8 +13,9 @@ interface ConfigProviderProps {
   locale?: IncremarkLocale
 }
 
-export function ConfigProvider({ children, locale = en }: ConfigProviderProps) {
-  const contextValue = useMemo(() => ({ locale }), [locale])
+// 提供 locale 给子组件（确保不是 undefined）
+export function ConfigProvider({ children, locale }: ConfigProviderProps) {
+  const contextValue = useMemo(() => ({ locale: locale || zhCN }), [locale])
 
   return <LocaleContext.Provider value={contextValue}>{children}</LocaleContext.Provider>
 }

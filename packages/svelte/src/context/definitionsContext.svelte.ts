@@ -1,22 +1,21 @@
 /**
  * @file Definitions Context - Svelte Context 实现
- * @description 管理 definitions 和 footnotes 的共享状态，对应 Vue 版本的 provide/inject
+ * @description 管理 definitions 和 footnotes 的共享状态，使用 Svelte 5 runes 语法
  */
 
 import { setContext, getContext } from 'svelte'
-import { writable, type Writable } from 'svelte/store'
 import type { Definition, FootnoteDefinition } from 'mdast'
 
 /**
- * Definitions Context 值类型
+ * Definitions Context 值类型（使用 getter 函数）
  */
 export interface DefinitionsContextValue {
-  /** Definitions 映射 */
-  definations: Writable<Record<string, Definition>>
-  /** Footnote definitions 映射 */
-  footnoteDefinitions: Writable<Record<string, FootnoteDefinition>>
-  /** Footnote 引用顺序 */
-  footnoteReferenceOrder: Writable<string[]>
+  /** 获取 Definitions 映射 */
+  getDefinations: () => Record<string, Definition>
+  /** 获取 Footnote definitions 映射 */
+  getFootnoteDefinitions: () => Record<string, FootnoteDefinition>
+  /** 获取 Footnote 引用顺序 */
+  getFootnoteReferenceOrder: () => string[]
 }
 
 /**
@@ -29,6 +28,7 @@ const DEFINITIONS_CONTEXT_KEY = Symbol('definitionsContext')
  * 
  * @description
  * 在父组件中调用，为子组件提供 definitions context
+ * 使用 $state 实现响应式状态
  * 
  * @returns 返回设置函数，用于更新 context 值
  * 
@@ -42,14 +42,15 @@ const DEFINITIONS_CONTEXT_KEY = Symbol('definitionsContext')
  * ```
  */
 export function setDefinitionsContext() {
-  const definations = writable<Record<string, Definition>>({})
-  const footnoteDefinitions = writable<Record<string, FootnoteDefinition>>({})
-  const footnoteReferenceOrder = writable<string[]>([])
+  // 使用 $state 实现响应式状态（每个组件实例有独立的状态）
+  let definationsState = $state<Record<string, Definition>>({})
+  let footnoteDefinitionsState = $state<Record<string, FootnoteDefinition>>({})
+  let footnoteReferenceOrderState = $state<string[]>([])
 
   const contextValue: DefinitionsContextValue = {
-    definations,
-    footnoteDefinitions,
-    footnoteReferenceOrder
+    getDefinations: () => definationsState,
+    getFootnoteDefinitions: () => footnoteDefinitionsState,
+    getFootnoteReferenceOrder: () => footnoteReferenceOrderState
   }
 
   setContext(DEFINITIONS_CONTEXT_KEY, contextValue)
@@ -58,42 +59,42 @@ export function setDefinitionsContext() {
    * 设置 definitions
    */
   function setDefinations(definitions: Record<string, Definition>) {
-    definations.set(definitions)
+    definationsState = definitions
   }
 
   /**
    * 设置 footnote definitions
    */
   function setFootnoteDefinitions(definitions: Record<string, FootnoteDefinition>) {
-    footnoteDefinitions.set(definitions)
+    footnoteDefinitionsState = definitions
   }
 
   /**
    * 设置 footnote 引用顺序
    */
   function setFootnoteReferenceOrder(order: string[]) {
-    footnoteReferenceOrder.set(order)
+    footnoteReferenceOrderState = order
   }
 
   /**
    * 清空 definitions
    */
   function clearDefinations() {
-    definations.set({})
+    definationsState = {}
   }
 
   /**
    * 清空 footnote definitions
    */
   function clearFootnoteDefinitions() {
-    footnoteDefinitions.set({})
+    footnoteDefinitionsState = {}
   }
 
   /**
    * 清空 footnote 引用顺序
    */
   function clearFootnoteReferenceOrder() {
-    footnoteReferenceOrder.set([])
+    footnoteReferenceOrderState = []
   }
 
   /**
@@ -131,7 +132,9 @@ export function setDefinitionsContext() {
  * <script>
  *   import { getDefinitionsContext } from '@incremark/svelte'
  *   
- *   const { definations, footnoteDefinitions, footnoteReferenceOrder } = getDefinitionsContext()
+ *   const context = getDefinitionsContext()
+ *   // 使用 getter 获取值（在模板或 $derived 中使用会自动追踪依赖）
+ *   const definitions = $derived(context.getDefinations())
  * </script>
  * ```
  */
@@ -144,4 +147,3 @@ export function getDefinitionsContext(): DefinitionsContextValue {
   
   return context
 }
-

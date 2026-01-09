@@ -119,7 +119,7 @@ export function useIncremark(optionsInput: MaybeRefOrGetter<UseIncremarkOptions>
 
   // 使用 useTypewriter composable 管理打字机效果
   // 传入响应式的 typewriter 配置，让 useTypewriter 内部监听变化
-  const { blocks, typewriter, transformer, isAnimationComplete } = useTypewriter({
+  const { blocks, typewriter, transformer, isAnimationComplete, displayedFootnoteReferenceOrder } = useTypewriter({
     typewriter: () => toValue(optionsInput).typewriter,
     completedBlocks,
     pendingBlocks
@@ -138,13 +138,10 @@ export function useIncremark(optionsInput: MaybeRefOrGetter<UseIncremarkOptions>
   })
 
   // AST
-  const ast = computed<Root>(() => ({
+  const ast = ref<Root>({
     type: 'root',
-    children: [
-      ...completedBlocks.value.map((b) => b.node),
-      ...pendingBlocks.value.map((b) => b.node)
-    ]
-  }))
+    children: []
+  })
 
   /**
    * 处理解析器更新结果（统一 append 和 finalize 的更新逻辑）
@@ -152,28 +149,38 @@ export function useIncremark(optionsInput: MaybeRefOrGetter<UseIncremarkOptions>
   function handleUpdate(update: IncrementalUpdate, isFinalize: boolean = false): void {
     markdown.value = parser.getBuffer()
 
+    // 处理被更新的 blocks（需要移除的旧 blocks）
+    if (update.updated.length > 0) {
+      const idsToRemove = new Set(update.updated.map(b => b.id))
+      completedBlocks.value = completedBlocks.value.filter(b => !idsToRemove.has(b.id))
+    }
+
     if (update.completed.length > 0) {
-      completedBlocks.value = [
-        ...completedBlocks.value,
-        ...update.completed.map((b) => markRaw(b))
-      ]
+      completedBlocks.value.push(...update.completed.map((b) => markRaw(b)))
     }
     pendingBlocks.value = update.pending.map((b) => markRaw(b))
 
     if (isFinalize) {
+      // 如果还有 pending blocks，则将它们添加到 completed blocks 中
+      if (pendingBlocks.value.length) {
+        completedBlocks.value.push(...pendingBlocks.value.map((b) => markRaw(b)))
+        pendingBlocks.value = []
+      }
       isLoading.value = false
       isFinalized.value = true
     } else {
       isLoading.value = true
     }
 
-    // 更新脚注引用顺序
+    // 更新脚注引用顺序（解析器的完整顺序）
     footnoteReferenceOrder.value = update.footnoteReferenceOrder
-    setFootnoteReferenceOrder(update.footnoteReferenceOrder)
+    // 注意：这里不再直接调用 setFootnoteReferenceOrder
+    // 脚注显示顺序由下面的 watch 根据打字机状态来控制
   }
 
   function append(chunk: string): IncrementalUpdate {
     const update = parser.append(chunk)
+    ast.value = update.ast
     handleUpdate(update, false)
     return update
   }
@@ -227,6 +234,16 @@ export function useIncremark(optionsInput: MaybeRefOrGetter<UseIncremarkOptions>
     }
   )
 
+  // 监听打字机的 displayedFootnoteReferenceOrder 变化，更新脚注显示
+  // 这确保脚注只在引用所在的 block 动画完成后才显示
+  watch(
+    displayedFootnoteReferenceOrder,
+    (newOrder) => {
+      setFootnoteReferenceOrder(newOrder)
+    },
+    { immediate: true }
+  )
+
   function render(content: string): IncrementalUpdate {
     const update = parser.render(content)
 
@@ -236,12 +253,13 @@ export function useIncremark(optionsInput: MaybeRefOrGetter<UseIncremarkOptions>
     isLoading.value = false
     isFinalized.value = true
     footnoteReferenceOrder.value = update.footnoteReferenceOrder
+    // render 是一次性渲染，不经过打字机，直接设置脚注顺序
     setFootnoteReferenceOrder(update.footnoteReferenceOrder)
 
     return update
   }
 
-  return {
+  const result = {
     /** 已收集的完整 Markdown 字符串 */
     markdown,
     /** 已完成的块列表 */
@@ -280,4 +298,6 @@ export function useIncremark(optionsInput: MaybeRefOrGetter<UseIncremarkOptions>
     /** 打字机控制 */
     typewriter
   }
+
+  return result as any
 }

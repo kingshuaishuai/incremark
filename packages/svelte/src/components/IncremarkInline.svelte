@@ -12,7 +12,7 @@
     getStableText,
     isHtmlNode
   } from '@incremark/shared'
-  import { getDefinitionsContext } from '../context/definitionsContext'
+  import { getDefinitionsContext } from '../context/definitionsContext.svelte.ts'
   import IncremarkMath from './IncremarkMath.svelte'
   import IncremarkHtmlElement from './IncremarkHtmlElement.svelte'
   import IncremarkInline from './IncremarkInline.svelte'
@@ -71,9 +71,9 @@
 
   // 获取 definitions context
   const context = getDefinitionsContext()
-  // 解构 store 以便使用 $ 语法订阅
-  const { definations } = context
 
+  // 使用 getter 获取 definitions
+  const definitions = $derived(context.getDefinations())
 
   /**
    * 获取节点的 chunks（类型安全）
@@ -156,12 +156,12 @@
 
   <!-- 引用式图片（imageReference） -->
   {#if isImageReference(node)}
-    {#if $definations && $definations[node.identifier]}
+    {#if definitions && definitions[node.identifier]}
       <img
         class="incremark-image incremark-reference-image"
-        src={$definations[node.identifier].url}
+        src={definitions[node.identifier].url}
         alt={node.alt || ''}
-        title={$definations[node.identifier].title || undefined}
+        title={definitions[node.identifier].title || undefined}
         loading="lazy"
       />
     {:else}
@@ -174,11 +174,11 @@
 
   <!-- 引用式链接（linkReference） -->
   {#if isLinkReference(node)}
-    {#if $definations && $definations[node.identifier]}
+    {#if definitions && definitions[node.identifier]}
       <a
         class="incremark-link incremark-reference-link"
-        href={$definations[node.identifier].url}
-        title={$definations[node.identifier].title || undefined}
+        href={definitions[node.identifier].url}
+        title={definitions[node.identifier].title || undefined}
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -213,4 +213,3 @@
     </del>
   {/if}
 {/each}
-

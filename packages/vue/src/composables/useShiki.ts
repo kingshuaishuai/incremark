@@ -154,13 +154,30 @@ export { getShikiManager, ShikiManager }
 
 /**
  * 使用 Shiki Highlighter（组合式函数）
- * 
+ *
  * @param theme 主题名称
  * @returns Shiki 相关的响应式状态和方法
  */
 export function useShiki(theme: string) {
   const highlighterInfo = shallowRef<HighlighterInfo | null>(null)
   const isHighlighting = shallowRef(false)
+  const isReady = shallowRef(false)
+
+  /**
+   * 初始化 highlighter（预加载）
+   */
+  async function initHighlighter(): Promise<void> {
+    if (isReady.value) return
+
+    try {
+      const info = await getShikiManager().getHighlighter(theme as BundledTheme)
+      highlighterInfo.value = info
+      isReady.value = true
+    } catch (e) {
+      console.warn('Failed to initialize Shiki highlighter:', e)
+      throw e
+    }
+  }
 
   /**
    * 获取 highlighter
@@ -168,6 +185,7 @@ export function useShiki(theme: string) {
   async function getHighlighter(): Promise<HighlighterInfo> {
     if (!highlighterInfo.value) {
       highlighterInfo.value = await getShikiManager().getHighlighter(theme as BundledTheme)
+      isReady.value = true
     }
     return highlighterInfo.value!
   }
@@ -204,6 +222,8 @@ export function useShiki(theme: string) {
   return {
     highlighterInfo,
     isHighlighting,
+    isReady,
+    initHighlighter,
     highlight
   }
 }

@@ -30,7 +30,7 @@ export const IncremarkCode: React.FC<IncremarkCodeProps> = ({
   disableHighlight = false,
   mermaidDelay = 500,
   customCodeBlocks,
-  blockStatus = 'completed',
+  blockStatus = 'pending',
   codeBlockConfigs,
   defaultCodeComponent: DefaultCodeComponent = IncremarkCodeDefault
 }) => {
@@ -82,13 +82,14 @@ export const IncremarkCode: React.FC<IncremarkCodeProps> = ({
     )
   }
 
-  // 默认代码块渲染
+  // 默认代码块渲染（支持用户自定义，使用 stream 高亮）
   return (
     <DefaultCodeComponent
       node={node}
       theme={theme}
       fallbackTheme={fallbackTheme}
       disableHighlight={disableHighlight}
+      blockStatus={blockStatus}
     />
   )
 }

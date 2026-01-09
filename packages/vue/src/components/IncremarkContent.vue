@@ -54,7 +54,6 @@
   watch(() => props.content, async (newContent, oldContent) => {
     if (isStreamMode.value) {
       await handleStreamInput();
-      return;
     } else {
       handleContentInput(newContent, oldContent);
     }

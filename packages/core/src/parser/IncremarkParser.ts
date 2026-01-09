@@ -70,7 +70,6 @@ export class IncremarkParser {
   private lineOffsets: number[] = [0]
   private completedBlocks: ParsedBlock[] = []
   private pendingStartLine = 0
-  private blockIdCounter = 0
   private context: BlockContext
   private options: IncremarkParserOptions
   /** 边界检测器 */
@@ -103,8 +102,21 @@ export class IncremarkParser {
     this.footnoteManager = new FootnoteManager()
   }
 
-  private generateBlockId(): string {
-    return `block-${++this.blockIdCounter}`
+  /**
+   * 生成 block 的 id（直接使用 offset）
+   * @param startOffset - block 的起始偏移量
+   */
+  private generateBlockId(startOffset: number): string {
+    return String(startOffset)
+  }
+
+  /**
+   * 生成 pending block 的稳定 id（基于 startOffset）
+   * pending blocks 在每次 append 时都会重新生成，使用 startOffset 确保 id 稳定
+   * @param startOffset - block 的起始偏移量，用作稳定的 id
+   */
+  private generatePendingBlockId(startOffset: number): string {
+    return String(startOffset)
   }
 
   /**
@@ -202,10 +214,43 @@ export class IncremarkParser {
 
       const ast = this.astBuilder.parse(stableText)
       // 使用绝对偏移量，确保 Block 的位置信息正确
-      const newBlocks = this.astBuilder.nodesToBlocks(ast.children, stableOffset, stableText, 'completed', () => this.generateBlockId())
+      const newBlocks = this.astBuilder.nodesToBlocks(ast.children, stableOffset, stableText, 'completed', (offset) => this.generateBlockId(offset))
+
+      // 检查是否有重叠的旧 blocks 需要移除
+      // 这主要处理容器增量解析的情况：容器内部的内容先被添加为独立 blocks，
+      // 然后整个容器被添加时，需要移除之前添加的内部 blocks
+      const blocksToRemove: ParsedBlock[] = []
+
+      for (const newBlock of newBlocks) {
+        for (const existingBlock of this.completedBlocks) {
+          // 检查是否有重叠：新 block 的起始位置在旧 block 的范围内
+          const isOverlapping = newBlock.startOffset >= existingBlock.startOffset && newBlock.startOffset < existingBlock.endOffset
+          // 或者旧 block 的起始位置在新 block 的范围内
+          const isOverlappingReverse = existingBlock.startOffset >= newBlock.startOffset && existingBlock.startOffset < newBlock.endOffset
+
+          if (isOverlapping || isOverlappingReverse) {
+            // 如果 ID 不同，说明是容器增量解析的情况，需要移除旧的
+            if (newBlock.id !== existingBlock.id) {
+              blocksToRemove.push(existingBlock)
+            }
+          }
+        }
+      }
+
+      // 移除重叠的 blocks
+      if (blocksToRemove.length > 0) {
+        const idsToRemove = new Set(blocksToRemove.map(b => b.id))
+        this.completedBlocks = this.completedBlocks.filter(b => !idsToRemove.has(b.id))
+      }
 
       this.completedBlocks.push(...newBlocks)
       update.completed = newBlocks
+
+      // 标记被移除的 blocks（用于通知上层）
+      if (blocksToRemove.length > 0) {
+        // 将被移除的 blocks 添加到 update.updated 中，标记它们已被替换
+        update.updated = blocksToRemove
+      }
 
       // 更新 definitions 从新完成的 blocks
       this.updateDefinitionsFromCompletedBlocks(newBlocks)
@@ -227,8 +272,15 @@ export class IncremarkParser {
       if (pendingText.trim()) {
         const pendingOffset = this.getLineOffset(this.pendingStartLine)
         const ast = this.astBuilder.parse(pendingText)
-        // 使用绝对偏移量，确保 Block 的位置信息正确
-        update.pending = this.astBuilder.nodesToBlocks(ast.children, pendingOffset, pendingText, 'pending', () => this.generateBlockId())
+        // pending blocks 使用基于 offset 的稳定 id，避免每次 append 时 id 变化
+        // 这对于 Vue/React 等框架的 key 稳定性很重要
+        update.pending = this.astBuilder.nodesToBlocks(
+          ast.children,
+          pendingOffset,
+          pendingText,
+          'pending',
+          (offset) => this.generatePendingBlockId(offset)
+        )
       }
     }
 
@@ -303,7 +355,7 @@ export class IncremarkParser {
           remainingOffset,
           remainingText,
           'completed',
-          () => this.generateBlockId()
+          (offset) => this.generateBlockId(offset)
         )
 
         this.completedBlocks.push(...finalBlocks)
@@ -421,7 +473,6 @@ export class IncremarkParser {
     this.lineOffsets = [0]
     this.completedBlocks = []
     this.pendingStartLine = 0
-    this.blockIdCounter = 0
     this.context = createInitialContext()
     this.lastPendingBlocks = []
     // 清空 definition 和 footnote 映射

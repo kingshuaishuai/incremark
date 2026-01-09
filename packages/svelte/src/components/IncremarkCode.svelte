@@ -36,7 +36,7 @@
     mermaidDelay = 500,
     customCodeBlocks,
     codeBlockConfigs,
-    blockStatus = 'completed',
+    blockStatus = 'pending',
     defaultCodeComponent
   }: Props = $props()
 
@@ -79,10 +79,12 @@
   />
 {:else}
   {@const Component = DefaultCodeBlock}
-  <Component 
-    {node} 
-    {theme} 
-    {fallbackTheme} 
-    {disableHighlight} 
+  <!-- 默认代码块渲染（支持用户自定义，使用 stream 高亮）-->
+  <Component
+    {node}
+    {theme}
+    {fallbackTheme}
+    {disableHighlight}
+    {blockStatus}
   />
 {/if}

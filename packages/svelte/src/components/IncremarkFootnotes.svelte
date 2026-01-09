@@ -5,20 +5,18 @@
 
 <script lang="ts">
   import type { RootContent } from 'mdast'
-  import { getDefinitionsContext } from '../context/definitionsContext'
+  import { getDefinitionsContext } from '../context/definitionsContext.svelte.ts'
   import IncremarkRenderer from './IncremarkRenderer.svelte'
 
   const context = getDefinitionsContext()
-  // 解构 store 以便使用 $ 语法订阅
-  const { footnoteDefinitions, footnoteReferenceOrder } = context
 
   /**
    * 按引用顺序排列的脚注列表
    * 只显示已有定义的脚注
    */
   const orderedFootnotes = $derived.by(() => {
-    const order = $footnoteReferenceOrder
-    const definitions = $footnoteDefinitions
+    const order = context.getFootnoteReferenceOrder()
+    const definitions = context.getFootnoteDefinitions()
     
     return order
       .map(identifier => ({
@@ -68,4 +66,3 @@
     </ol>
   </section>
 {/if}
-

@@ -88,7 +88,6 @@ const actualIsDisplayComplete = computed(() => {
           { 'incremark-last-pending': block.isLastPending }
         ]"
       >
-        <!-- 使用 IncremarkRenderer 统一处理所有节点类型 -->
         <IncremarkRenderer
           :node="block.node"
           :block-status="block.status"

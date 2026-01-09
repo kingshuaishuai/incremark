@@ -12,12 +12,13 @@ import { ref, shallowRef, computed, watch, toValue, onUnmounted, type Ref, type 
 import {
   createBlockTransformer,
   defaultPlugins,
+  mathPlugin,
+  collectFootnoteReferences,
   type RootContent,
   type ParsedBlock,
   type DisplayBlock,
   type AnimationEffect,
-  type BlockTransformer,
-  type BlockStatus
+  type BlockTransformer
 } from '@incremark/core'
 import type { TypewriterOptions, TypewriterControls } from './useIncremark'
 import { addCursorToNode } from '../utils/cursor'
@@ -37,6 +38,12 @@ export interface UseTypewriterReturn {
   transformer: BlockTransformer<RootContent> | null
   /** 所有动画是否已完成（队列为空且没有正在处理的 block） */
   isAnimationComplete: Ref<boolean>
+  /**
+   * 脚注引用顺序（所有动画完成后才返回）
+   * 用于控制脚注的显示时机：只有当所有 blocks 的打字机动画都完成后才显示脚注
+   * 动画进行中时返回空数组
+   */
+  displayedFootnoteReferenceOrder: ComputedRef<string[]>
 }
 
 /**
@@ -72,15 +79,13 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
       tickInterval: initialConfig.tickInterval ?? 30,
       effect: initialConfig.effect ?? 'none',
       pauseOnHidden: initialConfig.pauseOnHidden ?? true,
-      plugins: initialConfig.plugins ?? defaultPlugins,
+      // 默认插件 + 数学公式插件（数学公式应该整体显示，不参与打字机逐字符效果）
+      plugins: initialConfig.plugins ?? [...defaultPlugins, mathPlugin],
       onChange: (blocks) => {
+        // console.log('onChange',blocks)
         displayBlocksRef.value = blocks as DisplayBlock<RootContent>[]
         isTypewriterProcessing.value = transformer?.isProcessing() ?? false
         isTypewriterPaused.value = transformer?.isPausedState() ?? false
-        // 有 blocks 正在处理时，动画未完成
-        if (transformer?.isProcessing()) {
-          isAnimationComplete.value = false
-        }
       },
       onAllComplete: () => {
         // 所有动画完成
@@ -117,32 +122,18 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
     { deep: true }
   )
 
-  // 将 completedBlocks 转换为 SourceBlock 格式
-  const sourceBlocks = computed(() => {
-    return completedBlocks.value.map(block => ({
-      id: block.id,
-      node: block.node,
-      status: block.status as BlockStatus
-    }))
-  })
-
-  // 监听 sourceBlocks 变化，推送给 transformer
+  // 监听 blocks 变化，推送给 transformer
+  // transformer.push() 会自动检测并更新已存在 blocks 的内容变化
   if (transformer) {
     watch(
-      sourceBlocks,
-      (blocks) => {
-        transformer!.push(blocks)
-
-        // 更新正在显示的 block
-        const currentDisplaying = displayBlocksRef.value.find((b) => !b.isDisplayComplete)
-        if (currentDisplaying) {
-          const updated = blocks.find((b) => b.id === currentDisplaying.id)
-          if (updated) {
-            transformer!.update(updated)
-          }
-        }
+      [completedBlocks, pendingBlocks],
+      () => {
+        // 直接传递原始 block 引用
+        // ParsedBlock 的结构（id, node, status）已经兼容 SourceBlock
+        const allBlocks = [...completedBlocks.value, ...pendingBlocks.value] as any
+        transformer!.push(allBlocks)
       },
-      { immediate: true, deep: true }
+      { immediate: true }
     )
   }
 
@@ -171,14 +162,57 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
 
       return {
         id: db.id,
-        status: (db.isDisplayComplete ? 'completed' : 'pending') as BlockStatus,
-        isLastPending,
+        status: db.status,
         node,
+        // 这些字段在打字机模式下没有意义，设为默认值以满足类型要求
         startOffset: 0,
         endOffset: 0,
-        rawText: ''
+        rawText: '',
+        isLastPending
       }
     })
+  })
+
+  /**
+   * 脚注引用顺序（所有动画完成后才返回）
+   * 用于控制脚注的显示时机：只有当所有 blocks 的打字机动画都完成后才显示脚注
+   */
+  const displayedFootnoteReferenceOrder = computed(() => {
+    // 未启用打字机：返回所有脚注引用（从原始 blocks 中提取）
+    if (!typewriterEnabled.value || !transformer) {
+      const references: string[] = []
+      const seen = new Set<string>()
+      for (const block of rawBlocks.value) {
+        const blockRefs = collectFootnoteReferences(block.node)
+        for (const ref of blockRefs) {
+          if (!seen.has(ref)) {
+            seen.add(ref)
+            references.push(ref)
+          }
+        }
+      }
+      return references
+    }
+
+    // 启用打字机：只有所有动画完成后才返回脚注引用
+    // 如果还有动画在进行中，返回空数组
+    if (!isAnimationComplete.value) {
+      return []
+    }
+
+    // 所有动画完成，返回全部脚注引用
+    const references: string[] = []
+    const seen = new Set<string>()
+    for (const db of displayBlocksRef.value) {
+      const blockRefs = collectFootnoteReferences(db.displayNode)
+      for (const ref of blockRefs) {
+        if (!seen.has(ref)) {
+          seen.add(ref)
+          references.push(ref)
+        }
+      }
+    }
+    return references
   })
 
   // 打字机控制对象
@@ -229,6 +263,7 @@ export function useTypewriter(options: UseTypewriterOptions): UseTypewriterRetur
     blocks,
     typewriter: typewriterControls,
     transformer,
-    isAnimationComplete
+    isAnimationComplete,
+    displayedFootnoteReferenceOrder
   }
 }

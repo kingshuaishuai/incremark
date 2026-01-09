@@ -4,17 +4,17 @@
  */
 
 // Stores/Utilities
-export { useIncremark, type UseIncremarkOptions, type UseIncremarkReturn, type TypewriterOptions, type TypewriterControls } from './stores/useIncremark'
-export { useDevTools, type UseDevToolsOptions } from './stores/useDevTools.svelte'
+export { useIncremark, type UseIncremarkOptions, type UseIncremarkReturn, type TypewriterOptions, type TypewriterControls } from './stores/useIncremark.svelte.ts'
+export { useDevTools, type UseDevToolsOptions } from './stores/useDevTools.svelte.ts'
 export {
   useBlockTransformer,
   type UseBlockTransformerOptions,
   type UseBlockTransformerReturn
-} from './stores/useBlockTransformer'
-export { useLocale, type UseLocaleReturn } from './stores/useLocale.svelte'
+} from './stores/useBlockTransformer.svelte.ts'
+export { useLocale, type UseLocaleReturn } from './stores/useLocale.svelte.ts'
 
 // Context
-export { setDefinitionsContext, getDefinitionsContext, type DefinitionsContextValue } from './context/definitionsContext'
+export { setDefinitionsContext, getDefinitionsContext, type DefinitionsContextValue } from './context/definitionsContext.svelte.ts'
 
 // Components
 export {

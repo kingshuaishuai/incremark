@@ -119,10 +119,29 @@
       : sampleMarkdown
     const chunks = content.match(/[\s\S]{1,20}/g) || []
 
+    // 性能监测
+    const updateTimes: number[] = []
+    console.log(`[Perf] Starting stream with ${chunks.length} chunks`)
+
     for (const chunk of chunks) {
+      const start = performance.now()
       mdContent += chunk
+      await nextTick() // 等待 DOM 更新完成
+      const elapsed = performance.now() - start
+      updateTimes.push(elapsed)
       await new Promise((resolve) => setTimeout(resolve, 30))
     }
+
+    // 输出性能统计
+    const avg = updateTimes.reduce((a, b) => a + b, 0) / updateTimes.length
+    const max = Math.max(...updateTimes)
+    const min = Math.min(...updateTimes)
+    console.log(`[Perf] Stream completed:`)
+    console.log(`  - Chunks: ${chunks.length}`)
+    console.log(`  - Avg update: ${avg.toFixed(2)}ms`)
+    console.log(`  - Min update: ${min.toFixed(2)}ms`)
+    console.log(`  - Max update: ${max.toFixed(2)}ms`)
+    console.log(`  - Updates > 16ms (frame drop): ${updateTimes.filter(t => t > 16).length}`)
 
     isFinished = true
     isStreaming = false
@@ -143,7 +162,6 @@
 
   // ============ 自动滚动 ============
   let autoScrollEnabled = $state(true)
-  let scrollContainerRef: ReturnType<typeof AutoScrollContainer> | undefined = $state()
 
   // ============ 自定义输入 ============
   let customInputMode = $state(false)
@@ -369,7 +387,6 @@
     <ConfigProvider {locale}>
       <ThemeProvider theme={currentTheme}>
         <AutoScrollContainer
-          bind:this={scrollContainerRef}
           enabled={autoScrollEnabled}
           class="scroll-container"
         >

@@ -106,3 +106,9 @@ export type {
   TextChunk,
   TextNodeWithChunks
 } from './transformer/utils'
+
+// ============ 通用工具函数 ============
+export {
+  collectFootnoteReferences,
+  traverseAst
+} from './utils'

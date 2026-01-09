@@ -1,6 +1,6 @@
 import { setContext, getContext } from 'svelte'
 import type { IncremarkLocale } from '@incremark/shared'
-import { en } from '../index'
+import { zhCN } from '@incremark/shared'
 
 const LOCALE_KEY = Symbol('incremark-locale')
 
@@ -38,9 +38,10 @@ export function provideLocale(getLocale: () => IncremarkLocale) {
  */
 export function useLocale(): UseLocaleReturn {
   const context = getContext<LocaleContextValue | undefined>(LOCALE_KEY)
-  
+
   // 获取当前 locale（支持响应式更新）
-  const getLocale = context?.getLocale ?? (() => en)
+  // 使用 getContext 的默认值，如果没有 provider 则使用中文
+  const getLocale = context?.getLocale ?? (() => zhCN)
 
   const t = (key: string): string => {
     const locale = getLocale()

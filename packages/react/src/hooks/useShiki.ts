@@ -148,7 +148,7 @@ function getShikiManager(): ShikiManager {
   return shikiManagerInstance
 }
 
-export { getShikiManager, ShikiManager }
+export { getShikiManager, ShikiManager, type HighlighterInfo }
 
 // ============ React Hook ============
 
@@ -160,17 +160,37 @@ export { getShikiManager, ShikiManager }
  */
 export function useShiki(theme: string) {
   const [isHighlighting, setIsHighlighting] = React.useState(false)
-  const highlighterInfoRef = React.useRef<HighlighterInfo | null>(null)
+  const [isReady, setIsReady] = React.useState(false)
+  const [highlighterInfo, setHighlighterInfo] = React.useState<HighlighterInfo | null>(null)
+
+  /**
+   * 初始化 highlighter（预加载）
+   */
+  const initHighlighter = React.useCallback(async (): Promise<void> => {
+    if (isReady) return
+
+    try {
+      const info = await getShikiManager().getHighlighter(theme as BundledTheme)
+      setHighlighterInfo(info)
+      setIsReady(true)
+    } catch (e) {
+      console.warn('Failed to initialize Shiki highlighter:', e)
+      throw e
+    }
+  }, [theme, isReady])
 
   /**
    * 获取 highlighter
    */
   const getHighlighter = React.useCallback(async (): Promise<HighlighterInfo> => {
-    if (!highlighterInfoRef.current) {
-      highlighterInfoRef.current = await getShikiManager().getHighlighter(theme as BundledTheme)
+    if (!highlighterInfo) {
+      const info = await getShikiManager().getHighlighter(theme as BundledTheme)
+      setHighlighterInfo(info)
+      setIsReady(true)
+      return info
     }
-    return highlighterInfoRef.current!
-  }, [theme])
+    return highlighterInfo
+  }, [theme, highlighterInfo])
 
   /**
    * 高亮代码
@@ -205,8 +225,10 @@ export function useShiki(theme: string) {
   }, [getHighlighter, theme])
 
   return {
+    highlighterInfo,
     isHighlighting,
+    isReady,
+    initHighlighter,
     highlight
   }
 }
-

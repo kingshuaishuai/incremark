@@ -6,6 +6,7 @@
   import SvgIcon from './SvgIcon.svelte'
   import { useShiki } from '../stores/useShiki.svelte'
   import { useLocale } from '../stores/useLocale.svelte'
+  import CachedCodeRenderer from './CachedCodeRenderer.svelte'
 
   /**
    * 组件 Props
@@ -19,18 +20,21 @@
     fallbackTheme?: string
     /** 是否禁用代码高亮 */
     disableHighlight?: boolean
+    /** block 状态 */
+    blockStatus?: 'pending' | 'stable' | 'completed'
   }
 
   let {
     node,
     theme = 'github-dark',
     fallbackTheme = 'github-dark',
-    disableHighlight = false
+    disableHighlight = false,
+    blockStatus = 'pending'
   }: Props = $props()
 
   // 状态
   let copied = $state(false)
-  let highlightedHtml = $state('')
+  let isLanguageLoaded = $state(false)
 
   // 使用 Shiki 单例管理器
   const shiki = useShiki(() => theme)
@@ -42,22 +46,49 @@
   const language = $derived(node.lang || 'text')
   const code = $derived(node.value)
 
-  /**
-   * 动态加载 shiki 并高亮
-   */
-  async function doHighlight() {
-    if (!code || disableHighlight) {
-      highlightedHtml = ''
+  // 是否应该启用高亮（需要有代码内容才开始高亮逻辑）
+  const shouldEnableHighlight = $derived(!disableHighlight && code && code.length > 0)
+
+  // 初始化 highlighter 并加载语言
+  $effect(() => {
+    // 如果不需要高亮，直接返回
+    if (!shouldEnableHighlight) {
       return
     }
 
-    try {
-      const html = await shiki.highlight(code, language, fallbackTheme)
-      highlightedHtml = html
-    } catch (e) {
-      highlightedHtml = ''
-    }
-  }
+    // 使用立即执行的异步函数
+    ;(async () => {
+      if (!shiki.highlighterInfo) {
+        await shiki.initHighlighter()
+      } else if (language && language !== 'text') {
+        // 检查语言是否已加载
+        if (!shiki.highlighterInfo.loadedLanguages.has(language as any)) {
+          try {
+            isLanguageLoaded = false
+            // 检查语言是否被 shiki 支持
+            const supportedLangs = shiki.highlighterInfo.highlighter.getLoadedLanguages()
+            const bundledLangs = await import('shiki').then(m => Object.keys(m.bundledLanguages || {}))
+            const isSupported = supportedLangs.includes(language) || bundledLangs.includes(language)
+
+            if (isSupported) {
+              await shiki.highlighterInfo.highlighter.loadLanguage(language as any)
+              shiki.highlighterInfo.loadedLanguages.add(language as any)
+            }
+            // 无论是否支持，都标记为已加载（不支持的语言会 fallback 到纯文本显示）
+            isLanguageLoaded = true
+          } catch {
+            // 语言加载失败，标记为已加载（回退到无高亮）
+            isLanguageLoaded = true
+          }
+        } else {
+          isLanguageLoaded = true
+        }
+      } else {
+        // text 语言不需要加载
+        isLanguageLoaded = true
+      }
+    })()
+  })
 
   let copyTimeoutId: ReturnType<typeof setTimeout> | null = null
 
@@ -79,11 +110,6 @@
   onDestroy(() => {
     if (copyTimeoutId) clearTimeout(copyTimeoutId)
   })
-
-  // 监听代码、主题、语言变化并重新渲染
-  $effect(() => {
-    doHighlight()
-  })
 </script>
 
 <div class="incremark-code">
@@ -100,16 +126,19 @@
     </button>
   </div>
   <div class="code-content">
-    {#if shiki.isHighlighting && !highlightedHtml}
-      <div class="code-loading">
-        <pre><code>{code}</code></pre>
-      </div>
-    {:else if highlightedHtml}
-      <div class="shiki-wrapper">
-        {@html highlightedHtml}
-      </div>
-    {:else}
-      <pre class="code-fallback"><code>{code}</code></pre>
-    {/if}
+    <div class="shiki-wrapper">
+      {#if shouldEnableHighlight && shiki.highlighterInfo && isLanguageLoaded}
+        <!-- Stream 高亮（只有当存在代码内容且语言加载完成后才渲染） -->
+        <CachedCodeRenderer
+          code={code}
+          lang={language}
+          theme={theme}
+          highlighter={shiki.highlighterInfo.highlighter}
+        />
+      {:else}
+        <!-- 无高亮模式（禁用高亮、无代码内容、或语言未加载完成时显示） -->
+        <pre class="code-fallback"><code>{code}</code></pre>
+      {/if}
+    </div>
   </div>
 </div>
