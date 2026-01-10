@@ -15,38 +15,31 @@ Incremark 的 Vue 3 集成库。
 ## 安装
 
 ```bash
-pnpm add @incremark/core @incremark/vue
+pnpm add @incremark/vue @incremark/theme
 ```
 
 ## 快速开始
 
-**1. 引入样式**
-
-```ts
-import '@incremark/vue/style.css'
-```
-
-**2. 在组件中使用**
-
 ```vue
 <script setup>
-import { useIncremark, Incremark } from '@incremark/vue'
-import '@incremark/vue/style.css'
+import { ref } from 'vue'
+import { IncremarkContent } from '@incremark/vue'
+import '@incremark/theme/styles.css'
 
-const { blocks, append, finalize, reset } = useIncremark({ gfm: true })
+const content = ref('')
+const isFinished = ref(false)
 
 async function handleStream(stream) {
-  reset()
   for await (const chunk of stream) {
-    append(chunk)
+    content.value += chunk
   }
-  finalize()
+  isFinished.value = true
 }
 </script>
 
 <template>
   <button @click="handleStream">开始</button>
-  <Incremark :blocks="blocks" />
+  <IncremarkContent :content="content" :is-finished="isFinished" />
 </template>
 ```
 

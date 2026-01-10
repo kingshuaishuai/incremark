@@ -15,37 +15,29 @@ Incremark 的 Svelte 5 集成库。
 ## 安装
 
 ```bash
-pnpm add @incremark/core @incremark/svelte
+pnpm add @incremark/svelte @incremark/theme
 ```
 
 ## 快速开始
 
-**1. 引入样式**
-
-```ts
-import '@incremark/svelte/style.css'
-```
-
-**2. 在组件中使用**
-
 ```svelte
 <script>
-  import { useIncremark, Incremark } from '@incremark/svelte'
-  import '@incremark/svelte/style.css'
+  import { IncremarkContent } from '@incremark/svelte'
+  import '@incremark/theme/styles.css'
 
-  const { blocks, append, finalize, reset } = useIncremark({ gfm: true })
+  let content = $state('')
+  let isFinished = $state(false)
 
   async function handleStream(stream) {
-    reset()
     for await (const chunk of stream) {
-      append(chunk)
+      content += chunk
     }
-    finalize()
+    isFinished = true
   }
 </script>
 
-<button on:click={handleStream}>开始</button>
-<Incremark {blocks} />
+<button onclick={handleStream}>开始</button>
+<IncremarkContent {content} {isFinished} />
 ```
 
 ## API

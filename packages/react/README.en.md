@@ -17,7 +17,7 @@ React 18+ integration library for Incremark, providing high-performance streamin
 ## Installation
 
 ```bash
-pnpm add @incremark/core @incremark/react
+pnpm add @incremark/react @incremark/theme
 ```
 
 ## Quick Start
@@ -27,7 +27,7 @@ pnpm add @incremark/core @incremark/react
 ```tsx
 import { useState } from 'react'
 import { IncremarkContent } from '@incremark/react'
-import '@incremark/react/styles.css'
+import '@incremark/theme/styles.css'
 
 function App() {
   const [content, setContent] = useState('')

@@ -38,53 +38,57 @@ Traditional Markdown parsers **re-parse the entire document** on every new chunk
 ### Vue
 
 ```bash
-pnpm add @incremark/core @incremark/vue
+pnpm add @incremark/vue @incremark/theme
 ```
 
 ```vue
 <script setup>
-import { useIncremark, Incremark } from '@incremark/vue'
+import { ref } from 'vue'
+import { IncremarkContent } from '@incremark/vue'
+import '@incremark/theme/styles.css'
 
-const { blocks, append, finalize, reset } = useIncremark({ gfm: true })
+const content = ref('')
+const isFinished = ref(false)
 
 async function handleAIStream(stream) {
-  reset()
   for await (const chunk of stream) {
-    append(chunk)
+    content.value += chunk
   }
-  finalize()
+  isFinished.value = true
 }
 </script>
 
 <template>
-  <Incremark :blocks="blocks" />
+  <IncremarkContent :content="content" :is-finished="isFinished" />
 </template>
 ```
 
 ### React
 
 ```bash
-pnpm add @incremark/core @incremark/react
+pnpm add @incremark/react @incremark/theme
 ```
 
 ```tsx
-import { useIncremark, Incremark } from '@incremark/react'
+import { useState } from 'react'
+import { IncremarkContent } from '@incremark/react'
+import '@incremark/theme/styles.css'
 
 function App() {
-  const { blocks, append, finalize, reset } = useIncremark({ gfm: true })
+  const [content, setContent] = useState('')
+  const [isFinished, setIsFinished] = useState(false)
 
   async function handleAIStream(stream: ReadableStream) {
-    reset()
     const reader = stream.getReader()
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
-      append(new TextDecoder().decode(value))
+      setContent(prev => prev + new TextDecoder().decode(value))
     }
-    finalize()
+    setIsFinished(true)
   }
 
-  return <Incremark blocks={blocks} />
+  return <IncremarkContent content={content} isFinished={isFinished} />
 }
 ```
 

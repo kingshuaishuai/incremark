@@ -15,44 +15,37 @@ Incremark 的 React 18+ 集成库。
 ## 安装
 
 ```bash
-pnpm add @incremark/core @incremark/react
+pnpm add @incremark/react @incremark/theme
 ```
 
 ## 快速开始
 
-**1. 引入样式**
-
 ```tsx
-import '@incremark/react/styles.css'
-```
-
-**2. 在组件中使用**
-
-```tsx
-import { useIncremark, Incremark } from '@incremark/react'
-import '@incremark/react/styles.css'
+import { useState } from 'react'
+import { IncremarkContent } from '@incremark/react'
+import '@incremark/theme/styles.css'
 
 function App() {
-  const { blocks, append, finalize, reset } = useIncremark({ gfm: true })
+  const [content, setContent] = useState('')
+  const [isFinished, setIsFinished] = useState(false)
 
   async function handleStream(stream: ReadableStream) {
-    reset()
     const reader = stream.getReader()
     const decoder = new TextDecoder()
-    
+
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
-      append(decoder.decode(value))
+      setContent(prev => prev + decoder.decode(value))
     }
-    
-    finalize()
+
+    setIsFinished(true)
   }
 
   return (
     <>
       <button onClick={() => handleStream(stream)}>开始</button>
-      <Incremark blocks={blocks} />
+      <IncremarkContent content={content} isFinished={isFinished} />
     </>
   )
 }

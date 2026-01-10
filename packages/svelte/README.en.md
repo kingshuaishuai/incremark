@@ -16,7 +16,7 @@ Svelte 5 integration library for Incremark, providing high-performance streaming
 ## Installation
 
 ```bash
-pnpm add @incremark/core @incremark/svelte
+pnpm add @incremark/svelte @incremark/theme
 ```
 
 ## Quick Start
@@ -26,7 +26,7 @@ pnpm add @incremark/core @incremark/svelte
 ```svelte
 <script lang="ts">
   import { IncremarkContent } from '@incremark/svelte'
-  import '@incremark/svelte/style.css'
+  import '@incremark/theme/styles.css'
 
   let content = $state('')
   let isFinished = $state(false)

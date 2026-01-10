@@ -72,36 +72,111 @@ Traditional Markdown parsers **re-parse the entire document** on every new chunk
 
 ## Quick Experience
 
-```bash
-# Install
-pnpm add @incremark/core @incremark/vue
+::: code-group
 
-# Or with React
-pnpm add @incremark/core @incremark/react
-
-# Or with Svelte
-pnpm add @incremark/core @incremark/svelte
-
-# Or with Solid
-pnpm add @incremark/core @incremark/solid
+```bash [Vue]
+pnpm add @incremark/vue @incremark/theme
 ```
 
-```vue
-<script setup>
-import { useIncremark, Incremark } from '@incremark/vue'
+```bash [React]
+pnpm add @incremark/react @incremark/theme
+```
 
-const { blocks, append, finalize } = useIncremark()
+```bash [Svelte]
+pnpm add @incremark/svelte @incremark/theme
+```
+
+```bash [Solid]
+pnpm add @incremark/solid @incremark/theme
+```
+
+:::
+
+::: code-group
+
+```vue [Vue]
+<script setup>
+import { ref } from 'vue'
+import { IncremarkContent } from '@incremark/vue'
+import '@incremark/theme/styles.css'
+
+const content = ref('')
+const isFinished = ref(false)
 
 // Handle AI streaming output
 async function handleStream(stream) {
   for await (const chunk of stream) {
-    append(chunk)
+    content.value += chunk
   }
-  finalize()
+  isFinished.value = true
 }
 </script>
 
 <template>
-  <Incremark :blocks="blocks" />
+  <IncremarkContent :content="content" :is-finished="isFinished" />
 </template>
 ```
+
+```tsx [React]
+import { useState } from 'react'
+import { IncremarkContent } from '@incremark/react'
+import '@incremark/theme/styles.css'
+
+function App() {
+  const [content, setContent] = useState('')
+  const [isFinished, setIsFinished] = useState(false)
+
+  // Handle AI streaming output
+  async function handleStream(stream) {
+    for await (const chunk of stream) {
+      setContent(prev => prev + chunk)
+    }
+    setIsFinished(true)
+  }
+
+  return <IncremarkContent content={content} isFinished={isFinished} />
+}
+```
+
+```svelte [Svelte]
+<script>
+import { IncremarkContent } from '@incremark/svelte'
+import '@incremark/theme/styles.css'
+
+let content = $state('')
+let isFinished = $state(false)
+
+// Handle AI streaming output
+async function handleStream(stream) {
+  for await (const chunk of stream) {
+    content += chunk
+  }
+  isFinished = true
+}
+</script>
+
+<IncremarkContent {content} {isFinished} />
+```
+
+```tsx [Solid]
+import { createSignal } from 'solid-js'
+import { IncremarkContent } from '@incremark/solid'
+import '@incremark/theme/styles.css'
+
+function App() {
+  const [content, setContent] = createSignal('')
+  const [isFinished, setIsFinished] = createSignal(false)
+
+  // Handle AI streaming output
+  async function handleStream(stream) {
+    for await (const chunk of stream) {
+      setContent(prev => prev + chunk)
+    }
+    setIsFinished(true)
+  }
+
+  return <IncremarkContent content={content()} isFinished={isFinished()} />
+}
+```
+
+:::

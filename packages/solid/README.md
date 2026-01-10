@@ -17,7 +17,7 @@ Incremark 的 SolidJS 集成库。
 ## 安装
 
 ```bash
-pnpm add @incremark/core @incremark/solid
+pnpm add @incremark/solid @incremark/theme
 ```
 
 ## 快速开始

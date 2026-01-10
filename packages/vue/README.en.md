@@ -17,7 +17,7 @@ Vue 3 integration library for Incremark, providing high-performance streaming Ma
 ## Installation
 
 ```bash
-pnpm add @incremark/core @incremark/vue
+pnpm add @incremark/vue @incremark/theme
 ```
 
 ## Quick Start
@@ -28,7 +28,7 @@ pnpm add @incremark/core @incremark/vue
 <script setup>
 import { ref } from 'vue'
 import { IncremarkContent } from '@incremark/vue'
-import '@incremark/vue/style.css'
+import '@incremark/theme/styles.css'
 
 const content = ref('')
 const isFinished = ref(false)

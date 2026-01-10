@@ -17,7 +17,7 @@ SolidJS integration library for Incremark, providing high-performance streaming 
 ## Installation
 
 ```bash
-pnpm add @incremark/core @incremark/solid
+pnpm add @incremark/solid @incremark/theme
 ```
 
 ## Quick Start
@@ -27,7 +27,7 @@ pnpm add @incremark/core @incremark/solid
 ```tsx
 import { createSignal } from 'solid-js'
 import { IncremarkContent } from '@incremark/solid'
-import '@incremark/solid/style.css'
+import '@incremark/theme/styles.css'
 
 function App() {
   const [content, setContent] = createSignal('')
