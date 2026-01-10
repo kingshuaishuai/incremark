@@ -87,11 +87,76 @@ console.log(update.completed) // 已完成的块
 
 获取完整 AST。
 
-## BlockTransformer
+## 与框架集成
 
-打字机效果控制器，作为解析器和渲染器之间的中间层。
+对于日常使用，建议直接使用框架集成包，它们已内置增量解析和打字机效果支持：
 
-### 基本用法
+```vue
+<!-- Vue -->
+<script setup>
+import { ref } from 'vue'
+import { IncremarkContent } from '@incremark/vue'
+
+const content = ref('')
+const isFinished = ref(false)
+
+async function simulateStream() {
+  content.value = ''
+  isFinished.value = false
+
+  const text = '# Hello\n\nThis is **Incremark**!'
+  for (const chunk of text.match(/[\s\S]{1,5}/g) || []) {
+    content.value += chunk  // 增量追加
+    await new Promise(r => setTimeout(r, 50))
+  }
+  isFinished.value = true
+}
+</script>
+
+<template>
+  <IncremarkContent
+    :content="content"
+    :is-finished="isFinished"
+    :incremark-options="{ typewriter: { enabled: true } }"
+  />
+</template>
+```
+
+```tsx
+// React
+import { useState } from 'react'
+import { IncremarkContent } from '@incremark/react'
+
+function App() {
+  const [content, setContent] = useState('')
+  const [isFinished, setIsFinished] = useState(false)
+
+  async function simulateStream() {
+    setContent('')
+    setIsFinished(false)
+
+    const text = '# Hello\n\nThis is **Incremark**!'
+    const chunks = text.match(/[\s\S]{1,5}/g) || []
+    for (const chunk of chunks) {
+      setContent(prev => prev + chunk)  // 增量追加
+      await new Promise(r => setTimeout(r, 50))
+    }
+    setIsFinished(true)
+  }
+
+  return (
+    <IncremarkContent
+      content={content}
+      isFinished={isFinished}
+      incremarkOptions={{ typewriter: { enabled: true } } }
+    />
+  )
+}
+```
+
+## 高级用法：BlockTransformer
+
+`BlockTransformer` 是打字机效果控制器，作为解析器和渲染器之间的中间层。仅在需要自定义渲染逻辑时使用。
 
 ```ts
 import { createBlockTransformer, defaultPlugins } from '@incremark/core'
@@ -180,11 +245,6 @@ interface DisplayBlock {
   meta?: unknown
 }
 ```
-
-## 与框架集成
-
-- Vue: [@incremark/vue](../vue)
-- React: [@incremark/react](../react)
 
 ## License
 

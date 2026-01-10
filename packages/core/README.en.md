@@ -129,11 +129,76 @@ Get completed blocks.
 
 Get current buffer content.
 
-## BlockTransformer
+## Framework Integration
 
-Typewriter effect controller, serves as middleware between parser and renderer.
+For daily use, it's recommended to use the framework packages which have built-in incremental parsing and typewriter effect support:
 
-### Basic Usage
+```vue
+<!-- Vue -->
+<script setup>
+import { ref } from 'vue'
+import { IncremarkContent } from '@incremark/vue'
+
+const content = ref('')
+const isFinished = ref(false)
+
+async function simulateStream() {
+  content.value = ''
+  isFinished.value = false
+
+  const text = '# Hello\n\nThis is **Incremark**!'
+  for (const chunk of text.match(/[\s\S]{1,5}/g) || []) {
+    content.value += chunk  // Incremental append
+    await new Promise(r => setTimeout(r, 50))
+  }
+  isFinished.value = true
+}
+</script>
+
+<template>
+  <IncremarkContent
+    :content="content"
+    :is-finished="isFinished"
+    :incremark-options="{ typewriter: { enabled: true } }"
+  />
+</template>
+```
+
+```tsx
+// React
+import { useState } from 'react'
+import { IncremarkContent } from '@incremark/react'
+
+function App() {
+  const [content, setContent] = useState('')
+  const [isFinished, setIsFinished] = useState(false)
+
+  async function simulateStream() {
+    setContent('')
+    setIsFinished(false)
+
+    const text = '# Hello\n\nThis is **Incremark**!'
+    const chunks = text.match(/[\s\S]{1,5}/g) || []
+    for (const chunk of chunks) {
+      setContent(prev => prev + chunk)  // Incremental append
+      await new Promise(r => setTimeout(r, 50))
+    }
+    setIsFinished(true)
+  }
+
+  return (
+    <IncremarkContent
+      content={content}
+      isFinished={isFinished}
+      incremarkOptions={{ typewriter: { enabled: true } } }
+    />
+  )
+}
+```
+
+## Advanced: BlockTransformer
+
+`BlockTransformer` is the typewriter effect controller, serving as middleware between parser and renderer. Only use this when you need custom rendering logic.
 
 ```ts
 import { createBlockTransformer, defaultPlugins } from '@incremark/core'

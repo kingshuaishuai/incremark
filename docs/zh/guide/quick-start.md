@@ -67,10 +67,9 @@ function App() {
     setIsFinished(false)
 
     const text = '# Hello\n\nThis is **Incremark**!'
-    let acc = ''
-    for (const chunk of text.match(/[\s\S]{1,5}/g) || []) {
-      acc += chunk
-      setContent(acc)
+    const chunks = text.match(/[\s\S]{1,5}/g) || []
+    for (const chunk of chunks) {
+      setContent(prev => prev + chunk)
       await new Promise(r => setTimeout(r, 50))
     }
     setIsFinished(true)
