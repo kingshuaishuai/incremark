@@ -53,6 +53,17 @@ const components = {
 
 <IncremarkContent {content} {components} />
 ```
+
+```tsx [Solid]
+import { IncremarkContent } from '@incremark/solid'
+import CustomHeading from './CustomHeading'
+
+const components = {
+  heading: CustomHeading
+}
+
+<IncremarkContent content={content()} components={components} />
+```
 :::
 
 ## Component Types
@@ -136,6 +147,24 @@ const components = {
 </script>
 
 <IncremarkContent {content} {components} />
+```
+
+```tsx [Solid]
+import { IncremarkContent } from '@incremark/solid'
+
+function MyCodeBlock(props: { node: any }) {
+  return (
+    <pre class="my-code">
+      <code>{props.node.value}</code>
+    </pre>
+  )
+}
+
+const components = {
+  code: MyCodeBlock
+}
+
+<IncremarkContent content={content()} components={components} />
 ```
 :::
 

@@ -134,6 +134,24 @@ function App() {
 
 <Incremark {blocks} />
 ```
+
+```tsx [Solid]
+import { useIncremark, Incremark } from '@incremark/solid'
+
+function App() {
+  const { blocks, append, finalize, reset } = useIncremark({ gfm: true })
+
+  async function handleStream(stream) {
+    reset()
+    for await (const chunk of stream) {
+      append(chunk)
+    }
+    finalize()
+  }
+
+  return <Incremark blocks={blocks()} />
+}
+```
 :::
 
 ### useIncremark 返回值

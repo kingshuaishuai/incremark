@@ -21,6 +21,7 @@
 - [x] **@incremark/vue**: 完整的 Vue 组件集成。
 - [x] **@incremark/react**: 完整的 React 组件集成。
 - [x] **@incremark/svelte**: 完整的 Svelte 组件集成。
+- [x] **@incremark/solid**: 完整的 Solid 组件集成。
 - [x] **IncremarkContent**: 简单易用的声明式入口组件。
 
 ### 🔌 功能与扩展

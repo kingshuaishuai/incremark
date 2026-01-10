@@ -21,6 +21,7 @@ Our future plans focus on enhancing the library's capabilities for building mode
 - [x] **@incremark/vue**: Full-featured Vue component library.
 - [x] **@incremark/react**: Full-featured React component library.
 - [x] **@incremark/svelte**: Full-featured Svelte component library.
+- [x] **@incremark/solid**: Full-featured Solid component library.
 - [x] **IncremarkContent**: Declarative, easy-to-use entry component for all frameworks.
 
 ### 🔌 Features & Extensions

@@ -22,6 +22,9 @@ hero:
       text: Svelte Demo
       link: https://svelte.incremark.com/
     - theme: alt
+      text: Solid Demo
+      link: https://solid.incremark.com/
+    - theme: alt
       text: View on GitHub
       link: https://github.com/kingshuaishuai/incremark
 
@@ -37,7 +40,7 @@ features:
     details: Intelligent boundary detection for complex nested structures like code blocks and lists.
   - icon: 🔌
     title: Framework Agnostic
-    details: Core logic decoupled. First-class support for Vue, React, and Svelte.
+    details: Core logic decoupled. First-class support for Vue, React, Svelte, and Solid.
   - icon: 📊
     title: DevTools
     details: Built-in DevTools to visualize parsing state, block structure, and performance metrics.
@@ -78,6 +81,9 @@ pnpm add @incremark/core @incremark/react
 
 # Or with Svelte
 pnpm add @incremark/core @incremark/svelte
+
+# Or with Solid
+pnpm add @incremark/core @incremark/solid
 ```
 
 ```vue

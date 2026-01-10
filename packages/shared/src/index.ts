@@ -5,7 +5,7 @@
  */
 
 // 类型定义
-export type { TextNodeWithChunks } from './types'
+export type { TextNodeWithChunks, TextChunk } from './types'
 
 // HTML 处理
 export { extractTagName, isHtmlNode, isHtmlWrapperNode, processHtmlNodes, type HtmlTagInfo, type HtmlWrapperNode } from './html'

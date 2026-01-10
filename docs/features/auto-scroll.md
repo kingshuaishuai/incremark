@@ -47,6 +47,22 @@ function App() {
   <IncremarkContent {content} {isFinished} />
 </AutoScrollContainer>
 ```
+
+```tsx [Solid]
+import { createSignal } from 'solid-js'
+import { IncremarkContent, AutoScrollContainer } from '@incremark/solid'
+
+function App() {
+  const [content, setContent] = createSignal('')
+  const [isFinished, setIsFinished] = createSignal(false)
+
+  return (
+    <AutoScrollContainer enabled class="h-[500px]">
+      <IncremarkContent content={content()} isFinished={isFinished()} />
+    </AutoScrollContainer>
+  )
+}
+```
 :::
 
 ## Props

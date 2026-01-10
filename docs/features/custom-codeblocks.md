@@ -72,6 +72,25 @@ const customCodeBlocks = {
 
 <IncremarkContent {content} {customCodeBlocks} />
 ```
+
+```tsx [Solid]
+import { IncremarkContent } from '@incremark/solid'
+
+function EchartsBlock(props: {
+  codeStr: string
+  lang: string
+  completed: boolean
+  takeOver: boolean
+}) {
+  return <div class="echarts">{props.codeStr}</div>
+}
+
+const customCodeBlocks = {
+  echarts: EchartsBlock
+}
+
+<IncremarkContent content={content()} customCodeBlocks={customCodeBlocks} />
+```
 :::
 
 ## Custom Code Block Props

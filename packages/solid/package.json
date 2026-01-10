@@ -1,0 +1,74 @@
+{
+  "name": "@incremark/solid",
+  "version": "0.3.2",
+  "description": "High-performance streaming markdown renderer for SolidJS ecosystem.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./style.css": "@incremark/theme/styles.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup && npm run build:types",
+    "build:types": "tsc -p tsconfig.build.json",
+    "dev": "tsup --watch"
+  },
+  "dependencies": {
+    "@antfu/utils": "^9.3.0",
+    "@incremark/core": "workspace:*",
+    "@incremark/devtools": "workspace:*",
+    "@incremark/icons": "workspace:*",
+    "@incremark/shared": "workspace:*",
+    "@incremark/theme": "workspace:*",
+    "shiki": "^3.20.0",
+    "shiki-stream": "^0.1.4"
+  },
+  "peerDependencies": {
+    "katex": "^0.16.0",
+    "mermaid": "^10.0.0 || ^11.0.0",
+    "solid-js": "^1.9.0"
+  },
+  "peerDependenciesMeta": {
+    "mermaid": {
+      "optional": true
+    },
+    "katex": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@shikijs/core": "^3.21.0",
+    "@types/lodash-es": "^4.17.12",
+    "@types/mdast": "^4.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "solid-js": "^1.9.0"
+  },
+  "keywords": [
+    "markdown",
+    "solid",
+    "solidjs",
+    "streaming",
+    "ai",
+    "chatgpt",
+    "llm",
+    "typewriter",
+    "i18n",
+    "a11y"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kingshuaishuai/incremark.git",
+    "directory": "packages/solid"
+  },
+  "homepage": "https://www.incremark.com/"
+}

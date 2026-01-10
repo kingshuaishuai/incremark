@@ -53,6 +53,17 @@ const components = {
 
 <IncremarkContent {content} {components} />
 ```
+
+```tsx [Solid]
+import { IncremarkContent } from '@incremark/solid'
+import CustomHeading from './CustomHeading'
+
+const components = {
+  heading: CustomHeading
+}
+
+<IncremarkContent content={content()} components={components} />
+```
 :::
 
 ## 组件类型

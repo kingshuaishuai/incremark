@@ -68,6 +68,33 @@ const options: UseIncremarkOptions = {
 
 <IncremarkContent {content} {isFinished} incremarkOptions={options} />
 ```
+
+```tsx [Solid]
+import { createSignal } from 'solid-js'
+import { IncremarkContent, type UseIncremarkOptions } from '@incremark/solid'
+
+function App() {
+  const [content, setContent] = createSignal('')
+  const [isFinished, setIsFinished] = createSignal(false)
+
+  const options: UseIncremarkOptions = {
+    typewriter: {
+      enabled: true,
+      charsPerTick: [1, 3],
+      tickInterval: 30,
+      effect: 'typing'
+    }
+  }
+
+  return (
+    <IncremarkContent
+      content={content()}
+      isFinished={isFinished()}
+      incremarkOptions={options}
+    />
+  )
+}
+```
 :::
 
 ## Configuration

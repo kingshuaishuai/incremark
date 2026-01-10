@@ -75,6 +75,29 @@ const customContainers = {
   {customContainers}
 />
 ```
+
+```tsx [Solid]
+import { IncremarkContent } from '@incremark/solid'
+
+function WarningContainer(props: { node: any; children: any }) {
+  return (
+    <div class="warning-box">
+      <div class="warning-title">{props.node.title || 'Warning'}</div>
+      <div class="warning-content">{props.children}</div>
+    </div>
+  )
+}
+
+const customContainers = {
+  warning: WarningContainer
+}
+
+<IncremarkContent
+  content={content()}
+  incremarkOptions={{ containers: true }}
+  customContainers={customContainers}
+/>
+```
 :::
 
 ## 容器组件 Props

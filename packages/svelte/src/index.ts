@@ -61,6 +61,35 @@ export type {
   AnimationEffect
 } from '@incremark/core'
 
+// Re-export mdast types
+export type {
+  Root as MdastRoot,
+  Parent,
+  // Nodes
+  Heading,
+  Paragraph,
+  Code,
+  Blockquote,
+  List,
+  ListItem,
+  Table,
+  TableCell,
+  ThematicBreak,
+  // Inline
+  Text,
+  PhrasingContent,
+  InlineCode,
+  Link,
+  LinkReference,
+  Image,
+  ImageReference,
+  // HTML
+  HTML,
+  // Definitions
+  Definition,
+  FootnoteDefinition
+} from 'mdast'
+
 // Re-export transformer utilities and plugins
 export {
   BlockTransformer,

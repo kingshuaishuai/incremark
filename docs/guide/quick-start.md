@@ -11,14 +11,28 @@ pnpm add @incremark/vue @incremark/theme
 pnpm add @incremark/react @incremark/theme
 # OR
 pnpm add @incremark/svelte @incremark/theme
+# OR
+pnpm add @incremark/solid @incremark/theme
 ```
 
 ```bash [npm]
 npm install @incremark/vue @incremark/theme
+# OR
+npm install @incremark/react @incremark/theme
+# OR
+npm install @incremark/svelte @incremark/theme
+# OR
+npm install @incremark/solid @incremark/theme
 ```
 
 ```bash [yarn]
 yarn add @incremark/vue @incremark/theme
+# OR
+yarn add @incremark/react @incremark/theme
+# OR
+yarn add @incremark/svelte @incremark/theme
+# OR
+yarn add @incremark/solid @incremark/theme
 ```
 :::
 
@@ -108,6 +122,37 @@ function App() {
 <button onclick={simulateStream}>Start</button>
 <IncremarkContent {content} {isFinished} />
 ```
+
+```tsx [Solid]
+import { createSignal } from 'solid-js'
+import { IncremarkContent } from '@incremark/solid'
+import '@incremark/theme/styles.css' // [!code hl]
+
+function App() {
+  const [content, setContent] = createSignal('')
+  const [isFinished, setIsFinished] = createSignal(false)
+
+  async function simulateStream() {
+    setContent('')
+    setIsFinished(false)
+
+    const text = '# Hello\n\nThis is **Incremark**!'
+    const chunks = text.match(/[\s\S]{1,5}/g) || []
+    for (const chunk of chunks) {
+      setContent(prev => prev + chunk)
+      await new Promise(r => setTimeout(r, 50))
+    }
+    setIsFinished(true)
+  }
+
+  return (
+    <>
+      <button onClick={simulateStream}>Start</button>
+      <IncremarkContent content={content()} isFinished={isFinished()} />
+    </>
+  )
+}
+```
 :::
 
 ## Using Stream Mode
@@ -141,4 +186,3 @@ If you need to support math formulas (KaTeX), make sure to also import the KaTeX
 ```ts
 import 'katex/dist/katex.min.css'
 ```
-

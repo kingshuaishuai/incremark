@@ -32,6 +32,14 @@ import { IncremarkContent, ThemeProvider } from '@incremark/react'
   <IncremarkContent {content} />
 </ThemeProvider>
 ```
+
+```tsx [Solid]
+import { IncremarkContent, ThemeProvider } from '@incremark/solid'
+
+<ThemeProvider theme="dark">
+  <IncremarkContent content={content()} />
+</ThemeProvider>
+```
 :::
 
 ## 内置主题
