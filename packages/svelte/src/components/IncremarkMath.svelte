@@ -30,7 +30,7 @@
 
   let {
     node,
-    renderDelay = 300
+    renderDelay = 0
   }: Props = $props()
 
   // 状态

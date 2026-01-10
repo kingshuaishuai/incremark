@@ -18,7 +18,7 @@ const props = withDefaults(
     renderDelay?: number
   }>(),
   {
-    renderDelay: 300
+    renderDelay: 0
   }
 )
 

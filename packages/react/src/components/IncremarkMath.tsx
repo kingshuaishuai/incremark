@@ -17,7 +17,7 @@ export interface IncremarkMathProps {
 
 export const IncremarkMath: React.FC<IncremarkMathProps> = ({
   node,
-  renderDelay = 300
+  renderDelay = 0
 }) => {
   const [renderedHtml, setRenderedHtml] = useState('')
   const [isLoading, setIsLoading] = useState(false)
