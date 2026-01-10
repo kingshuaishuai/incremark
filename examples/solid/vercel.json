@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd ../.. && pnpm build && cd examples/solid && pnpm build",
+  "outputDirectory": "dist",
+  "installCommand": "cd ../.. && pnpm install"
+}
