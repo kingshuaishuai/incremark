@@ -145,7 +145,8 @@ export const CachedCodeRenderer = forwardRef<CachedCodeRendererRef, CachedCodeRe
     }, [code, hasStreamError])
 
     // 渲染（与 Vue 版本对齐）
-    if (hasStreamError) {
+    // SSR 或错误时渲染原始代码
+    if (hasStreamError || tokens.length === 0) {
       return (
         <pre className="shiki incremark-code-stream">
           <code>{code}</code>

@@ -5,6 +5,7 @@
   - 在脚本顶层创建和消费 stream（类似 Vue setup）
   - 使用 $state 存储 tokens
   - 使用 $effect 监听 code 变化
+  - SSR 兼容：Web Streams API 只在浏览器中使用
 -->
 <script lang="ts">
   import type { ThemedToken } from '@shikijs/core'
@@ -22,6 +23,9 @@
 
   let { code, lang, theme, highlighter }: Props = $props()
 
+  // SSR 检测：Web Streams API 只在浏览器中可用
+  const isBrowser = typeof window !== 'undefined'
+
   // Stream 错误状态
   let hasStreamError = $state(false)
 
@@ -31,57 +35,58 @@
   // 已处理的 code 长度
   let index = $state(0)
 
-  // 创建文本流（在脚本顶层，类似 Vue setup）
+  // Stream 相关状态（只在浏览器中初始化）
   let controller: ReadableStreamController<string> | null = null
-  const textStream = new ReadableStream<string>({
-    start(_controller) {
-      controller = _controller
-    }
-  })
-
-  // 创建 token stream
-  // 使用 untrack 获取初始值，因为 stream 创建后不支持动态更改 lang/theme/highlighter
   let tokenStream: ReadableStream<any> | null = null
 
-  try {
-    const initialHighlighter = untrack(() => highlighter)
-    const initialLang = untrack(() => lang)
-    const initialTheme = untrack(() => theme)
-    
-    tokenStream = textStream.pipeThrough(
-      new CodeToTokenTransformStream({
-        highlighter: initialHighlighter,
-        lang: initialLang,
-        theme: initialTheme,
-        allowRecalls: true
-      })
-    )
-  } catch (error) {
-    console.error('Failed to create token stream:', error)
-    hasStreamError = true
-  }
-
-  // 消费 token stream（与 Vue/React 版本对齐）
-  if (tokenStream) {
-    tokenStream.pipeTo(
-      new WritableStream({
-        write(token: any) {
-          if ('recall' in token) {
-            tokens.splice(tokens.length - token.recall, token.recall)
-          } else {
-            tokens.push(token)
-          }
-        }
-      })
-    ).catch((error) => {
-      console.error('Stream error:', error)
-      hasStreamError = true
+  // 只在浏览器环境中创建 stream
+  if (isBrowser) {
+    const textStream = new ReadableStream<string>({
+      start(_controller) {
+        controller = _controller
+      }
     })
+
+    try {
+      const initialHighlighter = untrack(() => highlighter)
+      const initialLang = untrack(() => lang)
+      const initialTheme = untrack(() => theme)
+      
+      tokenStream = textStream.pipeThrough(
+        new CodeToTokenTransformStream({
+          highlighter: initialHighlighter,
+          lang: initialLang,
+          theme: initialTheme,
+          allowRecalls: true
+        })
+      )
+    } catch (error) {
+      console.error('Failed to create token stream:', error)
+      hasStreamError = true
+    }
+
+    // 消费 token stream
+    if (tokenStream) {
+      tokenStream.pipeTo(
+        new WritableStream({
+          write(token: any) {
+            if ('recall' in token) {
+              tokens.splice(tokens.length - token.recall, token.recall)
+            } else {
+              tokens.push(token)
+            }
+          }
+        })
+      ).catch((error) => {
+        console.error('Stream error:', error)
+        hasStreamError = true
+      })
+    }
   }
 
   // 监听 code 变化，增量推送到流中（与 Vue 的 watchEffect 对齐）
   $effect(() => {
-    if (hasStreamError) return
+    if (!isBrowser || hasStreamError || !controller) return
 
     // 读取 code 的值来建立依赖
     const currentCode = code
@@ -92,7 +97,7 @@
     // 只处理增量更新：传入新增的部分
     if (currentCode.length > currentIndex) {
       const incremental = currentCode.slice(currentIndex)
-      controller?.enqueue(incremental as any)
+      controller.enqueue(incremental as any)
       index = currentCode.length
     }
   })
@@ -103,8 +108,8 @@
   })
 </script>
 
-{#if hasStreamError}
-  <!-- 错误状态：渲染纯文本 -->
+{#if hasStreamError || !isBrowser || tokens.length === 0}
+  <!-- SSR 或错误时渲染原始代码 -->
   <pre class="shiki incremark-code-stream"><code>{code}</code></pre>
 {:else}
   <!-- 正常渲染高亮代码（与 Vue/React 的渲染结构对齐） -->
