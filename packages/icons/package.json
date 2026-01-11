@@ -1,6 +1,6 @@
 {
   "name": "@incremark/icons",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Incremark icons - SVG icon library for Vue, React, and Svelte components.",
   "type": "module",
   "main": "./dist/index.js",

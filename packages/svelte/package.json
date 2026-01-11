@@ -1,6 +1,6 @@
 {
   "name": "@incremark/svelte",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "High-performance streaming markdown renderer for Svelte 5 ecosystem.",
   "type": "module",
   "svelte": "./dist/index.js",
