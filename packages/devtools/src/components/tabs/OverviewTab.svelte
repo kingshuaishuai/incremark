@@ -79,6 +79,8 @@
   .overview-tab {
     flex: 1;
     overflow-y: auto;
+    padding-right: 8px;
+    margin-right: -8px;
   }
 
   .overview-tab::-webkit-scrollbar {
@@ -92,6 +94,10 @@
   .overview-tab::-webkit-scrollbar-thumb {
     background: #444;
     border-radius: 3px;
+  }
+
+  .overview-tab::-webkit-scrollbar-thumb:hover {
+    background: #555;
   }
 
   .stats-grid {

@@ -93,9 +93,27 @@
     min-height: 100px;
     background: #1a1a1a;
     padding: 12px;
+    padding-right: 6px;
     border-radius: 6px;
     overflow: auto;
     font-size: 12px;
+  }
+
+  .json-tree::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .json-tree::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .json-tree::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 3px;
+  }
+
+  .json-tree::-webkit-scrollbar-thumb:hover {
+    background: #555;
   }
 
   .json-tree :global(.json-formatter-row) {

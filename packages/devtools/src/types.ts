@@ -28,7 +28,9 @@ export interface AppendRecord {
 export interface DevToolsOptions {
   /** 初始是否打开 */
   open?: boolean
-  /** 位置 */
+  /**
+   * @deprecated 位置现在由 floating-ui 自动计算，trigger 按钮可拖拽
+   */
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
   /** 主题 */
   theme?: 'dark' | 'light'

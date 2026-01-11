@@ -73,7 +73,6 @@ export class IncremarkDevTools {
       target: this.container,
       props: {
         store: this.store,
-        position: this.options.position,
         theme: this.options.theme
       }
     })

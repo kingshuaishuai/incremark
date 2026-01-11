@@ -134,6 +134,7 @@
     overflow-y: auto;
     margin-bottom: 12px;
     flex-shrink: 0;
+    padding-right: 8px;
   }
 
   .blocks-list::-webkit-scrollbar {
@@ -147,6 +148,10 @@
   .blocks-list::-webkit-scrollbar-thumb {
     background: #444;
     border-radius: 3px;
+  }
+
+  .blocks-list::-webkit-scrollbar-thumb:hover {
+    background: #555;
   }
 
   .block-item {
@@ -205,6 +210,7 @@
     min-height: 0;
     background: #2a2a2a;
     padding: 12px;
+    padding-right: 4px;
     border-radius: 8px;
     overflow-y: auto;
     display: flex;
@@ -222,6 +228,10 @@
   .block-detail::-webkit-scrollbar-thumb {
     background: #555;
     border-radius: 3px;
+  }
+
+  .block-detail::-webkit-scrollbar-thumb:hover {
+    background: #666;
   }
 
   .block-detail :global(h4),

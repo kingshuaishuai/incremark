@@ -83,6 +83,7 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    padding-right: 8px;
   }
 
   .timeline-list::-webkit-scrollbar {
@@ -96,6 +97,10 @@
   .timeline-list::-webkit-scrollbar-thumb {
     background: #444;
     border-radius: 3px;
+  }
+
+  .timeline-list::-webkit-scrollbar-thumb:hover {
+    background: #555;
   }
 
   .timeline-item {

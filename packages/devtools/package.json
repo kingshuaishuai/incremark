@@ -26,6 +26,7 @@
     "@incremark/core": "workspace:*"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.7.4",
     "json-formatter-js": "^2.5.23"
   },
   "devDependencies": {
