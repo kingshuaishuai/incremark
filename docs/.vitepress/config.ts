@@ -82,7 +82,8 @@ const en = {
           items: [
             { text: 'Architecture', link: '/advanced/architecture' },
             { text: 'Engines', link: '/advanced/engines' },
-            { text: 'Extensions', link: '/advanced/extensions' }
+            { text: 'Extensions', link: '/advanced/extensions' },
+            { text: 'Benchmark', link: '/advanced/benchmark' }
           ]
         }
       ],
@@ -201,7 +202,8 @@ const zh = {
           items: [
             { text: '架构原理', link: '/zh/advanced/architecture' },
             { text: '双引擎', link: '/zh/advanced/engines' },
-            { text: '扩展功能', link: '/zh/advanced/extensions' }
+            { text: '扩展功能', link: '/zh/advanced/extensions' },
+            { text: '性能测试', link: '/zh/advanced/benchmark' }
           ]
         }
       ],

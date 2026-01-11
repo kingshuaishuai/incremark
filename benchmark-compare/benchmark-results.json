@@ -1,0 +1,58 @@
+[
+  {
+    "scenario": "P1.5_COLOR_SYSTEM_REPORT.md",
+    "parser": "Incremark",
+    "totalTime": 58.25220899999999,
+    "perChunkAvg": 0.03118426605995717,
+    "maxChunkTime": 3.9058749999999804,
+    "minChunkTime": 0.0038329999999859865,
+    "memoryUsage": {
+      "heapUsed": 10.939999999999998,
+      "heapTotal": 1.75,
+      "external": 0,
+      "rss": 22.44999999999999
+    }
+  },
+  {
+    "scenario": "P1.5_COLOR_SYSTEM_REPORT.md",
+    "parser": "Streamdown",
+    "totalTime": 174.075958,
+    "perChunkAvg": 0.09318841434689508,
+    "maxChunkTime": 0.7458330000000046,
+    "minChunkTime": 0.009374999999977263,
+    "memoryUsage": {
+      "heapUsed": -5.649999999999999,
+      "heapTotal": 0.75,
+      "external": 0,
+      "rss": 6.630000000000024
+    }
+  },
+  {
+    "scenario": "P1.5_COLOR_SYSTEM_REPORT.md",
+    "parser": "markstream-vue",
+    "totalTime": 520.854042,
+    "perChunkAvg": 0.2788297869379015,
+    "maxChunkTime": 4.914291999999932,
+    "minChunkTime": 0.0757499999999709,
+    "memoryUsage": {
+      "heapUsed": -0.0799999999999983,
+      "heapTotal": 3.25,
+      "external": 0,
+      "rss": 4.289999999999992
+    }
+  },
+  {
+    "scenario": "P1.5_COLOR_SYSTEM_REPORT.md",
+    "parser": "ant-design-x",
+    "totalTime": 199.38187500000004,
+    "perChunkAvg": 0.1067354791220557,
+    "maxChunkTime": 1.0575839999999062,
+    "minChunkTime": 0.011874999999918145,
+    "memoryUsage": {
+      "heapUsed": 14.25,
+      "heapTotal": 1.5,
+      "external": 0,
+      "rss": 4.569999999999993
+    }
+  }
+]
