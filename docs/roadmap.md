@@ -40,7 +40,7 @@ Our future plans focus on enhancing the library's capabilities for building mode
 
 ### 🛠️ Markdown & Tooling
 - [x] **Code Component Refactoring**: Decouple Mermaid and Default renderers to allow for better composition and customization.
-- [ ] **DevTools Rewrite**: Rebuilding DevTools using Svelte for better DX.
+- [x] **DevTools Rewrite**: Rebuilding DevTools using Svelte for better DX with i18n support (zh-CN/en-US), multi-parser monitoring, and framework-agnostic design.
 - [x] **sliceAST Optimization**: Simplified code structure, removed dead code; per-block processing ensures performance.
 - [x] **Internationalization (i18n)**: Built-in multi-language support with ConfigProvider.
 - [x] **Accessibility (A11y)**: Enhanced screen reader support and ARIA standards.

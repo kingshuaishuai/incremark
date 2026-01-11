@@ -22,6 +22,9 @@ The main component for rendering Markdown content.
 | `codeBlockConfigs` | `Record<string, CodeBlockConfig>` | `{}` | Configuration for code blocks (e.g., `takeOver`). |
 | `showBlockStatus` | `boolean` | `false` | Whether to visualize block processing status (pending/completed). |
 | `pendingClass` | `string` | `'incremark-pending'` | CSS class applied to pending blocks. |
+| `devtools` | `IncremarkDevTools` | - | DevTools instance to register with for debugging. |
+| `devtoolsId` | `string` | *Auto-generated* | Unique identifier for this parser in DevTools. |
+| `devtoolsLabel` | `string` | `devtoolsId` | Display label for this parser in DevTools. |
 
 ### `<AutoScrollContainer />`
 

@@ -9,7 +9,6 @@ export default defineConfig({
       '@incremark/core/engines/micromark': path.resolve(__dirname, '../../packages/core/src/engines/micromark/index.ts'),
       '@incremark/core': path.resolve(__dirname, '../../packages/core/src'),
       '@incremark/react': path.resolve(__dirname, '../../packages/react/src'),
-      '@incremark/devtools': path.resolve(__dirname, '../../packages/devtools/src'),
       '@incremark/shared': path.resolve(__dirname, '../../packages/shared/src'),
       // '@incremark/theme': path.resolve(__dirname, '../../packages/theme/src')
     }

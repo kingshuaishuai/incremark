@@ -1,5 +1,5 @@
 // Composables
-export { useIncremark, useStreamRenderer, useDevTools, useBlockTransformer, useLocale } from './composables'
+export { useIncremark, useStreamRenderer, useBlockTransformer, useLocale } from './composables'
 export { useProvideDefinations } from './composables/useProvideDefinations'
 export { useDefinationsContext } from './composables/useDefinationsContext'
 export type {
@@ -7,7 +7,6 @@ export type {
   TypewriterOptions,
   TypewriterControls,
   UseStreamRendererOptions,
-  UseDevToolsOptions,
   UseBlockTransformerOptions,
   UseBlockTransformerReturn
 } from './composables'

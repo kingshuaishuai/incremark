@@ -1,14 +1,33 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted, onUnmounted, watchEffect } from 'vue'
 import 'katex/dist/katex.min.css'
 
 // 本地 composables 和组件
 import { useLocale } from './composables'
 import { IncremarkDemo } from './components'
 import { zhCN } from '@incremark/vue'
+import { createDevTools, setLocale as setDevToolsLocale } from '@incremark/devtools'
+
+// ============ DevTools ============
+const devtools = createDevTools({
+  locale: 'zh-CN'
+})
+
+onMounted(() => {
+  devtools.mount()
+})
+
+onUnmounted(() => {
+  devtools.unmount()
+})
 
 // ============ 国际化 ============
 const { locale, t, sampleMarkdown, toggleLocale } = useLocale()
+
+// 同步 DevTools 语言
+watchEffect(() => {
+  setDevToolsLocale(locale.value === 'zh' ? 'zh-CN' : 'en-US')
+})
 
 // ============ Incremark Locale ============
 const incremarkLocale = computed(() => locale.value === 'zh' ? zhCN : undefined)
@@ -47,6 +66,7 @@ watch([htmlEnabled, locale], () => {
       :sample-markdown="sampleMarkdown"
       :t="t"
       :locale="incremarkLocale"
+      :devtools="devtools"
     />
   </div>
 </template>

@@ -6,7 +6,6 @@
 
 // Hooks
 export { useIncremark, type UseIncremarkOptions, type UseIncremarkReturn, type TypewriterOptions, type TypewriterControls } from './hooks'
-export { useDevTools, type UseDevToolsOptions } from './hooks'
 export { useLocale, type UseLocaleReturn } from './hooks'
 export {
   useBlockTransformer,

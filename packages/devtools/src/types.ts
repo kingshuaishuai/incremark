@@ -1,4 +1,7 @@
-import type { ParsedBlock, Root } from '@incremark/core'
+import type { IncremarkParser, ParsedBlock, Root } from '@incremark/core'
+import type { Locale } from './i18n/types'
+
+export type TabType = 'overview' | 'blocks' | 'ast' | 'timeline'
 
 export interface DevToolsState {
   /** 所有块 */
@@ -29,5 +32,33 @@ export interface DevToolsOptions {
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
   /** 主题 */
   theme?: 'dark' | 'light'
+  /** 语言 */
+  locale?: Locale
+}
+
+/**
+ * Parser 注册选项
+ */
+export interface RegisterOptions {
+  /** 唯一标识符 */
+  id: string
+  /** 显示标签，默认使用 id */
+  label?: string
+}
+
+/**
+ * Parser 注册记录
+ */
+export interface ParserRegistration {
+  /** 唯一标识符 */
+  id: string
+  /** 显示标签 */
+  label: string
+  /** Parser 实例 */
+  parser: IncremarkParser
+  /** 当前状态 */
+  state: DevToolsState | null
+  /** Append 历史记录 */
+  appendHistory: AppendRecord[]
 }
 

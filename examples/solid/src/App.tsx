@@ -1,14 +1,34 @@
 /* @jsxImportSource solid-js */
 
-import { createSignal, createEffect, Index } from 'solid-js'
+import { createSignal, createEffect, Index, onMount, onCleanup } from 'solid-js'
 import 'katex/dist/katex.min.css'
 
 import { useLocale } from './hooks'
 import { IncremarkDemo } from './components'
 import { zhCN, en } from '@incremark/solid'
+import { createDevTools, setLocale as setDevToolsLocale } from '@incremark/devtools'
+
+// 在模块级别创建 devtools 实例，确保它在组件渲染前就存在
+const devtools = createDevTools({
+  locale: 'zh-CN'
+})
 
 export default function App() {
   const { locale, t, sampleMarkdown, toggleLocale } = useLocale()
+
+  // ============ DevTools ============
+  onMount(() => {
+    devtools.mount()
+  })
+
+  onCleanup(() => {
+    devtools.unmount()
+  })
+
+  // 同步 DevTools 语言
+  createEffect(() => {
+    setDevToolsLocale(locale() === 'zh' ? 'zh-CN' : 'en-US')
+  })
 
   // ============ HTML 模式 ============
   const [htmlEnabled, setHtmlEnabled] = createSignal(true)
@@ -71,6 +91,7 @@ export default function App() {
             sampleMarkdown={sampleMarkdown()}
             t={t()}
             locale={locale() === 'zh' ? zhCN : en}
+            devtools={devtools}
           />
         )}
       </Index>

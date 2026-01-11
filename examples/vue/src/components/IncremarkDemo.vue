@@ -2,6 +2,7 @@
 import { ref, computed, nextTick, watch } from 'vue'
 import { IncremarkContent, AutoScrollContainer, ThemeProvider, ConfigProvider, type DesignTokens, type UseIncremarkOptions, type IncremarkLocale } from '@incremark/vue'
 import { MicromarkAstBuilder } from '@incremark/core/engines/micromark'
+import type { IncremarkDevTools } from '@incremark/devtools'
 
 import { BenchmarkPanel, CustomInputPanel, CustomHeading, CustomWarningContainer, CustomInfoContainer, CustomTipContainer, CustomEchartCodeBlock } from './index'
 import type { BenchmarkStats } from '../composables'
@@ -12,6 +13,7 @@ const props = defineProps<{
   sampleMarkdown: string
   t: Messages
   locale?: IncremarkLocale
+  devtools?: IncremarkDevTools
 }>()
 
 // ============ 打字机配置 ============
@@ -339,6 +341,7 @@ defineExpose({
               :custom-code-blocks="customCodeBlocks"
               :code-block-configs="codeBlockConfigs"
               :show-block-status="true"
+              :devtools="devtools"
             />
           </AutoScrollContainer>
         </ThemeProvider>

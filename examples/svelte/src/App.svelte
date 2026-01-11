@@ -4,12 +4,34 @@
 -->
 
 <script lang="ts">
+  import { onMount, onDestroy } from 'svelte'
   import { useLocale } from './composables'
   import { IncremarkDemo } from './components'
   import { zhCN, type IncremarkLocale } from '@incremark/svelte'
+  import { createDevTools, setLocale as setDevToolsLocale, type IncremarkDevTools } from '@incremark/devtools'
+
+  // ============ DevTools ============
+  let devtools: IncremarkDevTools | null = $state(null)
+
+  onMount(async () => {
+    const dt = createDevTools({
+      locale: 'zh-CN'
+    })
+    await dt.mount()
+    devtools = dt
+  })
+
+  onDestroy(() => {
+    devtools?.unmount()
+  })
 
   // ============ 国际化 ============
   const { locale, t, sampleMarkdown, toggleLocale } = useLocale()
+
+  // 同步 DevTools 语言
+  $effect(() => {
+    setDevToolsLocale($locale === 'zh' ? 'zh-CN' : 'en-US')
+  })
 
   // ============ Incremark Locale ============
   const incremarkLocale = $derived<IncremarkLocale | undefined>(
@@ -44,6 +66,7 @@
       sampleMarkdown={$sampleMarkdown}
       t={$t}
       locale={incremarkLocale}
+      {devtools}
     />
   {/key}
 </div>

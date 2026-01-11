@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import type { UseIncremarkOptions } from './hooks/useIncremark'
+import type { IncremarkDevTools } from '@incremark/devtools'
 
 // 组件映射类型
 export type ComponentMap = Partial<Record<string, ComponentType<{ node: any }>>>
@@ -26,4 +27,10 @@ export interface IncremarkContentProps {
   incremarkOptions?: UseIncremarkOptions
   pendingClass?: string
   showBlockStatus?: boolean
+  /** DevTools 实例，传入后组件会自动注册 parser */
+  devtools?: IncremarkDevTools
+  /** DevTools 中显示的 parser ID，默认自动生成 */
+  devtoolsId?: string
+  /** DevTools 中显示的 parser 标签，默认使用 ID */
+  devtoolsLabel?: string
 }

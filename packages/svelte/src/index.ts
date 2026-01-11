@@ -5,7 +5,6 @@
 
 // Stores/Utilities
 export { useIncremark, type UseIncremarkOptions, type UseIncremarkReturn, type TypewriterOptions, type TypewriterControls } from './stores/useIncremark.svelte.ts'
-export { useDevTools, type UseDevToolsOptions } from './stores/useDevTools.svelte.ts'
 export {
   useBlockTransformer,
   type UseBlockTransformerOptions,

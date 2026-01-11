@@ -16,6 +16,9 @@ export { hasChunks, getStableText } from './text'
 // 环境检测
 export { isBrowser, isServer, isClipboardAvailable } from './env'
 
+// ID 生成
+export { generateParserId } from './id'
+
 // 国际化
 export { en, zhCN } from './locales'
 export type { IncremarkLocale } from './locales/types'

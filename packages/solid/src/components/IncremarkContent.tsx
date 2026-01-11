@@ -1,10 +1,11 @@
 /* @jsxImportSource solid-js */
 
-import { Component, createEffect, createMemo, onMount } from 'solid-js'
+import { Component, createEffect, createMemo, onMount, onCleanup } from 'solid-js'
 import type { JSX } from 'solid-js'
 import { useIncremark } from '../composables/useIncremark'
 import type { IncremarkContentProps } from '../types'
 import Incremark from './Incremark'
+import { generateParserId } from '@incremark/shared'
 
 /**
  * IncremarkContent 组件
@@ -20,7 +21,26 @@ export const IncremarkContent: Component<IncremarkContentProps> = (props) => {
     ...props.incremarkOptions
   })
 
-  const { blocks, append, finalize, render, reset, isDisplayComplete, markdown, contextValue, DefinationsProvider } = useIncremark(incremarkOptions)
+  const incremark = useIncremark(incremarkOptions)
+  const { blocks, append, finalize, render, reset, isDisplayComplete, markdown, contextValue, DefinationsProvider, parser } = incremark
+
+  // DevTools 集成
+  const parserId = props.devtoolsId || generateParserId()
+
+  onMount(() => {
+    if (props.devtools) {
+      props.devtools.register(parser, {
+        id: parserId,
+        label: props.devtoolsLabel || parserId
+      })
+    }
+  })
+
+  onCleanup(() => {
+    if (props.devtools) {
+      props.devtools.unregister(parserId)
+    }
+  })
 
   const isStreamMode = () => typeof props.stream === 'function'
 

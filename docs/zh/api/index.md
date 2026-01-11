@@ -22,6 +22,9 @@ Incremark 所有类型和组件的集中参考。
 | `codeBlockConfigs` | `Record<string, CodeBlockConfig>` | `{}` | 代码块配置（例如 `takeOver`）。 |
 | `showBlockStatus` | `boolean` | `false` | 是否可视化块的处理状态（pending/completed）。 |
 | `pendingClass` | `string` | `'incremark-pending'` | 应用于 pending 状态块的 CSS 类。 |
+| `devtools` | `IncremarkDevTools` | - | 要注册的 DevTools 实例，用于调试。 |
+| `devtoolsId` | `string` | *自动生成* | 在 DevTools 中此解析器的唯一标识符。 |
+| `devtoolsLabel` | `string` | `devtoolsId` | 在 DevTools 中此解析器的显示标签。 |
 
 ### `<AutoScrollContainer />`
 

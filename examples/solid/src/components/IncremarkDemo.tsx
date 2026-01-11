@@ -18,12 +18,14 @@ import {
 import { CustomHeading, CustomWarningContainer, CustomInfoContainer, CustomTipContainer, BenchmarkPanel, CustomInputPanel, type BenchmarkStats } from './index'
 import { CustomEchartCodeBlock } from './CustomEchartCodeBlock'
 import type { Messages } from '../hooks/useLocale'
+import type { IncremarkDevTools } from '@incremark/devtools'
 
 export interface IncremarkDemoProps {
   htmlEnabled: boolean
   sampleMarkdown: string
   t: Messages
   locale?: IncremarkLocale
+  devtools?: IncremarkDevTools | null
 }
 
 // ============ 自定义容器 ============
@@ -415,6 +417,7 @@ export function IncremarkDemo(props: IncremarkDemoProps) {
                 customCodeBlocks={customCodeBlocks}
                 codeBlockConfigs={codeBlockConfigs}
                 showBlockStatus={true}
+                devtools={props.devtools ?? undefined}
               />
             </AutoScrollContainer>
           </ThemeProvider>

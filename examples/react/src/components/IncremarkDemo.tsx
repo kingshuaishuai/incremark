@@ -20,6 +20,7 @@ import {
   CustomEchartCodeBlock
 } from './index'
 import type { Messages } from '../locales'
+import type { IncremarkDevTools } from '@incremark/devtools'
 
 interface BenchmarkStats {
   traditional: { time: number; parseCount: number; totalChars: number }
@@ -31,9 +32,10 @@ interface IncremarkDemoProps {
   sampleMarkdown: string
   t: Messages
   locale?: IncremarkLocale
+  devtools?: IncremarkDevTools | null
 }
 
-export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t, locale }: IncremarkDemoProps) {
+export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t, locale, devtools }: IncremarkDemoProps) {
   // ============ 打字机配置 ============
   const [typewriterEnabled, setTypewriterEnabled] = useState(false)
   const [typewriterSpeed, setTypewriterSpeed] = useState(2)
@@ -359,6 +361,7 @@ export function IncremarkDemo({ htmlEnabled, sampleMarkdown, t, locale }: Increm
                 customCodeBlocks={customCodeBlocks}
                 codeBlockConfigs={codeBlockConfigs}
                 showBlockStatus={true}
+                devtools={devtools ?? undefined}
               />
             </AutoScrollContainer>
           </ThemeProvider>

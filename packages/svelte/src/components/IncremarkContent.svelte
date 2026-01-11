@@ -7,7 +7,8 @@
   import { useIncremark } from '../stores/useIncremark.svelte.ts'
   import type { IncremarkContentProps } from './types'
   import Incremark from './Incremark.svelte'
-  import { untrack } from 'svelte'
+  import { untrack, onDestroy } from 'svelte'
+  import { generateParserId } from '@incremark/shared'
 
   let {
     stream,
@@ -19,7 +20,10 @@
     isFinished = false,
     incremarkOptions,
     pendingClass = 'incremark-pending',
-    showBlockStatus = false
+    showBlockStatus = false,
+    devtools,
+    devtoolsId,
+    devtoolsLabel
   }: IncremarkContentProps = $props()
 
   // 创建 incremark 实例（只创建一次）
@@ -31,6 +35,23 @@
     astBuilder: incremarkOptions?.astBuilder,
     typewriter: incremarkOptions?.typewriter
   }))
+
+  // DevTools 集成 - 生成稳定的默认 ID（只生成一次）
+  const defaultParserId = generateParserId()
+
+  $effect(() => {
+    if (devtools) {
+      const id = devtoolsId || defaultParserId
+      devtools.register(incremark.parser, {
+        id,
+        label: devtoolsLabel || id
+      })
+
+      return () => {
+        devtools.unregister(id)
+      }
+    }
+  })
 
   // 计算 parser 配置的稳定 key（用于检测变化）
   // astBuilder 用名称标识，因为它是类不能 JSON.stringify

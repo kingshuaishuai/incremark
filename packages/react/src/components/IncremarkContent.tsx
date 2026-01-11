@@ -3,6 +3,7 @@ import { useIncremark } from '../hooks/useIncremark'
 import type { IncremarkContentProps } from '../types'
 import { Incremark } from './Incremark'
 import { IncremarkContainerProvider } from './IncremarkContainerProvider'
+import { generateParserId } from '@incremark/shared'
 
 /**
  * IncremarkContent 组件
@@ -19,6 +20,11 @@ import { IncremarkContainerProvider } from './IncremarkContainerProvider'
  *
  * // 增量更新内容
  * <IncremarkContent content={partialContent} isFinished={false} />
+ *
+ * // 使用 DevTools
+ * const devtools = createDevTools()
+ * devtools.mount()
+ * <IncremarkContent content={content} devtools={devtools} devtoolsId="msg-1" />
  * ```
  */
 export const IncremarkContent: React.FC<IncremarkContentProps> = (props) => {
@@ -32,7 +38,10 @@ export const IncremarkContent: React.FC<IncremarkContentProps> = (props) => {
     isFinished = false,
     incremarkOptions,
     showBlockStatus,
-    pendingClass
+    pendingClass,
+    devtools,
+    devtoolsId,
+    devtoolsLabel
   } = props
 
   // 初始化时使用的选项（使用 ref 保存，只用于首次创建 parser）
@@ -44,7 +53,24 @@ export const IncremarkContent: React.FC<IncremarkContentProps> = (props) => {
     ...incremarkOptions
   })
 
-  const { blocks, append, finalize, render, reset, updateOptions, isDisplayComplete, markdown, typewriter, _definitionsContextValue } = useIncremark(initialOptionsRef.current)
+  const incremark = useIncremark(initialOptionsRef.current)
+  const { blocks, append, finalize, render, reset, updateOptions, isDisplayComplete, markdown, typewriter, _definitionsContextValue, parser } = incremark
+
+  // DevTools 集成
+  const parserIdRef = useRef(devtoolsId || generateParserId())
+
+  useEffect(() => {
+    if (devtools) {
+      devtools.register(parser, {
+        id: parserIdRef.current,
+        label: devtoolsLabel || parserIdRef.current
+      })
+
+      return () => {
+        devtools.unregister(parserIdRef.current)
+      }
+    }
+  }, [devtools, parser, devtoolsLabel])
 
   // 监听 incremarkOptions 的变化，动态更新配置（包括引擎切换）
   const prevOptionsRef = useRef(incremarkOptions)

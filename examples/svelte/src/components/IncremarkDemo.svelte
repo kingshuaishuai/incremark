@@ -24,6 +24,7 @@
     CustomEchartCodeBlock
   } from './index'
   import type { Messages } from '../locales'
+  import type { IncremarkDevTools } from '@incremark/devtools'
 
   interface BenchmarkStats {
     traditional: { time: number; parseCount: number; totalChars: number }
@@ -42,13 +43,16 @@
     t: Messages
     /** Incremark locale */
     locale?: IncremarkLocale
+    /** DevTools 实例 */
+    devtools?: IncremarkDevTools | null
   }
 
   let {
     htmlEnabled,
     sampleMarkdown,
     t,
-    locale
+    locale,
+    devtools
   }: Props = $props()
 
   // ============ 打字机配置 ============
@@ -399,6 +403,7 @@
             {customCodeBlocks}
             {codeBlockConfigs}
             showBlockStatus={true}
+            devtools={devtools ?? undefined}
           />
         </AutoScrollContainer>
       </ThemeProvider>
