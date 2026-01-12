@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed, provide } from 'vue'
 import type { DesignTokens } from '@incremark/theme'
 import { applyTheme } from '@incremark/theme'
 import { isServer } from '@incremark/shared'
+import { provideTheme } from './composables/useThemeContext'
 
 /**
  * 主题配置，可以是：
@@ -21,6 +22,12 @@ const props = withDefaults(
 )
 
 const containerRef = ref<HTMLElement>()
+
+// 创建主题的 computed ref 以便传递给子组件
+const themeValue = computed(() => props.theme)
+
+// 提供主题上下文
+provideTheme(themeValue)
 
 watch(
   () => props.theme,

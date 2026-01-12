@@ -9,7 +9,8 @@
   margin: @spacing-lg 0;
   border-radius: @border-radius-lg;
   overflow: hidden;
-  background: @color-code-block-background;  // 代码块专用背景色
+  background: @color-code-block-background;
+  color: @color-code-block-text;
 }
 
 /* ============ 代码块头部 ============ */
@@ -49,14 +50,16 @@
 }
 
 /* ============ Shiki 高亮样式 ============ */
-.shiki-wrapper pre {
+.shiki-wrapper pre,
+.shiki-wrapper .shiki {
   margin: 0;
   padding: @spacing-lg;
-  background: transparent !important;
+  background: transparent;
   overflow-x: auto;
 }
 
-.shiki-wrapper code {
+.shiki-wrapper code,
+.shiki-wrapper .shiki code {
   font-family: @font-family-mono;
   font-size: @font-size-base;
   line-height: @line-height-normal;
@@ -80,13 +83,13 @@
 }
 
 /* ============ Stream 高亮样式 ============ */
-.code-stream {
+.incremark-code-stream {
   background: transparent;
   padding: 0;
   margin: 0;
 }
 
-.code-stream code {
+.incremark-code-stream {
   font-family: 'Fira Code', 'JetBrains Mono', Consolas, Monaco, 'Courier New', monospace;
   font-size: 0.875em;
   line-height: 1.7;

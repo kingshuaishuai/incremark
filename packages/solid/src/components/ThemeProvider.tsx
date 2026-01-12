@@ -45,3 +45,23 @@ export function useTheme() {
   }
   return context
 }
+
+// 兼容其他框架的 useThemeContext API
+export function useThemeContext() {
+  const context = useTheme()
+
+  // 判断是否为暗色主题
+  const isDark = () => {
+    const themeValue = context.theme()
+    if (typeof themeValue === 'string') {
+      return themeValue === 'dark'
+    }
+    // 如果是 DesignTokens 对象，通过判断颜色来决定
+    return false
+  }
+
+  return {
+    theme: context.theme,
+    isDark: isDark()
+  }
+}

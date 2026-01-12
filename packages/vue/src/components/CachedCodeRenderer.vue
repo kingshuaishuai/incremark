@@ -3,12 +3,13 @@ import { h, ref, reactive, watch, renderList, onMounted, onUnmounted } from 'vue
 import { CodeToTokenTransformStream } from 'shiki-stream'
 import { getTokenStyleObject } from '@shikijs/core'
 import { objectId } from '@antfu/utils'
+import type { HighlighterGeneric, BundledLanguage, BundledTheme } from 'shiki'
 
 interface Props {
   code: string
   lang: string
   theme: string
-  highlighter: any
+  highlighter: HighlighterGeneric<BundledLanguage, BundledTheme>
 }
 
 const props = defineProps<Props>()

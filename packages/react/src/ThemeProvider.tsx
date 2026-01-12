@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, type ReactNode } from 'react'
+import React, { useEffect, useRef, type ReactNode, useMemo } from 'react'
 import type { DesignTokens } from '@incremark/theme'
 import { applyTheme } from '@incremark/theme'
+import { ThemeContext } from './hooks/useThemeContext'
 
 export interface ThemeProviderProps {
   /** 主题配置，可以是：
@@ -17,16 +18,16 @@ export interface ThemeProviderProps {
 
 /**
  * ThemeProvider 组件
- * 
+ *
  * 提供主题上下文，支持全局/局部主题和部分变量替换
- * 
+ *
  * @example
  * ```tsx
  * // 使用预设主题
  * <ThemeProvider theme="dark">
  *   <Incremark blocks={blocks} />
  * </ThemeProvider>
- * 
+ *
  * // 部分替换
  * <ThemeProvider theme={{ color: { text: { primary: '#custom' } } }}>
  *   <Incremark blocks={blocks} />
@@ -40,6 +41,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null)
 
+  // 创建主题的 memoized value 以便传递给子组件
+  const themeValue = useMemo(() => theme, [theme])
+
   useEffect(() => {
     if (containerRef.current) {
       // 应用主题到容器元素
@@ -48,9 +52,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   }, [theme])
 
   return (
-    <div ref={containerRef} className={`incremark-theme-provider ${className}`.trim()}>
-      {children}
-    </div>
+    <ThemeContext.Provider value={themeValue}>
+      <div ref={containerRef} className={`incremark-theme-provider ${className}`.trim()}>
+        {children}
+      </div>
+    </ThemeContext.Provider>
   )
 }
 
