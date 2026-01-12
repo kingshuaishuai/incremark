@@ -7,7 +7,7 @@
   import type { DesignTokens } from '@incremark/theme'
   import { applyTheme } from '@incremark/theme'
   import { isBrowser } from '@incremark/shared'
-  import { provideTheme } from './hooks/useThemeContext'
+  import { setThemeContext } from './context/themeContext.svelte.ts'
 
   /**
    * 组件 Props
@@ -35,15 +35,10 @@
   // 容器引用
   let containerRef: HTMLElement | null = null
 
-  // 创建主题的 readable store 以便传递给子组件
-  import { readable } from 'svelte/store'
-  const themeValue = readable(theme, (set) => {
-    // 当 theme prop 变化时更新
-    set(theme)
+  // 使用 $effect 追踪 theme prop 的变化并更新 context
+  $effect(() => {
+    setThemeContext(theme)
   })
-
-  // 提供主题上下文
-  provideTheme(themeValue)
 
   // 监听主题变化
   // 在 Svelte 5 中，$effect 会自动追踪在 effect 内部访问的响应式值

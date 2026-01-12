@@ -212,7 +212,7 @@ function renderChildren(children: RootContent[]): React.ReactNode {
  */
 export const IncremarkHtmlElement: React.FC<IncremarkHtmlElementProps> = ({ node }) => {
   const { tagName, attrs, children } = node
-  const Tag = tagName as keyof JSX.IntrinsicElements
+  const Tag = tagName as any
   const reactProps = toReactProps(attrs)
 
   // 自闭合元素没有子节点

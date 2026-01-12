@@ -14,6 +14,7 @@ export { useLocale, type UseLocaleReturn } from './stores/useLocale.svelte.ts'
 
 // Context
 export { setDefinitionsContext, getDefinitionsContext, type DefinitionsContextValue } from './context/definitionsContext.svelte.ts'
+export { setThemeContext, getThemeContext, useThemeContext, type ThemeValue } from './context/themeContext.svelte.ts'
 
 // Components
 export {

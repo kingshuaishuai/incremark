@@ -1,10 +1,10 @@
-import { useContext, createContext, type Context } from 'solid-js'
+import { useContext, createContext } from 'solid-js'
 import { createStore, produce } from 'solid-js/store'
 import type { DesignTokens } from '@incremark/theme'
 
 type ThemeValue = 'default' | 'dark' | DesignTokens | Partial<DesignTokens>
 
-const ThemeContext: Context<ThemeValue> = createContext('default')
+const ThemeContext = createContext<ThemeValue>('default')
 
 export function provideTheme(theme: ThemeValue) {
   return { ThemeContext, theme }
