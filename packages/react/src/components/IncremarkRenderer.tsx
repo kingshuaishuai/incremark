@@ -112,6 +112,34 @@ export const IncremarkRenderer: React.FC<IncremarkRendererProps> = ({
     )
   }
 
+  // 列表节点：传递所有 props
+  if (node.type === 'list') {
+    return (
+      <IncremarkList
+        node={node as any}
+        components={components}
+        customContainers={customContainers}
+        customCodeBlocks={customCodeBlocks}
+        codeBlockConfigs={codeBlockConfigs}
+        blockStatus={blockStatus}
+      />
+    )
+  }
+
+  // 引用块节点：传递所有 props
+  if (node.type === 'blockquote') {
+    return (
+      <IncremarkBlockquote
+        node={node as any}
+        components={components}
+        customContainers={customContainers}
+        customCodeBlocks={customCodeBlocks}
+        codeBlockConfigs={codeBlockConfigs}
+        blockStatus={blockStatus}
+      />
+    )
+  }
+
   // 其他节点：使用对应组件
   const Component = getComponent(node.type, components)
   return <Component node={node} />

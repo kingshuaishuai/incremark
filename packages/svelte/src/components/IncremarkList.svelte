@@ -14,9 +14,15 @@
   interface Props {
     /** 列表节点 */
     node: List
+    /** 自定义组件映射 */
+    components?: Record<string, any>
+    customContainers?: Record<string, any>
+    customCodeBlocks?: Record<string, any>
+    codeBlockConfigs?: Record<string, { takeOver?: boolean }>
+    blockStatus?: 'pending' | 'stable' | 'completed'
   }
 
-  let { node }: Props = $props()
+  let { node, components, customContainers, customCodeBlocks, codeBlockConfigs, blockStatus }: Props = $props()
 
   /**
    * 根据 ordered 属性计算标签名
@@ -99,7 +105,14 @@
         <IncremarkInline nodes={getItemInlineContent(item)} />
         <!-- 递归渲染所有块级内容（嵌套列表、heading、blockquote、code、table 等） -->
         {#each getItemBlockChildren(item) as child, childIndex (childIndex)}
-          <IncremarkRenderer node={child} />
+          <IncremarkRenderer
+            node={child}
+            {components}
+            {customContainers}
+            {customCodeBlocks}
+            {codeBlockConfigs}
+            {blockStatus}
+          />
         {/each}
       {/if}
     </li>

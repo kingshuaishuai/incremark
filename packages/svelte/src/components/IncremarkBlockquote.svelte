@@ -13,14 +13,27 @@
   interface Props {
     /** 引用节点 */
     node: Blockquote
+    /** 自定义组件映射 */
+    components?: Record<string, any>
+    customContainers?: Record<string, any>
+    customCodeBlocks?: Record<string, any>
+    codeBlockConfigs?: Record<string, { takeOver?: boolean }>
+    blockStatus?: 'pending' | 'stable' | 'completed'
   }
 
-  let { node }: Props = $props()
+  let { node, components, customContainers, customCodeBlocks, codeBlockConfigs, blockStatus }: Props = $props()
 </script>
 
 <blockquote class="incremark-blockquote">
   {#each node.children as child, index (index)}
-    <IncremarkRenderer node={child} />
+    <IncremarkRenderer
+      node={child}
+      {components}
+      {customContainers}
+      {customCodeBlocks}
+      {codeBlockConfigs}
+      {blockStatus}
+    />
   {/each}
 </blockquote>
 

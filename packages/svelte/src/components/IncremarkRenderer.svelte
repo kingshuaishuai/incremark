@@ -100,6 +100,26 @@
     blockStatus={blockStatus}
     defaultCodeComponent={components?.['code']}
   />
+<!-- 列表节点：传递所有 props -->
+{:else if node.type === 'list'}
+  <IncremarkList
+    node={node}
+    {components}
+    {customContainers}
+    {customCodeBlocks}
+    {codeBlockConfigs}
+    {blockStatus}
+  />
+<!-- 引用块节点：传递所有 props -->
+{:else if node.type === 'blockquote'}
+  <IncremarkBlockquote
+    node={node}
+    {components}
+    {customContainers}
+    {customCodeBlocks}
+    {codeBlockConfigs}
+    {blockStatus}
+  />
 {:else}
   <!-- 其他节点：使用对应组件 -->
   {@const Component = getComponent(node.type)}

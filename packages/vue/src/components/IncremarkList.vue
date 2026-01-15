@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { List, ListItem, RootContent } from 'mdast'
+import type { Component } from 'vue'
 import { computed } from 'vue'
 import IncremarkInline from './IncremarkInline.vue'
 import IncremarkRenderer from './IncremarkRenderer.vue'
+import type { CodeBlockConfig } from './Incremark.vue'
 
 // 设置组件名称以支持递归引用
 defineOptions({
@@ -11,6 +13,11 @@ defineOptions({
 
 const props = defineProps<{
   node: List
+  customContainers?: Record<string, Component>
+  customCodeBlocks?: Record<string, Component>
+  codeBlockConfigs?: Record<string, CodeBlockConfig>
+  blockStatus?: 'pending' | 'stable' | 'completed'
+  components?: Partial<Record<string, Component>>
 }>()
 
 const tag = computed(() => props.node.ordered ? 'ol' : 'ul')
@@ -77,7 +84,14 @@ function hasBlockChildren(item: ListItem): boolean {
         <!-- 递归渲染所有块级内容（嵌套列表、heading、blockquote、code、table 等） -->
         <template v-if="hasBlockChildren(item)">
           <template v-for="(child, childIndex) in getItemBlockChildren(item)" :key="childIndex">
-            <IncremarkRenderer :node="child" />
+            <IncremarkRenderer
+              :node="child"
+              :custom-containers="customContainers"
+              :custom-code-blocks="customCodeBlocks"
+              :code-block-configs="codeBlockConfigs"
+              :block-status="blockStatus"
+              :components="components"
+            />
           </template>
         </template>
       </template>

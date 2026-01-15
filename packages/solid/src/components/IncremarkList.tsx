@@ -2,11 +2,17 @@
 
 import type { List, ListItem, RootContent } from 'mdast'
 import { Component, For, Show, Index } from 'solid-js'
+import type { ComponentMap, CodeBlockConfig } from '../types'
 import { IncremarkInline } from './IncremarkInline'
 import { IncremarkRenderer } from './IncremarkRenderer'
 
 export interface IncremarkListProps {
   node: List
+  components?: ComponentMap
+  customContainers?: Record<string, Component<any>>
+  customCodeBlocks?: Record<string, Component<any>>
+  codeBlockConfigs?: Record<string, CodeBlockConfig>
+  blockStatus?: 'pending' | 'stable' | 'completed'
 }
 
 export const IncremarkList: Component<IncremarkListProps> = (props) => {
@@ -82,7 +88,14 @@ export const IncremarkList: Component<IncremarkListProps> = (props) => {
                     <Show when={hasBlockChildren(itemData)}>
                       <Index each={getItemBlockChildren(itemData)}>
                         {(child) => (
-                          <IncremarkRenderer node={child()} />
+                          <IncremarkRenderer
+                            node={child()}
+                            components={props.components}
+                            customContainers={props.customContainers}
+                            customCodeBlocks={props.customCodeBlocks}
+                            codeBlockConfigs={props.codeBlockConfigs}
+                            blockStatus={props.blockStatus}
+                          />
                         )}
                       </Index>
                     </Show>

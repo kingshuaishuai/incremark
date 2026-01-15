@@ -101,10 +101,40 @@ export const IncremarkRenderer: Component<IncremarkRendererProps> = (props) => {
         />
       </Show>
 
+      {/* 列表节点：传递所有 props */}
+      <Show
+        when={(props.node as RootContent).type === 'list' && !isHtmlNode(props.node) && !isContainerNode(props.node)}
+      >
+        <IncremarkList
+          node={props.node as any}
+          components={props.components}
+          customContainers={props.customContainers}
+          customCodeBlocks={props.customCodeBlocks}
+          codeBlockConfigs={props.codeBlockConfigs}
+          blockStatus={props.blockStatus}
+        />
+      </Show>
+
+      {/* 引用块节点：传递所有 props */}
+      <Show
+        when={(props.node as RootContent).type === 'blockquote' && !isHtmlNode(props.node) && !isContainerNode(props.node)}
+      >
+        <IncremarkBlockquote
+          node={props.node as any}
+          components={props.components}
+          customContainers={props.customContainers}
+          customCodeBlocks={props.customCodeBlocks}
+          codeBlockConfigs={props.codeBlockConfigs}
+          blockStatus={props.blockStatus}
+        />
+      </Show>
+
       {/* 其他节点：使用对应组件 */}
       <Show
         when={
           (props.node as RootContent).type !== 'code' &&
+          (props.node as RootContent).type !== 'list' &&
+          (props.node as RootContent).type !== 'blockquote' &&
           !isHtmlNode(props.node) &&
           !isContainerNode(props.node)
         }

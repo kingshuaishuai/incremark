@@ -174,6 +174,12 @@ class NewBlockBoundaryChecker implements StabilityChecker {
       return lineIndex - 1
     }
 
+    // 在列表中时，不检测 fence/heading/thematicBreak 作为边界
+    // 因为它们可能是列表项的内容（带缩进的代码块等）
+    if (context.inList) {
+      return -1
+    }
+
     // 新标题开始
     if (isHeading(line)) {
       return lineIndex - 1
@@ -190,8 +196,7 @@ class NewBlockBoundaryChecker implements StabilityChecker {
     }
 
     // 新列表开始（排除连续列表项）
-    // ⚠️ 修改：只有在不在列表中时才触发这个逻辑
-    if (!context.inList && isListItemStart(line) && !isListItemStart(prevLine)) {
+    if (isListItemStart(line) && !isListItemStart(prevLine)) {
       return lineIndex - 1
     }
 
@@ -277,10 +282,12 @@ export class BoundaryDetector {
       const wasInFencedCode = tempContext.inFencedCode
       const wasInContainer = tempContext.inContainer
       const wasContainerDepth = tempContext.containerDepth
+      const wasInList = tempContext.inList
 
-      // ⚠️ 关键修复：在 updateContext 之前检查明确的块边界
+      // 在 updateContext 之前检查明确的块边界
       // 如果当前行是代码块 fence 开始、新标题开始或分割线，且前一行不在 fenced code 中
       // 则应该标记前一个 block 为完成（即使在最后一行）
+      // ⚠️ 关键：如果在列表中，不触发这个逻辑，因为这些可能是列表项的内容
       const prevLine = i > 0 ? lines[i - 1] : ''
       const isSetextUnderline = i > 0 && isSetextHeadingUnderline(line, prevLine)
       const hasExplicitBlockBoundary =
@@ -288,8 +295,9 @@ export class BoundaryDetector {
         isHeading(line) ||          // 新标题开始
         isThematicBreak(line)       // 分割线
 
-      // ⚠️ 排除 Setext 下划线，因为它应该被视为标题的一部分，而不是独立块边界
-      if (!wasInFencedCode && !wasInContainer && hasExplicitBlockBoundary && !isSetextUnderline) {
+      // 排除 Setext 下划线，因为它应该被视为标题的一部分，而不是独立块边界
+      // 排除在列表中的情况，因为这些可能是列表项的内容
+      if (!wasInFencedCode && !wasInContainer && !wasInList && hasExplicitBlockBoundary && !isSetextUnderline) {
         // 前一个 block 已完成，可以标记为稳定边界
         stableLine = i - 1
         stableContext = { ...tempContext }

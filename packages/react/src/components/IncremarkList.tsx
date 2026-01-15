@@ -1,10 +1,16 @@
 import React from 'react'
 import type { List, ListItem, RootContent } from 'mdast'
+import type { ReactNode } from 'react'
 import { IncremarkInline } from './IncremarkInline'
 import { IncremarkRenderer } from './IncremarkRenderer'
 
 export interface IncremarkListProps {
   node: List
+  components?: Partial<Record<string, React.ComponentType<{ node: any }>>>
+  customContainers?: Record<string, React.ComponentType<{ name: string; options?: Record<string, any>; children?: ReactNode }>>
+  customCodeBlocks?: Record<string, React.ComponentType<{ codeStr: string; lang?: string; completed?: boolean; takeOver?: boolean }>>
+  codeBlockConfigs?: Record<string, { takeOver?: boolean }>
+  blockStatus?: 'pending' | 'stable' | 'completed'
 }
 
 /**
@@ -32,7 +38,14 @@ function getItemBlockChildren(item: ListItem): RootContent[] {
   })
 }
 
-export const IncremarkList: React.FC<IncremarkListProps> = ({ node }) => {
+export const IncremarkList: React.FC<IncremarkListProps> = ({
+  node,
+  components,
+  customContainers,
+  customCodeBlocks,
+  codeBlockConfigs,
+  blockStatus
+}) => {
   const Tag = node.ordered ? 'ol' : 'ul'
   const isTaskList = node.children?.some(item => item.checked !== null && item.checked !== undefined)
 
@@ -67,7 +80,14 @@ export const IncremarkList: React.FC<IncremarkListProps> = ({ node }) => {
             {/* 递归渲染所有块级内容（嵌套列表、heading、blockquote、code、table 等） */}
             {blockChildren.map((child, childIndex) => (
               <React.Fragment key={childIndex}>
-                <IncremarkRenderer node={child} />
+                <IncremarkRenderer
+                  node={child}
+                  components={components}
+                  customContainers={customContainers}
+                  customCodeBlocks={customCodeBlocks}
+                  codeBlockConfigs={codeBlockConfigs}
+                  blockStatus={blockStatus}
+                />
               </React.Fragment>
             ))}
           </li>

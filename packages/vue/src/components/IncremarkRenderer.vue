@@ -89,6 +89,26 @@ function isHtmlNode(node: ExtendedRootContent): node is HTML {
     :block-status="blockStatus"
     :default-code-component="components?.['code']"
   />
+  <!-- 列表节点：传递所有 props -->
+  <IncremarkList
+    v-else-if="(node as RootContent).type === 'list'"
+    :node="node as any"
+    :custom-containers="customContainers"
+    :custom-code-blocks="customCodeBlocks"
+    :code-block-configs="codeBlockConfigs"
+    :block-status="blockStatus"
+    :components="components"
+  />
+  <!-- 引用块节点：传递所有 props -->
+  <IncremarkBlockquote
+    v-else-if="(node as RootContent).type === 'blockquote'"
+    :node="node as any"
+    :custom-containers="customContainers"
+    :custom-code-blocks="customCodeBlocks"
+    :code-block-configs="codeBlockConfigs"
+    :block-status="blockStatus"
+    :components="components"
+  />
   <!-- 其他节点：使用对应组件 -->
   <component v-else :is="getComponent((node as RootContent).type)" :node="node as RootContent" />
 </template>
