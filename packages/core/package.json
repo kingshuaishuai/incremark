@@ -1,6 +1,6 @@
 {
   "name": "@incremark/core",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "High-performance incremental markdown parser specifically designed for AI streaming output scenarios.",
   "type": "module",
   "main": "./dist/index.js",
