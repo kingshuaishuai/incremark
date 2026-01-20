@@ -1,0 +1,48 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './file-preview.stories';
+
+<Meta of={stories} />
+
+# FilePreview
+
+文件预览渲染器，用于展示图片、视频、音频等文件。
+
+## 设计理念
+
+`FilePreview` 组件根据 `FilePart` 的 `mediaType` 字段自动选择预览方式：
+- `image/*` - 图片预览
+- `video/*` - 视频播放器
+- `audio/*` - 音频播放器
+- 其他 - 文件信息展示
+
+## 特性
+
+- 支持图片、视频、音频预览
+- 其他文件显示文件信息
+- 支持自定义最大尺寸
+
+## Props
+
+<Controls />
+
+## 示例
+
+### 图片预览
+
+<Canvas of={stories.Image} />
+
+### 其他文件
+
+<Canvas of={stories.OtherFile} />
+
+### 无文件名
+
+<Canvas of={stories.WithoutFilename} />
+
+## 样式
+
+组件使用 `im-file-preview` 前缀的 CSS 类名，确保引入样式：
+
+```typescript
+import '@incremark/theme/chat.css';
+```

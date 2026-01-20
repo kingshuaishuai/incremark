@@ -1,0 +1,159 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './chain-of-thought.stories';
+
+<Meta of={stories} />
+
+# ChainOfThought
+
+可折叠的思考过程容器组件，用于展示 AI 的多步骤思考过程。
+
+## 设计理念
+
+`ChainOfThought` 采用组合式设计：
+- `ChainOfThought` - 外层容器，管理折叠状态、标题栏和时长显示
+- `ChainOfThoughtStep` - 步骤布局组件，提供图标、连接线和内容区的标准布局，内容通过 slot 注入
+
+这种设计保持了组件的通用性，Step 内部可承载任意内容类型。
+
+## 特性
+
+- 可折叠的容器设计
+- 自动计算思考时长
+- 支持多种步骤状态（pending、active、complete、error）
+- 默认状态图标，支持自定义覆盖
+- 可配置 loading 动画（闪烁/旋转）
+- Step 支持可选折叠功能
+- 灵活的 slot 系统
+
+## 基础用法
+
+<Canvas of={stories.Basic} />
+
+## 多步骤（带竖线）
+
+使用 `show-divider` 属性在步骤之间显示连接竖线。
+
+<Canvas of={stories.MultiStep} />
+
+## 显示时长
+
+传入 `startTime` 和 `endTime` 自动计算并显示思考时长。
+
+<Canvas of={stories.WithDuration} />
+
+## 默认折叠
+
+设置 `v-model:expanded` 控制展开状态。
+
+<Canvas of={stories.Collapsed} />
+
+## 错误状态
+
+Step 的 `status="error"` 会让图标变红。
+
+<Canvas of={stories.WithError} />
+
+## 可折叠步骤
+
+Step 设置 `collapsible` 后支持点击折叠，`defaultExpanded` 控制默认展开状态。
+
+<Canvas of={stories.CollapsibleStep} />
+
+## Loading 动画
+
+支持 `pulse`（闪烁，默认）和 `spin`（旋转）两种动画。
+
+<Canvas of={stories.SpinAnimation} />
+
+## 自定义图标
+
+通过 `#icon` slot 设置非 loading 状态的图标，`#loading-icon` slot 设置 loading 状态图标。
+
+<Canvas of={stories.CustomIcon} />
+
+## 流式输出
+
+模拟真实的流式输出场景，步骤按顺序出现，不会预先显示未来步骤。
+
+<Canvas of={stories.Streaming} />
+
+## 默认图标
+
+`ChainOfThoughtStep` 根据 `status` 自动显示对应图标：
+
+| Status | 图标 | 说明 |
+|--------|------|------|
+| `pending` | Circle | 空心圆，等待状态 |
+| `active` | Loader2 | 旋转加载图标 |
+| `complete` | CheckCircle | 勾选圆，完成状态 |
+| `error` | XCircle | 叉号圆，错误状态 |
+
+可通过 `#icon` slot 覆盖默认图标：
+
+```vue
+<ChainOfThoughtStep status="active">
+  <template #icon><Icon icon="ph:magnifying-glass" width="14" height="14" /></template>
+  <div>搜索中...</div>
+</ChainOfThoughtStep>
+```
+
+## Props
+
+<Controls />
+
+## 使用示例
+
+### 使用默认图标
+
+```vue
+<script setup>
+import { ChainOfThought, ChainOfThoughtStep } from '@incremark/chat-vue';
+</script>
+
+<template>
+  <ChainOfThought title="思考过程" :loading="true">
+    <ChainOfThoughtStep status="complete" show-divider>
+      <div>搜索完成，找到 15 条结果</div>
+    </ChainOfThoughtStep>
+    <ChainOfThoughtStep status="active">
+      <div>正在分析结果...</div>
+    </ChainOfThoughtStep>
+  </ChainOfThought>
+</template>
+```
+
+### 自定义图标
+
+```vue
+<script setup>
+import { Icon } from '@iconify/vue';
+import { ChainOfThought, ChainOfThoughtStep, ReasoningMessage } from '@incremark/chat-vue';
+</script>
+
+<template>
+  <ChainOfThought title="思考过程" :loading="isThinking" :start-time="startTime">
+    <ChainOfThoughtStep status="complete" show-divider>
+      <template #icon><Icon icon="ph:magnifying-glass" width="14" height="14" /></template>
+      <div>搜索相关资料...</div>
+    </ChainOfThoughtStep>
+
+    <ChainOfThoughtStep status="active" show-divider>
+      <template #icon><Icon icon="ph:brain" width="14" height="14" /></template>
+      <ReasoningMessage :content="reasoningContent" :streaming="true" />
+    </ChainOfThoughtStep>
+
+    <ChainOfThoughtStep status="pending">
+      <template #icon><Icon icon="ph:wrench" width="14" height="14" /></template>
+      <div>等待执行...</div>
+    </ChainOfThoughtStep>
+  </ChainOfThought>
+</template>
+```
+
+## 样式
+
+组件使用 `im-cot` 和 `im-cot-step` 前缀的 CSS 类名，确保引入样式：
+
+```typescript
+import '@incremark/theme/chat.css';
+```

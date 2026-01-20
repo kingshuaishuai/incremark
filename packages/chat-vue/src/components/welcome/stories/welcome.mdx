@@ -1,0 +1,68 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './welcome.stories';
+
+<Meta of={stories} />
+
+# Welcome
+
+欢迎页组件，用于对话开始前的空状态展示，包含标题、描述、建议项和底部提示。
+
+## 基础用法
+
+传入建议项列表，展示默认欢迎页。
+
+<Canvas of={stories.Basic} />
+
+### Props
+
+<Controls of={stories.Basic} />
+
+## 完整示例
+
+包含标题、描述、建议项和底部提示的完整欢迎页。
+
+<Canvas of={stories.Full} />
+
+## 自定义图标
+
+通过 `icon` 属性自定义顶部图标。
+
+<Canvas of={stories.CustomIcon} />
+
+## 无建议项
+
+只显示标题和描述。
+
+<Canvas of={stories.NoSuggestions} />
+
+## 带描述的建议项
+
+建议项可以包含描述文字。
+
+<Canvas of={stories.WithDescriptions} />
+
+## API
+
+### Props
+
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| title | `string` | `'你好，有什么可以帮你？'` | 标题 |
+| description | `string` | - | 副标题/描述 |
+| icon | `string` | `'mdi:robot-happy-outline'` | Iconify 图标名 |
+| suggestions | `SuggestionItem[]` | - | 建议项列表 |
+| hint | `string` | - | 底部提示文字 |
+
+### Events
+
+| 事件 | 参数 | 说明 |
+|------|------|------|
+| select | `(item: SuggestionItem)` | 点击建议项时触发 |
+
+### Slots
+
+| 插槽 | 说明 |
+|------|------|
+| icon | 自定义图标 |
+| suggestions | 自定义建议项区域 |
+| hint | 自定义底部提示 |

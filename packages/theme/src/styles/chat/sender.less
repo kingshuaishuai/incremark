@@ -1,0 +1,145 @@
+/**
+ * Sender 组件样式
+ */
+
+@import '../css-variables.less';
+@import '../variables.less';
+
+// ============ Sender 根组件 ============
+.im-sender {
+  display: flex;
+  flex-direction: column;
+  gap: @im-spacing-3;
+  width: 100%;
+
+  // ============ 主体边框容器 ============
+  &__box {
+    display: flex;
+    flex-direction: column;
+    background: @color-background-elevated;
+    border-radius: @im-radius-lg;
+    transition: border-color @duration-fast @easing-ease-out,
+                box-shadow @duration-fast @easing-ease-out;
+
+    &--bordered {
+      border: 1px solid @color-border-default;
+
+      &:focus-within {
+        border-color: @color-brand-primary;
+      }
+    }
+
+    &--disabled {
+      background: @color-neutral-2;
+      cursor: not-allowed;
+
+      &:hover,
+      &:focus-within {
+        border-color: @color-border-default;
+        box-shadow: none;
+      }
+    }
+  }
+
+  // ============ 输入框 ============
+  &__input {
+    flex: 1;
+    min-height: 24px;
+  }
+
+  // ============ 工具栏 ============
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: @im-spacing-2 @im-spacing-3;
+    gap: @im-spacing-2;
+  }
+
+  // ============ 左侧操作区 ============
+  &__prefix {
+    display: flex;
+    align-items: center;
+    gap: @im-spacing-1;
+  }
+
+  // ============ 右侧操作区 ============
+  &__suffix {
+    display: flex;
+    align-items: center;
+    gap: @im-spacing-2;
+  }
+}
+
+// ============ SenderInput 输入框 ============
+.im-sender-input {
+  padding: @im-spacing-3;
+  font-size: @im-font-base;
+  line-height: @line-height-normal;
+
+  &--bordered {
+    border: 1px solid @color-border-default;
+    border-radius: @im-radius-md;
+  }
+
+  &--disabled {
+    color: @color-text-tertiary;
+    cursor: not-allowed;
+  }
+
+  &__editor.tiptap {
+    outline: none;
+    max-height: var(--im-sender-input-max-height, 200px);
+    overflow-y: auto;
+
+    // 移除内容边距
+    > :first-child {
+      margin-top: 0;
+    }
+
+    > :last-child {
+      margin-bottom: 0;
+    }
+
+    // placeholder 样式
+    p.is-editor-empty:first-child::before {
+      color: @color-text-tertiary;
+      content: attr(data-placeholder);
+      float: left;
+      height: 0;
+      pointer-events: none;
+    }
+  }
+}
+
+// ============ SenderActionButton 操作按钮 ============
+.im-sender-action-button {
+  &--active {
+    color: @color-brand-primary;
+    background-color: @color-brand-primary-light;
+  }
+}
+
+// ============ SenderSubmitButton 发送按钮 ============
+.im-sender-submit-button {
+  // 图标尺寸
+  &__icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// ============ SenderAttachments 附件预览 ============
+// 样式主要由 FilePreview 组件提供，这里只定义容器布局
+.im-sender-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: @im-spacing-2;
+  padding: @im-spacing-3;
+  // 下边框分隔附件区域和输入框
+  border-bottom: 1px solid @color-border-subtle;
+  // 顶部圆角与外部容器一致，避免尖角超出
+  border-radius: @im-radius-lg @im-radius-lg 0 0;
+  // 裁剪超出内容
+  overflow: hidden;
+}

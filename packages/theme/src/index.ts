@@ -17,7 +17,7 @@ export type {
 } from './tokens'
 
 // 主题值
-export { defaultTheme, darkTheme } from './themes'
+export { defaultTheme, darkTheme, createTheme, createDarkTheme } from './themes'
 export type { DesignTokens as ThemeTokens } from './tokens'
 
 // 工具函数

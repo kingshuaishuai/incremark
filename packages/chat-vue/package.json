@@ -1,0 +1,82 @@
+{
+  "name": "@incremark/chat-vue",
+  "version": "0.1.0",
+  "description": "Vue 3 implementation of Incremark Chat-UI with incremental rendering support.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./components": {
+      "types": "./dist/components/index.d.ts",
+      "import": "./dist/components/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "sb": "storybook dev -p 6016",
+    "build-sb": "storybook build"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.26"
+  },
+  "dependencies": {
+    "@floating-ui/vue": "^1.1.6",
+    "@iconify/vue": "^4.3.0",
+    "@incremark/chat-core": "workspace:*",
+    "@incremark/shared": "workspace:*",
+    "@incremark/theme": "workspace:*",
+    "@incremark/vue": "workspace:*",
+    "@tiptap/extension-document": "^3.15.3",
+    "@tiptap/extension-paragraph": "^3.15.3",
+    "@tiptap/extension-text": "^3.15.3",
+    "@tiptap/extensions": "^3.15.3",
+    "@tiptap/markdown": "^3.15.3",
+    "@tiptap/pm": "^3.15.3",
+    "@tiptap/vue-3": "^3.15.3",
+    "@vueuse/core": "^14.1.0"
+  },
+  "devDependencies": {
+    "@iconify-json/ph": "^1.2.2",
+    "@storybook/addon-docs": "^10.1.11",
+    "@storybook/addon-links": "^10.1.11",
+    "@storybook/addon-themes": "^10.1.11",
+    "@storybook/vue3": "^10.1.11",
+    "@storybook/vue3-vite": "^10.1.11",
+    "@vitejs/plugin-vue": "^6.0.3",
+    "@vue-macros/volar": "^3.1.2",
+    "esbuild-plugin-vue3": "^0.5.1",
+    "remark-gfm": "^4.0.1",
+    "storybook": "^10.1.11",
+    "tsup": "^8.5.1",
+    "typescript": "^5.3.0",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.16",
+    "vue": "^3.5.26"
+  },
+  "keywords": [
+    "ai",
+    "chat",
+    "vue",
+    "vue3",
+    "incremental",
+    "streaming",
+    "markdown"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kingshuaishuai/incremark.git",
+    "directory": "packages/chat-vue"
+  }
+}

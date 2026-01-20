@@ -1,0 +1,131 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './source-reference.stories';
+
+<Meta of={stories} />
+
+# SourceReference
+
+来源引用渲染器，用于展示 AI 回答的来源引用。
+
+## 设计理念
+
+`SourceReference` 组件根据 `SourcePart` 的 `sourceType` 字段展示不同的 UI：
+- `url` - 显示可点击的链接
+- `document` - 显示文档信息
+
+## 特性
+
+- 支持 URL 和文档两种来源类型
+- 简洁的 badge 样式
+- 支持新窗口打开
+- **自动识别文件类型并显示对应图标**
+- **常见文件类型使用标志性颜色**
+
+## Props
+
+<Controls />
+
+## 示例
+
+### URL 来源
+
+<Canvas of={stories.UrlSource} />
+
+### 文档来源
+
+<Canvas of={stories.DocumentSource} />
+
+### 无标题 URL
+
+<Canvas of={stories.UrlWithoutTitle} />
+
+## 文件类型图标
+
+组件会根据 `mediaType` 或 URL 扩展名自动识别文件类型，并显示对应的图标和标志性颜色。
+
+### PDF 文档
+
+<Canvas of={stories.PDFDocument} />
+
+### Word 文档
+
+<Canvas of={stories.WordDocument} />
+
+### Excel 表格
+
+<Canvas of={stories.ExcelSpreadsheet} />
+
+### PowerPoint 演示
+
+<Canvas of={stories.PowerPointPresentation} />
+
+### 图片文件
+
+<Canvas of={stories.ImageFile} />
+
+### 视频文件
+
+<Canvas of={stories.VideoFile} />
+
+### 音频文件
+
+<Canvas of={stories.AudioFile} />
+
+### 压缩文件
+
+<Canvas of={stories.ArchiveFile} />
+
+### 代码文件
+
+<Canvas of={stories.CodeFile} />
+
+### Markdown 文件
+
+<Canvas of={stories.MarkdownFile} />
+
+### URL 扩展名推断
+
+对于 URL 类型的来源，组件也会尝试根据 URL 扩展名识别文件类型：
+
+<Canvas of={stories.PDFUrl} />
+
+<Canvas of={stories.ImageUrl} />
+
+### 支持的文件类型
+
+| 文件类型 | mediaType | 图标 | 颜色 |
+|---------|-----------|------|------|
+| PDF | `application/pdf` | PDF 图标 | 红色 (#FF4B4B) |
+| Word | `application/msword`<br />`application/vnd.openxmlformats-officedocument.wordprocessingml.document` | Word 图标 | 蓝色 (#2B579A) |
+| Excel | `application/vnd.ms-excel`<br />`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` | Excel 图标 | 绿色 (#217346) |
+| PowerPoint | `application/vnd.ms-powerpoint`<br />`application/vnd.openxmlformats-officedocument.presentationml.presentation` | PowerPoint 图标 | 橙色 (#D24726) |
+| 图片 | `image/jpeg`<br />`image/png`<br />`image/gif`<br />`image/webp`<br />`image/svg+xml` | 图片图标 | 紫色 (#9B59B6) |
+| 视频 | `video/mp4`<br />`video/webm`<br />`video/quicktime` | 视频图标 | 深紫色 (#8E44AD) |
+| 音频 | `audio/mpeg`<br />`audio/wav`<br />`audio/ogg` | 音乐图标 | 青色 (#1ABC9C) |
+| 压缩文件 | `application/zip`<br />`application/x-rar-compressed`<br />`application/x-7z-compressed`<br />`application/x-tar` | 压缩包图标 | 黄色 (#F39C12) |
+| 文本 | `text/plain`<br />`text/html`<br />`text/css`<br />`text/javascript` | 文档图标 | 灰色 (#7F8C8D) |
+| JSON/XML | `application/json`<br />`application/xml`<br />`text/xml` | 代码图标 | 灰色 (#7F8C8D) |
+| Markdown | `text/markdown` | Markdown 图标 | 灰色 (#7F8C8D) |
+| 代码文件 | `application/x-sh`<br />`application/x-python` | 代码图标 | 灰色 (#7F8C8D) |
+
+## 图标定制
+
+组件提供 `icon` 插槽，可以完全自定义图标：
+
+```vue
+<SourceReference :part="part">
+  <template #icon>
+    <SvgIcon>
+      <Icon icon="mdi:custom-icon" />
+    </SvgIcon>
+  </template>
+</SourceReference>
+```
+
+## 样式
+
+组件使用 `im-source-reference` 前缀的 CSS 类名，确保引入样式：
+
+```typescript
+import '@incremark/theme/chat.css';
+```

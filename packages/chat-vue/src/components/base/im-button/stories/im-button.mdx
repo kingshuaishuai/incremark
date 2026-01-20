@@ -1,0 +1,98 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './im-button.stories';
+
+<Meta of={stories} />
+
+# ImButton
+
+按钮组件，提供完整的设计系统支持。
+
+## 设计系统
+
+`ImButton` 支持：
+- **6 种变体**: solid, outline, soft, subtle, ghost, link
+- **5 种颜色**: primary, neutral, success, warning, error
+- **5 种尺寸**: xs, sm, md, lg, xl
+
+## Props
+
+<Controls of={stories.Default} />
+
+## 示例
+
+### 默认
+
+<Canvas of={stories.Default} />
+
+### 变体 (Variants)
+
+展示所有变体和颜色的组合效果。
+
+<Canvas of={stories.Variants} />
+
+### 尺寸 (Sizes)
+
+从 xs 到 xl 五种尺寸。
+
+<Canvas of={stories.Sizes} />
+
+### 带图标
+
+配合 `SvgIcon` 组件使用图标。
+
+<Canvas of={stories.WithIcon} />
+
+### 仅图标按钮
+
+使用 `square` 或 `circle` 属性创建仅图标按钮。
+
+<Canvas of={stories.IconOnly} />
+
+### Message Actions 风格
+
+`soft` 和 `subtle` 变体非常适合用于消息操作按钮，配合 `square` 和小尺寸使用效果更佳。
+
+<Canvas of={stories.MessageActionStyle} />
+
+### 加载状态
+
+<Canvas of={stories.Loading} />
+
+### 禁用状态
+
+<Canvas of={stories.Disabled} />
+
+### 块级按钮
+
+使用 `block` 属性让按钮占满容器宽度。
+
+<Canvas of={stories.Block} />
+
+## 用法
+
+```vue
+<script setup>
+import { ImButton } from '@incremark/chat-vue';
+import { Icon } from '@iconify/vue';
+import { SvgIcon } from '@incremark/chat-vue';
+</script>
+
+<template>
+  <!-- 基础用法 -->
+  <ImButton>Default</ImButton>
+
+  <!-- 指定变体和颜色 -->
+  <ImButton variant="outline" color="success">Success</ImButton>
+
+  <!-- 带图标 -->
+  <ImButton>
+    <SvgIcon><Icon icon="ph:rocket" /></SvgIcon>
+    Launch
+  </ImButton>
+
+  <!-- 仅图标按钮 -->
+  <ImButton square>
+    <SvgIcon><Icon icon="ph:plus" /></SvgIcon>
+  </ImButton>
+</template>
+```

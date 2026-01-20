@@ -1,0 +1,91 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './part-renderer.stories';
+
+<Meta of={stories} />
+
+# PartRenderer
+
+Part 类型分发渲染器，根据 `MessagePart` 的 `type` 自动选择对应的渲染组件。
+
+## 设计理念
+
+`PartRenderer` 是一个纯粹的类型分发组件：
+1. 接收任意类型的 `MessagePart`
+2. 根据 `part.type` 判断使用哪个子组件
+3. 支持通过 `parts` prop 注册自定义 Part 组件
+4. 支持通过 slot 覆盖特定类型的渲染
+
+## 支持的 Part 类型
+
+| Type | 组件 | 状态 |
+|------|------|------|
+| `text` | TextMessage | ✅ 已实现 |
+| `reasoning` | ReasoningMessage | ✅ 已实现 |
+| `tool-call` | ToolCall | ✅ 已实现 |
+| 自定义类型 | 通过 `parts` 注册 | ✅ 支持 |
+
+## Props
+
+<Controls />
+
+## 示例
+
+### Text Markdown
+
+<Canvas of={stories.TextMarkdown} />
+
+### Text Plain
+
+<Canvas of={stories.TextPlain} />
+
+### Tool Call
+
+<Canvas of={stories.ToolCall} />
+
+### Reasoning
+
+<Canvas of={stories.Reasoning} />
+
+### 自定义 Part 组件
+
+通过 `parts` prop 注册自定义类型的渲染组件：
+
+<Canvas of={stories.CustomPart} />
+
+### 使用 Slot 覆盖
+
+通过具名 slot 覆盖特定类型的渲染：
+
+<Canvas of={stories.WithSlot} />
+
+## 扩展方式
+
+### 方式一：注册自定义组件
+
+```vue
+<PartRenderer
+  :part="part"
+  :parts="{
+    chart: ChartComponent,
+    'custom-type': CustomComponent
+  }"
+/>
+```
+
+### 方式二：使用 Slot
+
+```vue
+<PartRenderer :part="part">
+  <template #text="{ part, streaming }">
+    <MyCustomTextRenderer :content="part.content" />
+  </template>
+</PartRenderer>
+```
+
+## 样式
+
+组件使用 `im-part-renderer` 前缀的 CSS 类名，确保引入样式：
+
+```typescript
+import '@incremark/theme/chat.css';
+```

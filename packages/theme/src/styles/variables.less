@@ -57,6 +57,7 @@
 // 状态颜色
 @color-status-pending: var(--incremark-color-status-pending);
 @color-status-completed: var(--incremark-color-status-completed);
+@color-status-error: var(--incremark-base-colors-red-6);
 
 // 交互元素颜色
 @color-interactive-link: var(--incremark-color-interactive-link);
@@ -111,9 +112,32 @@
 
 /* ============ 阴影系统 ============ */
 
+// 基础阴影
 @shadow-sm: var(--incremark-shadow-sm);
 @shadow-md: var(--incremark-shadow-md);
 @shadow-lg: var(--incremark-shadow-lg);
+@shadow-center: var(--incremark-shadow-center);
+
+// 方向性阴影 - Level 1 (轻量)
+@shadow-1-down: var(--incremark-shadow-level1-down);
+@shadow-1-up: var(--incremark-shadow-level1-up);
+@shadow-1-left: var(--incremark-shadow-level1-left);
+@shadow-1-right: var(--incremark-shadow-level1-right);
+
+// 方向性阴影 - Level 2 (中等)
+@shadow-2-down: var(--incremark-shadow-level2-down);
+@shadow-2-up: var(--incremark-shadow-level2-up);
+@shadow-2-left: var(--incremark-shadow-level2-left);
+@shadow-2-right: var(--incremark-shadow-level2-right);
+
+// 方向性阴影 - Level 3 (强调)
+@shadow-3-down: var(--incremark-shadow-level3-down);
+@shadow-3-up: var(--incremark-shadow-level3-up);
+@shadow-3-left: var(--incremark-shadow-level3-left);
+@shadow-3-right: var(--incremark-shadow-level3-right);
+
+// 品牌色卡片阴影
+@shadow-brand-card: var(--incremark-shadow-brand-card);
 
 /* ============ 动画系统 ============ */
 
@@ -126,3 +150,42 @@
 @easing-ease-in-out: var(--incremark-animation-easing-ease-in-out);
 @easing-ease-out: var(--incremark-animation-easing-ease-out);
 
+/* ============ Chat UI 组件专用变量（im- 前缀） ============ */
+// 这些变量为 Chat UI 组件提供简化的命名，同时保持与主设计系统的一致性
+
+// 颜色别名（im-colors-*）
+@im-colors-gray-50: @color-neutral-2;
+@im-colors-gray-100: @color-neutral-3;
+@im-colors-gray-200: @color-border-default;
+@im-colors-gray-300: @color-neutral-5;
+@im-colors-gray-400: @color-neutral-6;
+@im-colors-gray-500: @color-neutral-7;
+@im-colors-gray-600: @color-neutral-8;
+@im-colors-gray-700: @color-text-secondary;
+@im-colors-gray-800: @color-text-primary;
+@im-colors-gray-900: @color-neutral-9;
+@im-colors-white: @color-neutral-1;
+
+// 间距别名（im-spacing-*）
+@im-spacing-1: @spacing-xs;
+@im-spacing-2: @spacing-sm;
+@im-spacing-3: @spacing-md;
+@im-spacing-4: @spacing-lg;
+@im-spacing-5: @spacing-xl;
+
+// 圆角别名（im-radius-*）
+@im-radius-sm: @border-radius-sm;
+@im-radius-md: @border-radius-md;
+@im-radius-lg: @border-radius-lg;
+
+// 字体大小别名（im-font-*）
+@im-font-xs: @font-size-xs;
+@im-font-sm: @font-size-sm;
+@im-font-base: @font-size-base;
+@im-font-md: @font-size-md;
+@im-font-lg: @font-size-lg;
+
+// ChainOfThought 步骤分隔线配置
+@im-cot-step-icon-size: 14px;
+@im-cot-step-icon-margin-top: 2px;
+@im-cot-divider-gap: 4px;

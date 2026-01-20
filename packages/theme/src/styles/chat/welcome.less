@@ -1,0 +1,58 @@
+/**
+ * Welcome 组件样式
+ */
+
+@import '../variables.less';
+
+.im-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 32px;
+  }
+
+  &__icon {
+    width: 48px;
+    height: 48px;
+    color: @color-brand-primary;
+    margin-bottom: 16px;
+  }
+
+  &__title {
+    font-size: @font-size-heading-h3;
+    font-weight: @font-weight-semibold;
+    color: @color-text-primary;
+    line-height: @line-height-tight;
+    margin: 0 0 8px 0;
+  }
+
+  &__description {
+    font-size: @font-size-base;
+    color: @color-text-secondary;
+    line-height: @line-height-relaxed;
+    margin: 0;
+    max-width: 400px;
+  }
+
+  &__suggestions {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+    max-width: 600px;
+    width: 100%;
+  }
+
+  &__hint {
+    font-size: @font-size-xs;
+    color: @color-text-tertiary;
+    line-height: @line-height-normal;
+  }
+}

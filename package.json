@@ -24,12 +24,14 @@
     "bump": "bumpp package.json packages/*/package.json --commit --push --tag",
     "bump:dry": "bumpp package.json packages/*/package.json --dry",
     "release": "npx tsx scripts/release.ts",
-    "release:dry": "npx tsx scripts/release.ts --dry"
+    "release:dry": "npx tsx scripts/release.ts --dry",
+    "sb:vue": "pnpm --filter @incremark/chat-vue sb"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
     "bumpp": "^10.3.2",
     "changelogen": "^0.6.2",
+    "ts-morph": "^27.0.2",
     "tsup": "^8.0.0",
     "tsup-preset-solid": "^2.2.0",
     "tsx": "^4.21.0",

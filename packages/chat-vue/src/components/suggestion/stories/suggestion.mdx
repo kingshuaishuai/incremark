@@ -1,0 +1,67 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './suggestion.stories';
+
+<Meta of={stories} />
+
+# Suggestion
+
+快捷建议组件，用于展示预设的提示词或操作建议，帮助用户快速开始对话。
+
+## 基础用法
+
+最简单的用法，只需要传入建议项列表。
+
+<Canvas of={stories.Basic} />
+
+### Props
+
+<Controls of={stories.Basic} />
+
+## 带图标
+
+通过 `icon` 属性为建议项添加图标，使用 Iconify 图标名称。
+
+<Canvas of={stories.WithIcon} />
+
+## 带描述
+
+通过 `description` 属性添加描述文字，适合需要更多说明的场景。
+
+<Canvas of={stories.WithDescription} />
+
+## 垂直排列
+
+设置 `vertical` 为 `true` 可以垂直排列建议项。
+
+<Canvas of={stories.Vertical} />
+
+## 禁用状态
+
+通过 `disabled` 属性禁用某些建议项。
+
+<Canvas of={stories.Disabled} />
+
+## API
+
+### SuggestionProps
+
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| items | `SuggestionItem[]` | - | 建议项列表 |
+| vertical | `boolean` | `false` | 是否垂直排列 |
+
+### SuggestionItem
+
+| 属性 | 类型 | 说明 |
+|------|------|------|
+| id | `string` | 唯一标识（可选） |
+| label | `string` | 建议文本 |
+| description | `string` | 描述（可选） |
+| icon | `string` | Iconify 图标名（可选） |
+| disabled | `boolean` | 是否禁用（可选） |
+
+### Events
+
+| 事件 | 参数 | 说明 |
+|------|------|------|
+| select | `(item: SuggestionItem)` | 点击建议项时触发 |

@@ -1,0 +1,95 @@
+/**
+ * MessageActions 组件样式
+ */
+
+@import '../variables.less';
+
+// MessageActions 容器
+.im-message-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: @im-spacing-1;
+
+  &--borderless {
+    // 默认无边框样式
+  }
+
+  &--filled {
+    padding: @im-spacing-1;
+    border-radius: @im-radius-md;
+    background: @color-neutral-2;
+  }
+
+  &--outlined {
+    padding: @im-spacing-1;
+    border: 1px solid @color-border-default;
+    border-radius: @im-radius-md;
+  }
+}
+
+// MessageAction 通用按钮
+.im-message-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: @im-radius-sm;
+  background: transparent;
+  color: @color-text-tertiary;
+  cursor: pointer;
+  transition: all @duration-fast @easing-ease-out;
+
+  &:hover {
+    background: @color-neutral-3;
+    color: @color-text-secondary;
+  }
+
+  &:active {
+    background: @color-neutral-4;
+  }
+
+  &--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  &--loading {
+    cursor: wait;
+  }
+
+  &__icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// MessageActionFeedback 反馈按钮
+.im-message-action-feedback {
+  display: inline-flex;
+  align-items: center;
+  gap: @im-spacing-1;
+
+  &__like {
+    &--active {
+      color: @color-status-error;
+
+      &:hover {
+        color: @color-status-error;
+      }
+    }
+  }
+
+  &__dislike {
+    &--active {
+      color: @color-text-secondary;
+
+      &:hover {
+        color: @color-text-secondary;
+      }
+    }
+  }
+}

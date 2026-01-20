@@ -22,3 +22,9 @@ export { generateParserId } from './id'
 // 国际化
 export { en, zhCN } from './locales'
 export type { IncremarkLocale } from './locales/types'
+
+// 格式化工具
+export { formatDuration, formatFileSize } from './format'
+
+// BEM 命名工具
+export { createBem, createImBem } from './bem'

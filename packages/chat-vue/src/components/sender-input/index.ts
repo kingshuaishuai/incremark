@@ -1,0 +1,1 @@
+export { default as SenderInput } from './sender-input.vue';

@@ -1,0 +1,440 @@
+/**
+ * ImButton 按钮组件样式
+ *
+ * 设计系统:
+ * - 6 种变体: solid, outline, soft, subtle, ghost, link
+ * - 5 种颜色: primary, neutral, success, warning, error
+ * - 5 种尺寸: xs, sm, md, lg, xl
+ */
+
+@import '../variables.less';
+
+// ============ 颜色变量定义 ============
+// Primary (Blue)
+@btn-primary-6: var(--incremark-base-colors-blue-6);
+@btn-primary-7: var(--incremark-base-colors-blue-7);
+@btn-primary-2: var(--incremark-base-colors-blue-2);
+@btn-primary-3: var(--incremark-base-colors-blue-3);
+
+// Success (Green)
+@btn-success-6: var(--incremark-base-colors-green-6);
+@btn-success-7: var(--incremark-base-colors-green-7);
+@btn-success-2: var(--incremark-base-colors-green-2);
+@btn-success-3: var(--incremark-base-colors-green-3);
+
+// Warning (Orange)
+@btn-warning-6: var(--incremark-base-colors-orange-6);
+@btn-warning-7: var(--incremark-base-colors-orange-7);
+@btn-warning-2: var(--incremark-base-colors-orange-2);
+@btn-warning-3: var(--incremark-base-colors-orange-3);
+
+// Error (Red)
+@btn-error-6: var(--incremark-base-colors-red-6);
+@btn-error-7: var(--incremark-base-colors-red-7);
+@btn-error-2: var(--incremark-base-colors-red-2);
+@btn-error-3: var(--incremark-base-colors-red-3);
+
+// ============ 尺寸变量定义 ============
+@btn-height-xs: 24px;
+@btn-height-sm: 28px;
+@btn-height-md: 32px;
+@btn-height-lg: 36px;
+@btn-height-xl: 40px;
+
+@btn-padding-xs: 0 8px;
+@btn-padding-sm: 0 10px;
+@btn-padding-md: 0 12px;
+@btn-padding-lg: 0 14px;
+@btn-padding-xl: 0 16px;
+
+@btn-font-xs: 12px;
+@btn-font-sm: 12px;
+@btn-font-md: 13px;
+@btn-font-lg: 14px;
+@btn-font-xl: 14px;
+
+@btn-icon-xs: 14px;
+@btn-icon-sm: 14px;
+@btn-icon-md: 16px;
+@btn-icon-lg: 18px;
+@btn-icon-xl: 20px;
+
+// ============ 基础样式 ============
+.im-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: @im-radius-md;
+  font-weight: @font-weight-medium;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 150ms ease;
+  outline: none;
+  user-select: none;
+
+  // Focus 环
+  &:focus-visible {
+    outline: 2px solid @color-brand-primary;
+    outline-offset: 2px;
+  }
+
+  // ============ 尺寸 ============
+  &--xs {
+    height: @btn-height-xs;
+    padding: @btn-padding-xs;
+    font-size: @btn-font-xs;
+    border-radius: @im-radius-sm;
+
+    .im-svg-icon {
+      font-size: @btn-icon-xs;
+    }
+  }
+
+  &--sm {
+    height: @btn-height-sm;
+    padding: @btn-padding-sm;
+    font-size: @btn-font-sm;
+
+    .im-svg-icon {
+      font-size: @btn-icon-sm;
+    }
+  }
+
+  &--md {
+    height: @btn-height-md;
+    padding: @btn-padding-md;
+    font-size: @btn-font-md;
+
+    .im-svg-icon {
+      font-size: @btn-icon-md;
+    }
+  }
+
+  &--lg {
+    height: @btn-height-lg;
+    padding: @btn-padding-lg;
+    font-size: @btn-font-lg;
+
+    .im-svg-icon {
+      font-size: @btn-icon-lg;
+    }
+  }
+
+  &--xl {
+    height: @btn-height-xl;
+    padding: @btn-padding-xl;
+    font-size: @btn-font-xl;
+
+    .im-svg-icon {
+      font-size: @btn-icon-xl;
+    }
+  }
+
+  // ============ Solid 变体 ============
+  &--solid {
+    color: @color-text-inverse;
+
+    &.im-button--primary {
+      background: @btn-primary-6;
+      &:hover { background: @btn-primary-7; }
+      &:active { background: @btn-primary-7; filter: brightness(0.95); }
+    }
+
+    &.im-button--neutral {
+      background: @color-neutral-8;
+      &:hover { background: @color-neutral-9; }
+      &:active { background: @color-neutral-9; filter: brightness(0.95); }
+    }
+
+    &.im-button--success {
+      background: @btn-success-6;
+      &:hover { background: @btn-success-7; }
+      &:active { background: @btn-success-7; filter: brightness(0.95); }
+    }
+
+    &.im-button--warning {
+      background: @btn-warning-6;
+      &:hover { background: @btn-warning-7; }
+      &:active { background: @btn-warning-7; filter: brightness(0.95); }
+    }
+
+    &.im-button--error {
+      background: @btn-error-6;
+      &:hover { background: @btn-error-7; }
+      &:active { background: @btn-error-7; filter: brightness(0.95); }
+    }
+  }
+
+  // ============ Outline 变体 ============
+  &--outline {
+    background: transparent;
+
+    &.im-button--primary {
+      color: @btn-primary-6;
+      border-color: @btn-primary-6;
+      &:hover { background: @btn-primary-2; }
+      &:active { background: @btn-primary-3; }
+    }
+
+    &.im-button--neutral {
+      color: @color-text-primary;
+      border-color: @color-border-default;
+      &:hover { background: @color-neutral-3; border-color: @color-border-strong; }
+      &:active { background: @color-neutral-4; }
+    }
+
+    &.im-button--success {
+      color: @btn-success-6;
+      border-color: @btn-success-6;
+      &:hover { background: @btn-success-2; }
+      &:active { background: @btn-success-3; }
+    }
+
+    &.im-button--warning {
+      color: @btn-warning-6;
+      border-color: @btn-warning-6;
+      &:hover { background: @btn-warning-2; }
+      &:active { background: @btn-warning-3; }
+    }
+
+    &.im-button--error {
+      color: @btn-error-6;
+      border-color: @btn-error-6;
+      &:hover { background: @btn-error-2; }
+      &:active { background: @btn-error-3; }
+    }
+  }
+
+  // ============ Soft 变体 ============
+  &--soft {
+    border-color: transparent;
+
+    &.im-button--primary {
+      color: @btn-primary-6;
+      background: @btn-primary-2;
+      &:hover { background: @btn-primary-3; }
+      &:active { background: @btn-primary-3; filter: brightness(0.97); }
+    }
+
+    &.im-button--neutral {
+      color: @color-text-primary;
+      background: @color-neutral-3;
+      &:hover { background: @color-neutral-4; }
+      &:active { background: @color-neutral-5; }
+    }
+
+    &.im-button--success {
+      color: @btn-success-6;
+      background: @btn-success-2;
+      &:hover { background: @btn-success-3; }
+      &:active { background: @btn-success-3; filter: brightness(0.97); }
+    }
+
+    &.im-button--warning {
+      color: @btn-warning-6;
+      background: @btn-warning-2;
+      &:hover { background: @btn-warning-3; }
+      &:active { background: @btn-warning-3; filter: brightness(0.97); }
+    }
+
+    &.im-button--error {
+      color: @btn-error-6;
+      background: @btn-error-2;
+      &:hover { background: @btn-error-3; }
+      &:active { background: @btn-error-3; filter: brightness(0.97); }
+    }
+  }
+
+  // ============ Subtle 变体 (soft + outline) ============
+  &--subtle {
+    &.im-button--primary {
+      color: @btn-primary-6;
+      background: @btn-primary-2;
+      border-color: @btn-primary-6;
+      &:hover { background: @btn-primary-3; }
+      &:active { background: @btn-primary-3; filter: brightness(0.97); }
+    }
+
+    &.im-button--neutral {
+      color: @color-text-primary;
+      background: @color-neutral-3;
+      border-color: @color-border-default;
+      &:hover { background: @color-neutral-4; }
+      &:active { background: @color-neutral-5; }
+    }
+
+    &.im-button--success {
+      color: @btn-success-6;
+      background: @btn-success-2;
+      border-color: @btn-success-6;
+      &:hover { background: @btn-success-3; }
+      &:active { background: @btn-success-3; filter: brightness(0.97); }
+    }
+
+    &.im-button--warning {
+      color: @btn-warning-6;
+      background: @btn-warning-2;
+      border-color: @btn-warning-6;
+      &:hover { background: @btn-warning-3; }
+      &:active { background: @btn-warning-3; filter: brightness(0.97); }
+    }
+
+    &.im-button--error {
+      color: @btn-error-6;
+      background: @btn-error-2;
+      border-color: @btn-error-6;
+      &:hover { background: @btn-error-3; }
+      &:active { background: @btn-error-3; filter: brightness(0.97); }
+    }
+  }
+
+  // ============ Ghost 变体 ============
+  &--ghost {
+    background: transparent;
+    border-color: transparent;
+
+    &.im-button--primary {
+      color: @btn-primary-6;
+      &:hover { background: @btn-primary-2; }
+      &:active { background: @btn-primary-3; }
+    }
+
+    &.im-button--neutral {
+      color: @color-text-primary;
+      &:hover { background: @color-neutral-4; }
+      &:active { background: @color-neutral-5; }
+    }
+
+    &.im-button--success {
+      color: @btn-success-6;
+      &:hover { background: @btn-success-2; }
+      &:active { background: @btn-success-3; }
+    }
+
+    &.im-button--warning {
+      color: @btn-warning-6;
+      &:hover { background: @btn-warning-2; }
+      &:active { background: @btn-warning-3; }
+    }
+
+    &.im-button--error {
+      color: @btn-error-6;
+      &:hover { background: @btn-error-2; }
+      &:active { background: @btn-error-3; }
+    }
+  }
+
+  // ============ Link 变体 ============
+  &--link {
+    background: transparent;
+    border-color: transparent;
+    height: auto;
+    padding: 0;
+
+    &.im-button--primary {
+      color: @btn-primary-6;
+      &:hover { color: @btn-primary-7; text-decoration: underline; }
+    }
+
+    &.im-button--neutral {
+      color: @color-text-secondary;
+      &:hover { color: @color-text-primary; text-decoration: underline; }
+    }
+
+    &.im-button--success {
+      color: @btn-success-6;
+      &:hover { color: @btn-success-7; text-decoration: underline; }
+    }
+
+    &.im-button--warning {
+      color: @btn-warning-6;
+      &:hover { color: @btn-warning-7; text-decoration: underline; }
+    }
+
+    &.im-button--error {
+      color: @btn-error-6;
+      &:hover { color: @btn-error-7; text-decoration: underline; }
+    }
+  }
+
+  // ============ 特殊形状 ============
+  &--block {
+    display: flex;
+    width: 100%;
+  }
+
+  &--square {
+    padding: 0;
+
+    &.im-button--xs { width: @btn-height-xs; }
+    &.im-button--sm { width: @btn-height-sm; }
+    &.im-button--md { width: @btn-height-md; }
+    &.im-button--lg { width: @btn-height-lg; }
+    &.im-button--xl { width: @btn-height-xl; }
+  }
+
+  &--circle {
+    padding: 0;
+    border-radius: 50%;
+
+    &.im-button--xs { width: @btn-height-xs; }
+    &.im-button--sm { width: @btn-height-sm; }
+    &.im-button--md { width: @btn-height-md; }
+    &.im-button--lg { width: @btn-height-lg; }
+    &.im-button--xl { width: @btn-height-xl; }
+  }
+
+  // ============ 状态 ============
+  &--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  &--loading {
+    cursor: wait;
+    pointer-events: none;
+  }
+
+  // ============ Active/选中状态 ============
+  &--active {
+    // Ghost 变体的 active 状态
+    &.im-button--ghost {
+      &.im-button--neutral {
+        background: @color-neutral-5;
+        &:hover { background: @color-neutral-5; }
+      }
+      &.im-button--primary {
+        background: @btn-primary-3;
+        &:hover { background: @btn-primary-3; }
+      }
+    }
+
+    // Soft 变体的 active 状态
+    &.im-button--soft {
+      &.im-button--neutral {
+        background: @color-neutral-5;
+        &:hover { background: @color-neutral-5; }
+      }
+    }
+  }
+
+  // ============ Spinner ============
+  &__spinner {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: im-button-spin 0.6s linear infinite;
+  }
+}
+
+@keyframes im-button-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

@@ -1,0 +1,291 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './tool-call.stories';
+
+<Meta of={stories} />
+
+# ToolCall
+
+工具调用渲染器，用于展示 AI 调用工具的过程和结果。
+
+## 设计理念
+
+`ToolCall` 组件根据 `ToolCallPart` 的 `state` 字段展示不同的 UI 状态：
+
+| 状态 | 说明 |
+|------|------|
+| `input-streaming` | 参数流式输入中 |
+| `input-available` | 参数已完成，等待执行 |
+| `approval-requested` | 需要用户审批（敏感操作） |
+| `approval-responded` | 用户已响应审批 |
+| `executing` | 执行中 |
+| `output-available` | 执行完成，有结果 |
+| `output-error` | 执行出错 |
+| `output-denied` | 用户拒绝执行 |
+
+## 特性
+
+- 支持自定义工具渲染器注册（完全接管渲染）
+- 支持自定义输出渲染器注册（仅自定义输出部分）
+- 根据状态显示不同 UI
+- 内置默认渲染器（显示工具名、参数、结果）
+- 支持流式状态更新
+- 支持用户审批流程
+
+## Props
+
+<Controls />
+
+### 默认状态标签
+
+```typescript
+{
+  'input-streaming': 'Streaming...',
+  'input-available': 'Ready',
+  'approval-requested': 'Awaiting Approval',
+  'approval-responded': 'Approved',
+  'executing': 'Executing...',
+  'output-available': 'Completed',
+  'output-error': 'Error',
+  'output-denied': 'Denied'
+}
+```
+
+## Slots
+
+| Slot | Description |
+|------|-------------|
+| `approval` | 自定义审批 UI（当状态为 `approval-requested` 时显示） |
+
+## ToolCallPart 类型
+
+```typescript
+type ToolCallState =
+  | 'input-streaming'
+  | 'input-available'
+  | 'approval-requested'
+  | 'approval-responded'
+  | 'executing'
+  | 'output-available'
+  | 'output-error'
+  | 'output-denied';
+
+interface ToolCallPart {
+  type: 'tool-call';
+  toolCallId: string;
+  toolName: string;
+  args: Record<string, unknown>;
+  state: ToolCallState;
+  output?: unknown;
+  error?: string;
+}
+```
+
+## 使用示例
+
+### 基础用法
+
+```vue
+<script setup>
+import { ToolCall } from '@incremark/chat-vue';
+
+const part = {
+  type: 'tool-call',
+  toolCallId: 'call_001',
+  toolName: 'search',
+  args: { query: 'Vue 3' },
+  state: 'executing'
+};
+</script>
+
+<template>
+  <ToolCall :part="part" />
+</template>
+```
+
+### 显示执行结果
+
+```vue
+<script setup>
+import { ToolCall } from '@incremark/chat-vue';
+
+const part = {
+  type: 'tool-call',
+  toolCallId: 'call_001',
+  toolName: 'search',
+  args: { query: 'Vue 3' },
+  state: 'output-available',
+  output: { results: ['Vue 3 Guide', 'Vue 3 API'] }
+};
+</script>
+
+<template>
+  <ToolCall :part="part" />
+</template>
+```
+
+### 自定义工具渲染器
+
+为特定工具提供完全自定义的渲染器：
+
+```vue
+<script setup>
+import { ToolCall } from '@incremark/chat-vue';
+import SearchToolRenderer from './SearchToolRenderer.vue';
+
+const part = { /* ... */ };
+const tools = {
+  search: SearchToolRenderer
+};
+</script>
+
+<template>
+  <ToolCall :part="part" :tools="tools" />
+</template>
+```
+
+自定义渲染器会接收 `ToolRendererProps`：
+
+```typescript
+interface ToolRendererProps {
+  toolCallId: string;
+  toolName: string;
+  args: Record<string, unknown>;
+  state: ToolCallState;
+  output?: unknown;
+  error?: string;
+}
+```
+
+### 自定义输出渲染器
+
+只自定义输出部分的渲染，保留默认的 header 和 args：
+
+```vue
+<script setup>
+import { ToolCall } from '@incremark/chat-vue';
+import SearchResultRenderer from './SearchResultRenderer.vue';
+
+const part = {
+  type: 'tool-call',
+  toolCallId: 'call_001',
+  toolName: 'search',
+  args: { query: 'Vue 3' },
+  state: 'output-available',
+  output: { results: ['Vue 3 Guide', 'Vue 3 API'], count: 2 }
+};
+
+const outputRenderers = {
+  search: SearchResultRenderer
+};
+</script>
+
+<template>
+  <ToolCall :part="part" :output-renderers="outputRenderers" />
+</template>
+```
+
+输出渲染器会接收 `OutputRendererProps`：
+
+```typescript
+interface OutputRendererProps {
+  toolName: string;
+  output: unknown;
+}
+```
+
+### 自定义审批 UI
+
+当工具需要用户审批时，可以自定义审批界面：
+
+```vue
+<script setup>
+import { ToolCall } from '@incremark/chat-vue';
+
+const part = {
+  type: 'tool-call',
+  toolCallId: 'call_001',
+  toolName: 'deleteFile',
+  args: { path: '/important-file.ts' },
+  state: 'approval-requested'
+};
+
+function approve() {
+  // 处理审批通过
+}
+
+function deny() {
+  // 处理审批拒绝
+}
+</script>
+
+<template>
+  <ToolCall :part="part">
+    <template #approval>
+      <div class="approval-actions">
+        <span>确认删除此文件？</span>
+        <button @click="approve">确认</button>
+        <button @click="deny">拒绝</button>
+      </div>
+    </template>
+  </ToolCall>
+</template>
+```
+
+### 隐藏参数或结果
+
+```vue
+<template>
+  <!-- 只显示工具名和状态 -->
+  <ToolCall :part="part" :show-args="false" :show-output="false" />
+</template>
+```
+
+## 状态示例
+
+### 参数输入中
+
+<Canvas of={stories.InputStreaming} />
+
+### 等待执行
+
+<Canvas of={stories.InputAvailable} />
+
+### 等待审批
+
+<Canvas of={stories.ApprovalRequested} />
+
+### 审批已响应
+
+<Canvas of={stories.ApprovalResponded} />
+
+### 执行中
+
+<Canvas of={stories.Executing} />
+
+### 执行完成
+
+<Canvas of={stories.OutputAvailable} />
+
+### 执行出错
+
+<Canvas of={stories.OutputError} />
+
+### 用户拒绝
+
+<Canvas of={stories.OutputDenied} />
+
+### 自定义输出渲染器
+
+<Canvas of={stories.WithOutputRenderer} />
+
+### 自定义状态标签
+
+<Canvas of={stories.WithCustomStateLabels} />
+
+## 样式
+
+组件使用 `im-tool-call` 前缀的 CSS 类名，确保引入样式：
+
+```typescript
+import '@incremark/theme/chat.css';
+```

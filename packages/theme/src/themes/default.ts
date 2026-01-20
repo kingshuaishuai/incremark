@@ -3,108 +3,41 @@
  */
 
 import type { DesignTokens } from '../tokens'
-import { generateBrand } from '@incremark/colors'
+import { generateColorSystem } from '@incremark/colors'
 
-// 生成品牌色（蓝色系）
-const brandColors = generateBrand('#3b82f6')
+// 生成完整的颜色系统（包含交互状态）
+const colorBlue = generateColorSystem('#3b82f6')
+const colorPurple = generateColorSystem('#a855f7')
+const colorGreen = generateColorSystem('#10b981')
+const colorRed = generateColorSystem('#ef4444')
+const colorOrange = generateColorSystem('#f97316')
+const colorCyan = generateColorSystem('#06b6d4')
+const colorIndigo = generateColorSystem('#5776ff')
 
-// 中性色系列（微调后的颜色，与公司颜色有细微差异）
+// 中性色系列（调整后的颜色，增强对比度）
 const neutralSeries = {
   1: '#ffffff',
-  2: '#f8f9fc',   // 稍微偏蓝一点
-  3: '#f1f3f8',   // 稍微偏蓝
-  4: '#e2e5ec',   // 稍微调整
-  5: '#cdd1da',   // 稍微调整
-  6: '#9ca4b1',   // 稍微调整
-  7: '#677284',   // 稍微调整
-  8: '#34435a',   // 稍微偏蓝
-  9: '#011431',   // 稍微调整
-  10: '#01122d'   // 稍微调整
+  2: '#fafbfc',   // 极浅背景
+  3: '#f3f4f6',   // hover 背景（加深）
+  4: '#e5e7eb',   // active/selected 背景（加深）
+  5: '#d1d5db',   // 边框色（加深）
+  6: '#9ca3af',   // 次要文字
+  7: '#6b7280',   // 主要文字
+  8: '#374151',   // 深色文字
+  9: '#1f2937',   // 代码块背景
+  10: '#111827'   // 最深色
 } as const;
-
-// 基础色系统（使用自动生成）
-const baseBlue = generateBrand('#3b82f6')
-const basePurple = generateBrand('#a855f7')
-const baseGreen = generateBrand('#10b981')
-const baseRed = generateBrand('#ef4444')
-const baseOrange = generateBrand('#f97316')
-const baseCyan = generateBrand('#06b6d4')
 
 export const defaultTheme: DesignTokens = {
   // ============ 基础色系统 ============
   baseColors: {
-    blue: {
-      1: baseBlue.palette[1],
-      2: baseBlue.palette[2],
-      3: baseBlue.palette[3],
-      4: baseBlue.palette[4],
-      5: baseBlue.palette[5],
-      6: baseBlue.palette[6],   // 主色
-      7: baseBlue.palette[7],
-      8: baseBlue.palette[8],
-      9: baseBlue.palette[9],
-      10: baseBlue.palette[10]
-    },
-    purple: {
-      1: basePurple.palette[1],
-      2: basePurple.palette[2],
-      3: basePurple.palette[3],
-      4: basePurple.palette[4],
-      5: basePurple.palette[5],
-      6: basePurple.palette[6],   // 主色
-      7: basePurple.palette[7],
-      8: basePurple.palette[8],
-      9: basePurple.palette[9],
-      10: basePurple.palette[10]
-    },
-    green: {
-      1: baseGreen.palette[1],
-      2: baseGreen.palette[2],
-      3: baseGreen.palette[3],
-      4: baseGreen.palette[4],
-      5: baseGreen.palette[5],
-      6: baseGreen.palette[6],   // 主色
-      7: baseGreen.palette[7],
-      8: baseGreen.palette[8],
-      9: baseGreen.palette[9],
-      10: baseGreen.palette[10]
-    },
-    red: {
-      1: baseRed.palette[1],
-      2: baseRed.palette[2],
-      3: baseRed.palette[3],
-      4: baseRed.palette[4],
-      5: baseRed.palette[5],
-      6: baseRed.palette[6],   // 主色
-      7: baseRed.palette[7],
-      8: baseRed.palette[8],
-      9: baseRed.palette[9],
-      10: baseRed.palette[10]
-    },
-    orange: {
-      1: baseOrange.palette[1],
-      2: baseOrange.palette[2],
-      3: baseOrange.palette[3],
-      4: baseOrange.palette[4],
-      5: baseOrange.palette[5],
-      6: baseOrange.palette[6],   // 主色
-      7: baseOrange.palette[7],
-      8: baseOrange.palette[8],
-      9: baseOrange.palette[9],
-      10: baseOrange.palette[10]
-    },
-    cyan: {
-      1: baseCyan.palette[1],
-      2: baseCyan.palette[2],
-      3: baseCyan.palette[3],
-      4: baseCyan.palette[4],
-      5: baseCyan.palette[5],
-      6: baseCyan.palette[6],   // 主色
-      7: baseCyan.palette[7],
-      8: baseCyan.palette[8],
-      9: baseCyan.palette[9],
-      10: baseCyan.palette[10]
-    }
+    blue: colorBlue,
+    purple: colorPurple,
+    green: colorGreen,
+    red: colorRed,
+    orange: colorOrange,
+    cyan: colorCyan,
+    indigo: colorIndigo
   },
   color: {
     // ============ Neutral 中性色系统 ============
@@ -120,12 +53,12 @@ export const defaultTheme: DesignTokens = {
       9: neutralSeries[9],
       10: neutralSeries[10]
     },
-    // ============ 品牌主题色（自动生成）============
+    // ============ 品牌主题色（引用 indigo）============
     brand: {
-      primary: brandColors.primary,
-      primaryHover: brandColors.hover,
-      primaryActive: brandColors.active,
-      primaryLight: brandColors.light
+      primary: colorIndigo.primary,      // indigo[6]
+      primaryHover: colorIndigo.hover,   // indigo[7]
+      primaryActive: colorIndigo.active, // indigo[8]
+      primaryLight: colorIndigo.light    // indigo[2]
     },
     // ============ 语义化颜色（基于 neutral） ============
     text: {
@@ -153,15 +86,15 @@ export const defaultTheme: DesignTokens = {
       // border 使用通用的 border.strong，不单独定义
     },
     status: {
-      pending: basePurple.palette[6],    // 使用紫色系主色
-      completed: baseGreen.palette[6]    // 使用绿色系主色
+      pending: colorPurple.primary,    // 使用紫色系主色
+      completed: colorGreen.primary    // 使用绿色系主色
     },
     // ============ 交互元素颜色 ============
     interactive: {
-      link: brandColors.primary,          // 使用品牌主色
-      linkHover: brandColors.hover,       // 使用 hover 变体
-      linkVisited: basePurple.palette[7], // 使用紫色系深色表示访问过
-      checked: baseGreen.palette[6]       // 使用绿色系主色表示选中
+      link: colorIndigo.primary,         // 使用 indigo 主色
+      linkHover: colorIndigo.hover,      // 使用 indigo hover
+      linkVisited: colorPurple.dark,     // 使用紫色系深色表示访问过
+      checked: colorGreen.primary        // 使用绿色系主色表示选中
     }
   },
   typography: {
@@ -170,8 +103,8 @@ export const defaultTheme: DesignTokens = {
       mono: "'Fira Code', 'SF Mono', 'Monaco', 'Consolas', monospace"
     },
     fontSize: {
-      xs: '11px',
-      sm: '12px',
+      xs: '12px',
+      sm: '13px',
       base: '14px',
       md: '16px',
       lg: '18px',
@@ -211,9 +144,34 @@ export const defaultTheme: DesignTokens = {
     }
   },
   shadow: {
-    sm: '0 1px 2px rgba(0, 0, 0, 0.05)',
-    md: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    lg: '0 10px 15px rgba(0, 0, 0, 0.1)'
+    // 基础阴影（使用深蓝色基底，更有质感）
+    sm: '0 2px 4px rgba(0, 19, 48, 0.06)',
+    md: '0 2px 12px rgba(0, 19, 48, 0.08)',
+    lg: '0 2px 16px rgba(0, 19, 48, 0.12)',
+    center: '0 0 8px rgba(0, 19, 48, 0.08)',
+    // 方向性阴影 - 一级（轻量）
+    level1: {
+      down: '0 2px 4px rgba(0, 19, 48, 0.06)',
+      up: '0 -2px 4px rgba(0, 19, 48, 0.06)',
+      left: '-2px 0 8px rgba(0, 19, 48, 0.06)',
+      right: '2px 0 8px rgba(0, 19, 48, 0.06)'
+    },
+    // 方向性阴影 - 二级（中等）
+    level2: {
+      down: '0 2px 12px rgba(0, 19, 48, 0.08)',
+      up: '0 -2px 12px rgba(0, 19, 48, 0.08)',
+      left: '-2px 0 12px rgba(0, 19, 48, 0.08)',
+      right: '2px 0 12px rgba(0, 19, 48, 0.08)'
+    },
+    // 方向性阴影 - 三级（强调）
+    level3: {
+      down: '0 2px 16px rgba(0, 19, 48, 0.12)',
+      up: '0 -2px 16px rgba(0, 19, 48, 0.12)',
+      left: '-2px 0 16px rgba(0, 19, 48, 0.12)',
+      right: '2px 0 16px rgba(0, 19, 48, 0.12)'
+    },
+    // 品牌色卡片阴影
+    brandCard: '0 2px 12px rgba(1, 69, 197, 0.12)'
   },
   animation: {
     duration: {
@@ -227,4 +185,3 @@ export const defaultTheme: DesignTokens = {
     }
   }
 }
-

@@ -1,0 +1,141 @@
+/**
+ * FilePreview 组件样式
+ */
+
+@import '../variables.less';
+
+.im-file-preview {
+  position: relative;
+
+  // ============ 标准模式 ============
+  &__image {
+    display: block;
+    border-radius: @im-radius-md;
+  }
+
+  &__video {
+    display: block;
+    border-radius: @im-radius-md;
+  }
+
+  &__audio {
+    width: 100%;
+  }
+
+  &__file {
+    display: flex;
+    align-items: center;
+    gap: @im-spacing-2;
+    padding: @im-spacing-2 @im-spacing-3;
+    background: @color-neutral-2;
+    border: 1px solid @color-border-subtle;
+    border-radius: @im-radius-md;
+  }
+
+  &__file-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__filename {
+    font-size: @im-font-sm;
+    color: @color-text-primary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__type {
+    font-size: @im-font-xs;
+    color: @color-text-tertiary;
+  }
+
+  // ============ 紧凑模式（附件列表） ============
+  &--compact {
+    display: flex;
+    align-items: center;
+    gap: @im-spacing-2;
+    max-width: 200px;
+  }
+
+  // ============ 图片缩略图 ============
+  &__thumbnail {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: @im-radius-sm;
+    overflow: hidden;
+  }
+
+  &__thumbnail-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  // ============ 文件图标容器 ============
+  &__icon-box {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  // 图标尺寸（vscode-icons 自带颜色，直接显示）
+  &__icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  // ============ 文件信息（紧凑模式） ============
+  &__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+  }
+
+  &__name {
+    font-size: @im-font-sm;
+    color: @color-text-primary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__size {
+    font-size: @im-font-xs;
+    color: @color-text-tertiary;
+  }
+
+  // ============ 删除按钮 ============
+  &__remove {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+
+    // 覆盖 ImButton 样式
+    &.im-button {
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      min-height: 18px;
+      padding: 0;
+      background: @color-neutral-6;
+      color: @color-text-inverse;
+      font-size: 12px;
+
+      &:hover {
+        background: @color-neutral-7;
+        color: @color-text-inverse;
+      }
+    }
+  }
+}

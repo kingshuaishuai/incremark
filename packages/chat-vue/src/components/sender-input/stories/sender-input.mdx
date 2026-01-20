@@ -1,0 +1,58 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './sender-input.stories';
+
+<Meta of={stories} />
+
+# SenderInput
+
+基于 Tiptap 3 的输入框组件，支持 Markdown 编辑，用于聊天输入场景。
+
+## 设计理念
+
+`SenderInput` 是一个轻量级的 Tiptap 编辑器封装，专为聊天输入场景设计：
+- 基于 Tiptap 3.0 的现代编辑器框架
+- 支持 Markdown 格式的输入和输出
+- 提供简洁的 v-model 双向绑定
+- 支持禁用状态和自定义占位符
+
+## 特性
+
+- ✏️ 支持 Markdown 格式（粗体、斜体、代码等）
+- 📝 实时 v-model 双向绑定
+- 🎯 专为聊天输入场景优化
+- 🔧 可扩展的 Tiptap 扩展系统
+- 🎨 清爽的默认样式
+
+## Props
+
+<Controls />
+
+## 示例
+
+### 基础用法
+
+<Canvas of={stories.Basic} />
+
+最简单的使用方式，通过 v-model 绑定输入内容：
+
+### 禁用状态
+
+<Canvas of={stories.Disabled} />
+
+通过 `disabled` 属性禁用输入框：
+
+### 自定义占位符
+
+<Canvas of={stories.CustomPlaceholder} />
+
+通过 `placeholder` 属性自定义占位符文本：
+
+
+### 带初始值
+
+<Canvas of={stories.WithValue} />
+
+
+## API
+
+<Controls />

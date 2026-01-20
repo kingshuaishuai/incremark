@@ -1,0 +1,105 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './message-bubble.stories';
+
+<Meta of={stories} />
+
+# MessageBubble
+
+消息气泡容器组件，用于包裹各种消息内容（TextMessage、ToolCall 等）。
+
+## 设计理念
+
+`MessageBubble` 是一个纯容器组件，提供：
+- 布局控制（左对齐/右对齐）
+- 样式变体（filled/outlined/borderless）
+- 插槽系统（avatar/header/footer）
+
+内容渲染由子组件负责，MessageBubble 只负责外层容器样式。
+
+## 特性
+
+- 📍 支持 start/end 两种位置
+- 🎨 支持多种样式变体
+- 🔌 灵活的插槽系统
+- 🧩 可与任意内容组件组合
+
+## Props
+
+<Controls />
+
+## 示例
+
+### 基础用法
+
+<Canvas of={stories.Basic} />
+
+### 用户消息（右对齐）
+
+<Canvas of={stories.UserMessage} />
+
+### 带头像
+
+<Canvas of={stories.WithAvatar} />
+
+### 带头部和底部
+
+<Canvas of={stories.WithHeaderFooter} />
+
+### Outlined 变体
+
+<Canvas of={stories.Outlined} />
+
+### Borderless 变体
+
+<Canvas of={stories.Borderless} />
+
+### Round 形状
+
+<Canvas of={stories.Round} />
+
+### 对话示例
+
+<Canvas of={stories.Conversation} />
+
+## 插槽
+
+| 插槽名 | 说明 |
+|--------|------|
+| default | 消息内容 |
+| avatar | 头像区域 |
+| header | 头部区域（角色名、时间等） |
+| footer | 底部区域（操作按钮等） |
+
+## 场景演示
+
+### 流式 Markdown 输出
+
+模拟 AI 逐字生成 Markdown 内容。
+
+<Canvas of={stories.StreamingMarkdown} />
+
+### 思考 + 回答
+
+先展示思考过程，再输出回答内容。
+
+<Canvas of={stories.ReasoningThenAnswer} />
+
+### 工具调用 + 回答
+
+展示工具调用状态变化，完成后生成回答。
+
+<Canvas of={stories.ToolCallThenAnswer} />
+
+### 完整多轮对话
+
+包含用户提问、工具调用、思考、回答等多种 Part 组合。
+
+<Canvas of={stories.FullConversation} />
+
+## 样式
+
+组件使用 `im-message-bubble` 前缀的 CSS 类名，确保引入样式：
+
+```typescript
+import '@incremark/theme/chat.css';
+```

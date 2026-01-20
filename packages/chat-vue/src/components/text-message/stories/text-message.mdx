@@ -1,0 +1,51 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './text-message.stories';
+
+<Meta of={stories} />
+
+# TextMessage
+
+文本消息渲染器，支持 Markdown 和纯文本两种格式。
+
+## 设计理念
+
+`TextMessage` 是一个纯渲染组件，根据 `TextPart` 的 `format` 字段自动选择渲染方式：
+- `format: 'markdown'` - 使用 IncremarkContent 渲染 Markdown
+- `format: 'plain'` - 直接渲染纯文本
+
+## 特性
+
+- 📝 支持 Markdown 和纯文本
+- ⚡ 支持流式渲染
+- 🎨 集成 Incremark 增量渲染
+- 🔧 支持自定义容器和代码块组件
+
+## Props
+
+<Controls />
+
+## 示例
+
+### Markdown 格式
+
+<Canvas of={stories.Markdown} />
+
+### 纯文本格式
+
+<Canvas of={stories.Plain} />
+
+### 流式渲染
+
+<Canvas of={stories.Streaming} />
+
+### 复杂 Markdown
+
+<Canvas of={stories.ComplexMarkdown} />
+
+## 样式
+
+组件使用 `im-text-message` 前缀的 CSS 类名，确保引入样式：
+
+```typescript
+import '@incremark/theme/chat.css';
+```

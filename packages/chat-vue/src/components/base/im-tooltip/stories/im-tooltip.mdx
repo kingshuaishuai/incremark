@@ -1,0 +1,87 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './im-tooltip.stories';
+
+<Meta of={stories} />
+
+# ImTooltip
+
+提示组件，基于 `ImPopover` 实现，悬停触发，深色背景。
+
+## 设计理念
+
+`ImTooltip` 是对 `ImPopover` 的封装，专门用于显示简短的提示信息：
+- 默认 hover 触发
+- 默认显示箭头
+- 深色背景样式
+- 无内容时直接渲染子元素
+
+## 特性
+
+- 💡 简洁的 API
+- 🎯 支持 12 种位置
+- ➡️ 自带箭头
+- 🌙 深色背景样式
+- 🔄 无内容时降级为普通渲染
+
+## Props
+
+<Controls />
+
+## 示例
+
+### 基础用法
+
+悬停显示提示内容。
+
+<Canvas of={stories.Default} />
+
+### 不同位置
+
+支持上下左右四个基础方向。
+
+<Canvas of={stories.Placements} />
+
+### 长文本
+
+Tooltip 会自适应长文本内容。
+
+<Canvas of={stories.LongContent} />
+
+### 无内容时
+
+当 `content` 为空时，直接渲染子元素，不显示 tooltip。
+
+<Canvas of={stories.NoContent} />
+
+### 在图标上使用
+
+常见的图标提示用法。
+
+<Canvas of={stories.OnIcon} />
+
+### 对齐变体
+
+支持 start 和 end 对齐变体。
+
+<Canvas of={stories.AlignmentVariants} />
+
+## 样式
+
+组件使用 `im-tooltip` 前缀的 CSS 类名，确保引入样式：
+
+```typescript
+import '@incremark/theme/chat.css';
+```
+
+### CSS 类结构
+
+- `.im-tooltip` - 提示内容容器
+
+### 与 ImPopover 的区别
+
+| 特性 | ImTooltip | ImPopover |
+|------|-----------|-----------|
+| 触发方式 | 仅 hover | hover/click/focus/manual |
+| 箭头 | 默认显示 | 可选 |
+| 样式 | 深色背景 | 无默认样式 |
+| 使用场景 | 简短提示 | 复杂内容 |

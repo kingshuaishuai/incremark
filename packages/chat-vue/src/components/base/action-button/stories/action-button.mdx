@@ -1,0 +1,112 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './action-button.stories';
+
+<Meta of={stories} />
+
+# ActionButton
+
+操作按钮组件，基于意图（Intent）抽象的按钮封装，支持 UI 适配器模式。
+
+## 设计理念
+
+`ActionButton` 是对底层按钮组件的高级封装，主要特点：
+
+1. **意图驱动**：使用 `intent` 属性描述按钮用途，而非直接指定样式
+2. **UI 适配器**：通过 `ChatProvider` 注入自定义 UI 组件库
+3. **统一接口**：为不同场景提供一致的 API
+
+### Intent 映射
+
+| Intent | 用途 | 默认样式 |
+|--------|------|----------|
+| `action` | 操作按钮（默认） | ghost + neutral |
+| `primary` | 主要操作 | solid + primary |
+| `secondary` | 次要操作 | outline + neutral |
+| `danger` | 危险操作 | solid + error |
+
+## Props
+
+<Controls of={stories.Default} />
+
+## 示例
+
+### 默认
+
+<Canvas of={stories.Default} />
+
+### 意图 (Intents)
+
+不同意图对应不同的视觉样式。
+
+<Canvas of={stories.Intents} />
+
+### 尺寸 (Sizes)
+
+支持 xs、sm、md、lg 四种尺寸。
+
+<Canvas of={stories.Sizes} />
+
+### 仅图标按钮
+
+使用 `square` 或 `circle` 属性创建仅图标按钮。
+
+<Canvas of={stories.IconOnly} />
+
+### 选中状态 (Active)
+
+使用 `active` 属性表示按钮的选中/激活状态，常用于切换按钮或模式选择。
+
+<Canvas of={stories.Active} />
+
+### 禁用状态
+
+<Canvas of={stories.Disabled} />
+
+### 加载状态
+
+<Canvas of={stories.Loading} />
+
+## 用法
+
+```vue
+<script setup>
+import { ActionButton, SvgIcon } from '@incremark/chat-vue';
+import { Icon } from '@iconify/vue';
+</script>
+
+<template>
+  <!-- 基础用法（默认 action 意图） -->
+  <ActionButton>
+    <SvgIcon><Icon icon="mdi:plus" /></SvgIcon>
+    添加
+  </ActionButton>
+
+  <!-- 主要操作 -->
+  <ActionButton intent="primary">
+    <SvgIcon><Icon icon="mdi:check" /></SvgIcon>
+    确认
+  </ActionButton>
+
+  <!-- 危险操作 -->
+  <ActionButton intent="danger">
+    <SvgIcon><Icon icon="mdi:delete" /></SvgIcon>
+    删除
+  </ActionButton>
+
+  <!-- 仅图标按钮 -->
+  <ActionButton square aria-label="添加">
+    <SvgIcon><Icon icon="mdi:plus" /></SvgIcon>
+  </ActionButton>
+</template>
+```
+
+## 与 ImButton 的区别
+
+| 特性 | ActionButton | ImButton |
+|------|--------------|----------|
+| 抽象级别 | 高（意图驱动） | 低（样式驱动） |
+| UI 适配 | 支持 | 不支持 |
+| 使用场景 | 业务组件 | 基础组件 |
+| 样式控制 | 通过 intent | 通过 variant/color |
+
+**推荐**：在业务组件中优先使用 `ActionButton`，在需要精细控制样式时使用 `ImButton`。

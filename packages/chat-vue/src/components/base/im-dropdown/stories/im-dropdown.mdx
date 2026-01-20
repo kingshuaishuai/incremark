@@ -1,0 +1,65 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './im-dropdown.stories';
+
+<Meta of={stories} />
+
+# ImDropdown
+
+下拉菜单组件，基于 ImPopover 实现，点击触发显示菜单列表。
+
+## 基础用法
+
+点击触发器显示下拉菜单，选择菜单项后自动关闭。
+
+<Canvas of={stories.Default} />
+
+### Props
+
+<Controls of={stories.Default} />
+
+## 带分割线
+
+使用 `divider: true` 可以在菜单项之间添加分割线。
+
+<Canvas of={stories.WithDivider} />
+
+## 禁用项
+
+使用 `disabled: true` 可以禁用某个菜单项。
+
+<Canvas of={stories.WithDisabled} />
+
+## 不同位置
+
+支持 `bottom-start`、`bottom`、`bottom-end` 等多种位置。
+
+<Canvas of={stories.Placements} />
+
+## 禁用状态
+
+设置 `disabled` 属性可以禁用整个下拉菜单。
+
+<Canvas of={stories.Disabled} />
+
+## DropdownItem 类型
+
+```typescript
+interface DropdownItem {
+  /** 唯一标识 */
+  key: string;
+  /** 显示文本 */
+  label: string;
+  /** 图标（可选） */
+  icon?: string;
+  /** 是否禁用 */
+  disabled?: boolean;
+  /** 是否为分割线 */
+  divider?: boolean;
+}
+```
+
+## 事件
+
+| 事件名 | 说明 | 参数 |
+|--------|------|------|
+| select | 选择菜单项时触发 | `(item: DropdownItem)` |

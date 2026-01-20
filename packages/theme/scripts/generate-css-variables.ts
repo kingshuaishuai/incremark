@@ -13,13 +13,12 @@ const __dirname = dirname(__filename)
 const rootDir = resolve(__dirname, '..')
 const srcDir = resolve(rootDir, 'src')
 
-// 动态导入 ESM 模块
+// 直接从源文件导入（tsx 支持 TypeScript）
+import { generateCSSVars } from '../src/utils/generate-css-vars.js'
+import { defaultTheme, darkTheme } from '../src/themes/index.js'
+
 async function main() {
   console.log('Generating CSS Variables Less file...')
-
-  const { generateCSSVars } = await import('../dist/index.js')
-  const { defaultTheme } = await import('../dist/index.js')
-  const { darkTheme } = await import('../dist/index.js')
 
   // 1. 生成默认主题的 CSS Variables
   const defaultVars = generateCSSVars(defaultTheme, {

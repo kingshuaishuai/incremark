@@ -1,0 +1,63 @@
+/**
+ * SourceReference 组件样式
+ */
+
+@import '../variables.less';
+
+.im-source-reference {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  gap: 6px;
+
+  &__icon {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    // 颜色现在由组件根据文件类型动态设置
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: @color-interactive-link;
+    text-decoration: none;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: @color-interactive-link-hover;
+    }
+  }
+
+  &__title {
+    color: @color-text-primary;
+    word-break: break-all;
+  }
+
+  &__type {
+    margin-left: 4px;
+    font-size: 12px;
+    color: @color-text-tertiary;
+  }
+
+  &__document {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  // URL 类型变体
+  &--url {
+    .im-source-reference__link {
+      color: @color-interactive-link;
+    }
+  }
+
+  // 文档类型变体
+  &--document {
+    .im-source-reference__document {
+      color: @color-text-secondary;
+    }
+  }
+}

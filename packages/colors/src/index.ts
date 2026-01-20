@@ -191,14 +191,49 @@ export function generatePalette(baseColor: string): string[] {
 }
 
 /**
+ * 交互状态颜色
+ */
+export interface ColorStates {
+  /** 主色（色阶 6） */
+  primary: string
+  /** hover 状态（色阶 7） */
+  hover: string
+  /** active/pressed 状态（色阶 8） */
+  active: string
+  /** 浅色背景（色阶 2） */
+  light: string
+  /** 更浅的背景（色阶 1） */
+  lighter: string
+  /** 深色背景（色阶 9） */
+  dark: string
+}
+
+/**
+ * 完整的颜色系统（包含色阶和交互状态）
+ */
+export interface ColorSystem extends ColorStates {
+  /** 完整的 10 级色阶 */
+  1: string
+  2: string
+  3: string
+  4: string
+  5: string
+  6: string
+  7: string
+  8: string
+  9: string
+  10: string
+}
+
+/**
  * 生成品牌色系统
- * 
+ *
  * @param primaryColor 品牌主色
- * @returns 品牌色对象
+ * @returns 品牌色对象（兼容旧版）
  */
 export function generateBrand(primaryColor: string) {
   const palette = generatePalette(primaryColor)
-  
+
   return {
     // 主色（索引 6）
     primary: palette[5],
@@ -225,6 +260,37 @@ export function generateBrand(primaryColor: string) {
 }
 
 /**
+ * 生成完整的颜色系统（包含色阶和交互状态）
+ *
+ * @param primaryColor 主色
+ * @returns 完整的颜色系统
+ */
+export function generateColorSystem(primaryColor: string): ColorSystem {
+  const palette = generatePalette(primaryColor)
+
+  return {
+    // 色阶
+    1: palette[0],
+    2: palette[1],
+    3: palette[2],
+    4: palette[3],
+    5: palette[4],
+    6: palette[5],
+    7: palette[6],
+    8: palette[7],
+    9: palette[8],
+    10: palette[9],
+    // 交互状态
+    primary: palette[5],
+    hover: palette[6],
+    active: palette[7],
+    light: palette[1],
+    lighter: palette[0],
+    dark: palette[8]
+  }
+}
+
+/**
  * 预设品牌色
  */
 export const presets = {
@@ -238,5 +304,21 @@ export const presets = {
   indigo: generateBrand('#6366f1'),
   yellow: generateBrand('#eab308'),
   teal: generateBrand('#14b8a6')
+}
+
+/**
+ * 预设颜色系统（包含交互状态）
+ */
+export const colorSystems = {
+  blue: generateColorSystem('#3b82f6'),
+  purple: generateColorSystem('#a855f7'),
+  green: generateColorSystem('#10b981'),
+  orange: generateColorSystem('#f97316'),
+  red: generateColorSystem('#ef4444'),
+  cyan: generateColorSystem('#06b6d4'),
+  pink: generateColorSystem('#ec4899'),
+  indigo: generateColorSystem('#6366f1'),
+  yellow: generateColorSystem('#eab308'),
+  teal: generateColorSystem('#14b8a6')
 }
 

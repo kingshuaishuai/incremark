@@ -1,0 +1,62 @@
+/**
+ * Suggestion 组件样式
+ */
+
+@import '../variables.less';
+
+.im-suggestion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  &--vertical {
+    flex-direction: column;
+  }
+}
+
+.im-suggestion-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: @font-size-sm;
+  color: @color-text-primary;
+  background: @color-background-elevated;
+  border: 1px solid @color-border-default;
+  border-radius: @border-radius-lg;
+  cursor: pointer;
+  transition: all @duration-fast @easing-ease-out;
+
+  &:hover:not(:disabled) {
+    border-color: @color-brand-primary;
+    background: @color-brand-primary-light;
+  }
+
+  &--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    color: @color-text-secondary;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+  }
+
+  &__label {
+    line-height: @line-height-normal;
+  }
+
+  &__description {
+    font-size: @font-size-xs;
+    color: @color-text-tertiary;
+    line-height: @line-height-tight;
+  }
+}

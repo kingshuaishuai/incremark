@@ -1,0 +1,52 @@
+{
+  "name": "@incremark/chat-core",
+  "version": "0.1.0",
+  "description": "Framework-agnostic core library for building AI chat interfaces with incremental rendering support.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./protocol": {
+      "types": "./dist/protocol/index.d.ts",
+      "import": "./dist/protocol/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run -- --coverage"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "typescript": "^5.3.0",
+    "vitest": "^4.0.16"
+  },
+  "keywords": [
+    "ai",
+    "chat",
+    "llm",
+    "streaming",
+    "incremental",
+    "framework-agnostic",
+    "typescript"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kingshuaishuai/incremark.git",
+    "directory": "packages/chat-core"
+  },
+  "dependencies": {
+    "nanoid": "^5.1.6"
+  }
+}

@@ -1,0 +1,38 @@
+.sender-input {
+  padding: @im-spacing-2;
+  font-size: @im-font-base;
+  
+  &--bordered {
+    border: 1px solid @color-border-default;
+    border-radius: @im-radius-md;
+  }
+
+  &--disabled {
+    color: @color-text-tertiary;
+    cursor: not-allowed;
+  }
+  
+  &__editor.tiptap {
+    outline: none;
+    max-height: var(--im-sender-input-max-height, 150px);
+    overflow: auto;
+
+    // content margin remove
+    > :first-child {
+      margin-top: 0;
+    }
+
+    > :last-child {
+      margin-bottom: 0;
+    }
+
+    // placeholder 
+    p.is-editor-empty:first-child::before {
+      color: @color-text-tertiary;
+      content: attr(data-placeholder);
+      float: left;
+      height: 0;
+      pointer-events: none;
+    }
+  }
+}

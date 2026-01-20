@@ -1,0 +1,109 @@
+/**
+ * ImPopover 样式
+ * 参考 NuxtUI 设计风格 - 简洁轻量
+ */
+
+@import '../variables.less';
+
+// 触发器包裹元素 - 不影响布局
+.im-popover-trigger {
+  display: inline-flex;
+}
+
+.im-popover {
+  position: absolute;
+  z-index: 1000;
+  border-radius: @im-radius-md;
+  background: @color-neutral-1;
+  border: 1px solid @color-border-subtle;
+  box-shadow: @shadow-2-down;
+
+  &__arrow {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: inherit;
+    transform: rotate(45deg);
+
+    // 使用伪元素绘制边框，只显示两条边
+    &::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: inherit;
+      border: 1px solid @color-border-subtle;
+      border-right: none;
+      border-bottom: none;
+    }
+  }
+
+  // 根据位置调整箭头边框方向
+  &[data-placement^='top'] &__arrow::before {
+    border: 1px solid @color-border-subtle;
+    border-left: none;
+    border-top: none;
+  }
+
+  &[data-placement^='bottom'] &__arrow::before {
+    border: 1px solid @color-border-subtle;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  &[data-placement^='left'] &__arrow::before {
+    border: 1px solid @color-border-subtle;
+    border-left: none;
+    border-bottom: none;
+  }
+
+  &[data-placement^='right'] &__arrow::before {
+    border: 1px solid @color-border-subtle;
+    border-right: none;
+    border-top: none;
+  }
+}
+
+// Popover 淡入淡出动画
+// 注意：不使用 transform，因为 floating-ui 需要先计算位置
+// 如果使用 transform，会导致元素从 (0,0) 位置动画移动到目标位置
+.im-popover-fade-enter-active,
+.im-popover-fade-leave-active {
+  transition: opacity 150ms ease;
+}
+
+.im-popover-fade-enter-from,
+.im-popover-fade-leave-to {
+  opacity: 0;
+}
+
+// Popover 内容区域
+.im-popover-content {
+  padding: 8px 12px;
+  font-size: @im-font-sm;
+  color: @color-text-primary;
+}
+
+// Demo 用样式
+.im-demo-input {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid @color-border-default;
+  border-radius: @im-radius-md;
+  font-size: @im-font-sm;
+  outline: none;
+  transition: border-color 150ms ease;
+
+  &:focus {
+    border-color: @color-brand-primary;
+  }
+}
+
+.im-demo-trigger {
+  display: inline-block;
+  padding: 8px 12px;
+  border: 1px dashed @color-border-default;
+  border-radius: @im-radius-md;
+  font-size: @im-font-sm;
+  color: @color-text-secondary;
+}

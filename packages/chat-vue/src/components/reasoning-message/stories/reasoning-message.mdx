@@ -1,0 +1,126 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './reasoning-message.stories';
+
+<Meta of={stories} />
+
+# ReasoningMessage
+
+推理内容渲染器，专门用于渲染 AI 的推理过程（Markdown 格式）。
+
+## 设计理念
+
+`ReasoningMessage` 是一个纯渲染组件，只负责渲染推理内容，不包含折叠逻辑。
+
+如果需要折叠功能，请使用 `ChainOfThought` 组件包裹：
+
+```vue
+<ChainOfThought title="思考过程">
+  <ReasoningMessage :content="reasoningContent" :streaming="true" />
+</ChainOfThought>
+```
+
+## 特性
+
+- 📝 支持 Markdown 渲染
+- ⚡ 支持流式渲染
+- 🎨 集成 Incremark 增量渲染
+- 🔧 支持自定义容器和代码块组件
+
+## 基础用法
+
+<Canvas of={stories.Simple} />
+
+## Markdown 格式
+
+支持完整的 Markdown 语法，包括标题、列表、代码块、引用等。
+
+<Canvas of={stories.WithMarkdown} />
+
+## 流式渲染
+
+设置 `streaming={true}` 显示流式渲染状态。
+
+<Canvas of={stories.Streaming} />
+
+### 流式渲染演示
+
+真实场景下的流式输出效果（内容会逐字显示）：
+
+<Canvas of={stories.StreamingDemo} />
+
+## 引用块样式
+
+设置 `blockquote={true}` 使用引用块样式，适合在对话中区分推理内容。
+
+<Canvas of={stories.Blockquote} />
+
+## Props
+
+<Controls of={stories.Simple} />
+
+## 使用示例
+
+### 基础用法
+
+```vue
+<script setup>
+import { ReasoningMessage } from '@incremark/chat-vue';
+
+const content = '让我思考一下这个问题...';
+</script>
+
+<template>
+  <ReasoningMessage :content="content" />
+</template>
+```
+
+### 配合 ChainOfThought 使用
+
+```vue
+<script setup>
+import { ChainOfThought, ChainOfThoughtStep, ReasoningMessage } from '@incremark/chat-vue';
+import { Icon } from '@iconify/vue';
+
+const reasoningContent = `## 问题分析
+
+用户需要实现一个聊天 UI 组件...`;
+</script>
+
+<template>
+  <ChainOfThought title="思考过程" :loading="true">
+    <ChainOfThoughtStep status="active">
+      <template #icon><Icon icon="ph:brain" width="14" height="14" /></template>
+      <ReasoningMessage :content="reasoningContent" :streaming="true" />
+    </ChainOfThoughtStep>
+  </ChainOfThought>
+</template>
+```
+
+### 自定义 Incremark 配置
+
+```vue
+<script setup>
+import { ReasoningMessage } from '@incremark/chat-vue';
+
+const incremarkOptions = {
+  gfm: true,
+  math: true,
+  containers: true
+};
+</script>
+
+<template>
+  <ReasoningMessage
+    :content="content"
+    :incremark-options="incremarkOptions"
+  />
+</template>
+```
+
+## 样式
+
+组件使用 `im-reasoning` 前缀的 CSS 类名，确保引入样式：
+
+```typescript
+import '@incremark/theme/chat.css';
+```

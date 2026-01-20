@@ -1,0 +1,19 @@
+/**
+ * ReasoningMessage 组件样式
+ *
+ * 只负责推理内容的渲染样式
+ * 折叠相关样式在 chain-of-thought.less
+ */
+
+@import '../variables.less';
+
+.im-reasoning {
+  color: @color-text-secondary;
+  font-size: @im-font-sm;
+  line-height: @line-height-relaxed;
+
+  &--blockquote {
+    padding-left: 12px;
+    border-left: 3px solid @color-border-default;
+  }
+}

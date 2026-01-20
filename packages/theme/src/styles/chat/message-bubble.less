@@ -1,0 +1,102 @@
+/**
+ * MessageBubble 消息气泡组件样式
+ */
+
+@import '../variables.less';
+
+.im-message-bubble {
+  display: flex;
+  gap: @im-spacing-2;
+  max-width: 100%;
+
+  // placement modifiers
+  &--start {
+    flex-direction: row;
+  }
+
+  &--end {
+    flex-direction: row-reverse;
+  }
+
+  // 头像区域
+  &__avatar {
+    flex-shrink: 0;
+  }
+
+  // 主体区域
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: @im-spacing-1;
+    min-width: 0;
+  }
+
+  // width modifiers
+  &--auto &__main {
+    flex: 0 1 auto;
+  }
+
+  &--block &__main {
+    flex: 1;
+  }
+
+  // 头部
+  &__header {
+    font-size: @im-font-sm;
+    color: @color-text-secondary;
+  }
+
+  // 内容区域
+  &__content {
+    max-width: 100%;
+
+    // 去掉 incremark 内容首尾块元素的 margin
+    .incremark > .incremark-block:first-child > :first-child {
+      margin-top: 0;
+    }
+
+    .incremark > .incremark-block:last-child > :last-child {
+      margin-bottom: 0;
+    }
+
+    // variant modifiers
+    &--filled {
+      background-color: @color-background-elevated;
+      padding: @im-spacing-2 @im-spacing-3;
+    }
+
+    &--outlined {
+      border: 1px solid @color-border-default;
+      padding: @im-spacing-2 @im-spacing-3;
+    }
+
+    &--borderless {
+      // 无边框无背景
+    }
+
+    // shape modifiers
+    &--default {
+      border-radius: @im-radius-md;
+    }
+
+    &--round {
+      border-radius: @im-radius-lg;
+    }
+  }
+
+  // 底部
+  &__footer {
+    font-size: @im-font-sm;
+    color: @color-text-secondary;
+  }
+
+  // end placement 时内容右对齐
+  &--end &__main {
+    align-items: flex-end;
+  }
+
+  &--end &__header,
+  &--end &__footer {
+    text-align: right;
+  }
+}

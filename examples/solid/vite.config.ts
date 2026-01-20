@@ -10,7 +10,7 @@ export default defineConfig({
       '@incremark/core': resolve(__dirname, '../../packages/core/src'),
       '@incremark/solid': resolve(__dirname, '../../packages/solid/src'),
       '@incremark/shared': resolve(__dirname, '../../packages/shared/src'),
-      '@incremark/theme/styles.css': resolve(__dirname, '../../packages/theme/dist/styles.css'),
+      '@incremark/theme/styles.css': resolve(__dirname, '../../packages/theme/dist/incremark.css'),
       '@incremark/theme': resolve(__dirname, '../../packages/theme/src'),
       '@incremark/icons': resolve(__dirname, '../../packages/icons/src'),
     }

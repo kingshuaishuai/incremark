@@ -1,0 +1,223 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './message-actions.stories';
+
+<Meta of={stories} />
+
+# MessageActions
+
+消息操作按钮组件，用于在消息气泡底部显示复制、点赞/点踩等操作。
+
+## 设计理念
+
+1. **双模式支持** - 支持配置方式（简单）和 Slot 方式（灵活）
+2. **内置基础组件** - 提供 ImButton、ImTooltip 等基础组件，开箱即用
+3. **Adapter 注入** - 支持通过 ChatProvider 注入自定义 UI 组件库
+4. **预置常用操作** - MessageActionCopy、MessageActionFeedback 等
+5. **自动折叠** - 配置方式支持 `maxVisible`，超出部分自动折叠到"更多"
+
+## 组件列表
+
+| 组件 | 说明 |
+|------|------|
+| `MessageActions` | 容器组件，支持配置方式和 Slot 方式 |
+| `MessageAction` | 通用操作按钮 |
+| `MessageActionCopy` | 预置复制操作 |
+| `MessageActionFeedback` | 预置点赞/点踩操作 |
+| `MessageActionMore` | 更多操作下拉菜单 |
+
+## Slot 方式
+
+### 基础用法
+
+<Canvas of={stories.Basic} />
+
+### Props
+
+<Controls of={stories.Basic} />
+
+### 变体样式
+
+#### Filled
+
+<Canvas of={stories.Filled} />
+
+#### Outlined
+
+<Canvas of={stories.Outlined} />
+
+### 自定义按钮
+
+通过 `MessageAction` 添加自定义操作：
+
+<Canvas of={stories.CustomAction} />
+
+### 仅复制按钮
+
+<Canvas of={stories.CopyOnly} />
+
+### 仅反馈按钮
+
+<Canvas of={stories.FeedbackOnly} />
+
+### 反馈状态
+
+#### 已点赞
+
+<Canvas of={stories.Liked} />
+
+#### 已点踩
+
+<Canvas of={stories.Disliked} />
+
+### 更多操作
+
+<Canvas of={stories.WithMoreActions} />
+
+### 完整示例
+
+<Canvas of={stories.FullExample} />
+
+## 配置方式
+
+配置方式更简洁，适合标准场景。通过 `actions` 数组配置操作项，支持 `maxVisible` 自动折叠。
+
+### 基础用法
+
+<Canvas of={stories.ConfigBasic} />
+
+### 自动折叠
+
+当操作项超过 `maxVisible` 数量时，超出部分自动折叠到"更多"下拉菜单：
+
+<Canvas of={stories.ConfigAutoCollapse} />
+
+### 完整示例
+
+<Canvas of={stories.ConfigFull} />
+
+### ActionItem 类型
+
+```typescript
+interface ActionItem {
+  /** 唯一标识 */
+  key: string;
+  /** 操作类型：'copy' | 'feedback' | 'custom' */
+  type?: ActionItemType;
+  /** 图标组件 */
+  icon?: Component;
+  /** Tooltip 文本 */
+  tooltip?: string;
+  /** 显示文本（折叠到更多时显示） */
+  label?: string;
+  /** 是否禁用 */
+  disabled?: boolean;
+  /** 点击处理函数 */
+  handler?: () => void;
+  /** copy 类型专用：要复制的文本 */
+  copyText?: string;
+}
+```
+
+### 配置方式 Props
+
+| Prop | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `actions` | `ActionItem[]` | - | 操作项配置 |
+| `maxVisible` | `number` | `Infinity` | 最大可见数量，超出折叠到更多 |
+| `feedbackValue` | `FeedbackValue` | - | 反馈值（v-model） |
+| `variant` | `string` | `'borderless'` | 变体样式 |
+
+### 配置方式事件
+
+| 事件 | 参数 | 说明 |
+|------|------|------|
+| `action` | `ActionItem` | 操作被触发时 |
+| `update:feedbackValue` | `FeedbackValue` | 反馈值变化时 |
+
+## 使用方式
+
+### Slot 方式（灵活）
+
+```vue
+<script setup>
+import { ChatProvider, MessageActions, MessageActionCopy, MessageActionFeedback } from '@incremark/chat-vue';
+import { ref } from 'vue';
+
+const feedback = ref('default');
+</script>
+
+<template>
+  <ChatProvider>
+    <MessageActions>
+      <MessageActionCopy :text="content" />
+      <MessageActionFeedback v-model:value="feedback" />
+    </MessageActions>
+  </ChatProvider>
+</template>
+```
+
+### 配置方式（简洁）
+
+```vue
+<script setup>
+import { h, ref } from 'vue';
+import { Icon } from '@iconify/vue';
+import { ChatProvider, MessageActions } from '@incremark/chat-vue';
+import type { ActionItem } from '@incremark/chat-vue';
+
+const feedback = ref('default');
+const actions: ActionItem[] = [
+  { key: 'copy', type: 'copy', copyText: '消息内容', tooltip: '复制' },
+  { key: 'feedback', type: 'feedback' },
+  { key: 'regenerate', icon: h(Icon, { icon: 'ph:arrows-clockwise' }), tooltip: '重新生成', label: '重新生成', handler: () => {} },
+  { key: 'edit', icon: h(Icon, { icon: 'ph:pencil-simple' }), tooltip: '编辑', label: '编辑' },
+  { key: 'share', icon: h(Icon, { icon: 'ph:share' }), tooltip: '分享', label: '分享' }
+];
+</script>
+
+<template>
+  <ChatProvider>
+    <MessageActions
+      :actions="actions"
+      :max-visible="3"
+      v-model:feedback-value="feedback"
+      @action="handleAction"
+    />
+  </ChatProvider>
+</template>
+```
+
+### 注入自定义 UI 库
+
+```vue
+<script setup>
+import { ChatProvider, MessageActions, MessageActionCopy } from '@incremark/chat-vue';
+import { Button, Tooltip } from 'ant-design-vue';
+import { CopyOutlined, CheckOutlined } from '@ant-design/icons-vue';
+
+const adapter = {
+  Button,
+  Tooltip,
+  icons: {
+    copy: CopyOutlined,
+    check: CheckOutlined
+  }
+};
+</script>
+
+<template>
+  <ChatProvider :adapter="adapter">
+    <MessageActions>
+      <MessageActionCopy :text="content" />
+    </MessageActions>
+  </ChatProvider>
+</template>
+```
+
+## 样式
+
+组件使用 `im-message-actions` 前缀的 CSS 类名，确保引入样式：
+
+```typescript
+import '@incremark/theme/chat.css';
+```

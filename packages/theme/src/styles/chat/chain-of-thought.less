@@ -1,0 +1,257 @@
+/**
+ * ChainOfThought 组件样式
+ */
+
+@import '../variables.less';
+
+// ========== Mixins ==========
+.flex-center() {
+  display: flex;
+  align-items: center;
+}
+
+// ========== 变量 ==========
+@cot-icon-size: 14px;
+@cot-step-gap: @im-spacing-3;  // 步骤之间的间隔
+
+// ========== ChainOfThought 容器 ==========
+.im-cot {
+  margin: @im-spacing-2 0;
+
+  &__header {
+    .flex-center();
+    width: fit-content;
+    gap: @im-spacing-1;
+    font-size: @im-font-base;
+    color: @im-colors-gray-700;
+    line-height: @line-height-normal;
+    cursor: pointer;
+    user-select: none;
+    transition: color @duration-fast @easing-ease-out;
+
+    &:hover {
+      color: @im-colors-gray-800;
+    }
+  }
+
+  &__icon {
+    .flex-center();
+    font-size: @cot-icon-size;
+
+    &--pulse {
+      animation: im-cot-color-pulse 2s ease-in-out infinite;
+    }
+
+    &--spin {
+      animation: im-cot-spin 1s linear infinite;
+    }
+  }
+
+  &__title {
+    .flex-center();
+    gap: @im-spacing-2;
+    line-height: @line-height-normal;
+  }
+
+  &__duration {
+    color: @im-colors-gray-500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__chevron {
+    font-size: @cot-icon-size;
+    color: @im-colors-gray-500;
+    transition: transform @duration-normal @easing-ease-in-out;
+
+    &--expanded {
+      transform: rotate(90deg);
+    }
+  }
+
+  &__content {
+    margin-top: @im-spacing-2;
+    width: 100%;
+  }
+}
+
+// ========== ChainOfThoughtStep ==========
+@cot-line-height: 20px; // 内容行高，图标需要与此对齐
+
+.im-cot-step {
+  display: flex;
+  gap: @im-spacing-2;
+  position: relative;
+
+  // 除最后一个外，都有底部间隔
+  &:not(:last-child) {
+    padding-bottom: @cot-step-gap;
+  }
+
+  // 图标区域 - 使用 padding 让图标垂直居中于第一行文字
+  &__icon {
+    flex-shrink: 0;
+    width: @cot-icon-size;
+    font-size: @cot-icon-size;
+    // 让图标垂直居中于行高
+    padding-top: ((@cot-line-height - @cot-icon-size) / 2);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    color: @im-colors-gray-500;
+    position: relative;
+
+    // 竖线：从图标底部延伸到步骤底部（下一步图标顶部）
+    &--with-divider::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1px;
+      background: @im-colors-gray-200;
+      // 从图标底部开始
+      top: calc(((@cot-line-height - @cot-icon-size) / 2) + @cot-icon-size + 4px);
+      // 延伸到步骤底部 + 下一步的图标顶部 padding
+      bottom: calc(-1 * @cot-step-gap + ((@cot-line-height - @cot-icon-size) / 2) - 2px);
+    }
+  }
+
+  // 内容区域
+  &__content {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    line-height: @cot-line-height;
+    color: @im-colors-gray-700;
+  }
+
+  // Header 区域
+  &__header {
+    font-weight: 500;
+    color: @im-colors-gray-800;
+  }
+
+  // 折叠箭头
+  &__chevron {
+    flex-shrink: 0;
+    font-size: @cot-icon-size;
+    color: @im-colors-gray-400;
+    transition: transform @duration-normal @easing-ease-in-out;
+  }
+
+  // 可折叠状态
+  &--collapsible &__header {
+    .flex-center();
+    gap: @im-spacing-1;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  &--collapsible:not(&--collapsed) &__chevron {
+    transform: rotate(90deg);
+  }
+
+  // Body 区域
+  &__body {
+    color: @im-colors-gray-600;
+  }
+
+  // Footer 区域
+  &__footer {
+    margin-top: @im-spacing-1;
+    color: @im-colors-gray-500;
+    font-size: 12px;
+  }
+
+  // 状态样式
+  &--pending &__icon {
+    color: @im-colors-gray-400;
+  }
+
+  &--active &__icon {
+    color: @color-brand-primary;
+  }
+
+  &--complete &__icon {
+    color: @color-status-completed;
+  }
+
+  &--error &__icon {
+    color: @color-status-error;
+  }
+
+  // 加载动画
+  &__spinner {
+    animation: im-cot-spin 1s linear infinite;
+  }
+}
+
+// ========== 动画 ==========
+@keyframes im-cot-color-pulse {
+  0%, 100% {
+    color: @color-brand-primary;
+    opacity: 1;
+  }
+  50% {
+    color: @color-brand-primary-light;
+    opacity: 0.7;
+  }
+}
+
+@keyframes im-cot-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+// ========== 内置 Step 组件样式 ==========
+
+// SearchStep
+.im-cot-search-step {
+  &__status {
+    color: @im-colors-gray-600;
+  }
+
+  &__result {
+    color: @im-colors-gray-700;
+
+    span + span::before {
+      content: '，';
+    }
+  }
+}
+
+// ThinkingStep
+.im-cot-thinking-step {
+  // 继承父级的字体样式
+}
+
+// ToolCallStep
+.im-cot-tool-step {
+  &__name {
+    font-weight: 500;
+    color: @im-colors-gray-800;
+    margin-bottom: @im-spacing-1;
+  }
+
+  &__args {
+    margin: @im-spacing-1 0;
+    padding: @im-spacing-2;
+    background: @im-colors-gray-100;
+    border-radius: @im-radius-sm;
+    font-size: 12px;
+
+    code {
+      font-family: @font-family-mono;
+      color: @im-colors-gray-700;
+    }
+  }
+
+  &__status {
+    color: @im-colors-gray-600;
+    font-style: italic;
+  }
+
+  &__result {
+    margin-top: @im-spacing-1;
+    color: @im-colors-gray-700;
+  }
+}

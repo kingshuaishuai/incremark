@@ -1,0 +1,31 @@
+/**
+ * ImTooltip 样式
+ * 参考 NuxtUI 设计风格
+ */
+
+@import '../variables.less';
+
+.im-tooltip {
+  padding: 6px 10px;
+  border-radius: @im-radius-md;
+  background: @color-neutral-9;
+  color: @color-text-inverse;
+  font-size: @im-font-xs;
+  line-height: 1.4;
+  white-space: nowrap;
+  max-width: 240px;
+  pointer-events: none;
+}
+
+// 覆盖 popover 样式（tooltip 使用深色背景）
+.im-popover:has(.im-tooltip) {
+  padding: 0;
+  background: @color-neutral-9;
+  border-color: @color-neutral-9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+
+  .im-popover__arrow {
+    background: @color-neutral-9;
+    border-color: @color-neutral-9;
+  }
+}

@@ -1,0 +1,57 @@
+/**
+ * ImDropdown 样式
+ * 参考 NuxtUI 设计风格
+ */
+
+@import '../variables.less';
+
+.im-dropdown {
+  &__menu {
+    min-width: 160px;
+    padding: 4px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: @im-radius-sm;
+    font-size: @im-font-sm;
+    color: @color-text-primary;
+    cursor: pointer;
+    transition: background-color 150ms ease;
+
+    &:hover {
+      background: @color-neutral-2;
+    }
+
+    &--disabled {
+      color: @color-text-tertiary;
+      cursor: not-allowed;
+
+      &:hover {
+        background: transparent;
+      }
+    }
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    color: @color-text-secondary;
+  }
+
+  &__label {
+    flex: 1;
+  }
+
+  &__divider {
+    height: 1px;
+    margin: 4px 0;
+    background: @color-border-subtle;
+  }
+}

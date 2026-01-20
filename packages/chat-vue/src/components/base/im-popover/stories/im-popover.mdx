@@ -1,0 +1,100 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './im-popover.stories';
+
+<Meta of={stories} />
+
+# ImPopover
+
+基础浮动层组件，基于 `@floating-ui/vue` 实现，支持多种触发方式和位置。
+
+## 设计理念
+
+`ImPopover` 是一个灵活的浮动层组件，提供：
+- 多种触发方式：hover / click / focus / manual
+- 自动位置调整（flip 和 shift）
+- 可选的箭头指示器
+- Teleport 支持
+
+## 特性
+
+- 🎯 支持 12 种位置
+- 🖱️ 四种触发方式
+- ➡️ 可选箭头
+- 📍 自动位置调整
+- 🚀 Teleport 支持
+- ♿ 可访问性支持
+
+## Props
+
+<Controls />
+
+## 示例
+
+### 点击触发（默认）
+
+点击按钮显示/隐藏弹出层。
+
+<Canvas of={stories.Click} />
+
+### 悬停触发
+
+鼠标悬停时显示弹出层。
+
+<Canvas of={stories.Hover} />
+
+### 焦点触发
+
+输入框聚焦时显示弹出层。
+
+<Canvas of={stories.Focus} />
+
+### 带箭头
+
+启用箭头指示器。
+
+<Canvas of={stories.WithArrow} />
+
+### 不同位置
+
+支持上下左右四个基础方向，以及对齐变体（如 top-start, top-end 等）。
+
+<Canvas of={stories.Placements} />
+
+### 手动控制
+
+使用 `v-model:visible` 手动控制显示/隐藏。
+
+<Canvas of={stories.Manual} />
+
+### 禁用状态
+
+禁用后无法触发弹出层。
+
+<Canvas of={stories.Disabled} />
+
+## 暴露方法
+
+组件通过 `defineExpose` 暴露以下方法：
+
+| 方法 | 说明 |
+|------|------|
+| `show()` | 显示弹出层 |
+| `hide()` | 隐藏弹出层 |
+| `toggle()` | 切换显示状态 |
+
+## 样式
+
+组件使用 `im-popover` 前缀的 CSS 类名，确保引入样式：
+
+```typescript
+import '@incremark/theme/chat.css';
+```
+
+### CSS 类结构
+
+- `.im-popover` - 弹出层根元素
+- `.im-popover__arrow` - 箭头元素
+
+### 过渡动画
+
+使用 `im-popover-fade` 过渡名称，可自定义动画效果。

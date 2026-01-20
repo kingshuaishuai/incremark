@@ -1,0 +1,177 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './sender.stories';
+
+<Meta of={stories} />
+
+# Sender
+
+消息发送组件，用于聊天界面的输入区域。支持多种布局风格，可通过插槽灵活定制。
+
+## 特性
+
+- 基于 Tiptap 的富文本输入框
+- 支持 Enter/Shift+Enter 快捷提交
+- 加载状态下显示停止按钮
+- 通过插槽支持多种布局风格
+
+## 基础用法
+
+最简单的使用方式，只需要绑定 `v-model` 和 `@submit` 事件。
+
+<Canvas of={stories.Basic} />
+
+### Props
+
+<Controls of={stories.Basic} />
+
+## 带操作按钮
+
+通过 `prefix` 和 `suffix` 插槽添加自定义操作按钮。
+
+- `prefix` 插槽：位于工具栏左侧
+- `suffix` 插槽：位于工具栏右侧（发送按钮之前）
+
+<Canvas of={stories.WithActions} />
+
+## 加载状态
+
+设置 `loading` 属性显示发送中状态，此时发送按钮变为停止按钮，点击触发 `cancel` 事件。
+
+<Canvas of={stories.Loading} />
+
+## 文件上传
+
+使用 `SenderFileButton` 和 `SenderAttachments` 组件实现文件上传功能。
+
+- `SenderFileButton` 放置在 `prefix` 插槽中，点击触发文件选择
+- `SenderAttachments` 放置在 `attachments` 插槽中，展示已选文件预览
+
+<Canvas of={stories.WithFileUpload} />
+
+### 附件预览组件
+
+`SenderAttachments` 组件支持图片预览和文件图标展示：
+
+<Canvas of={stories.AttachmentsPreview} />
+
+## 布局示例
+
+Sender 组件设计灵活，可以模拟各种主流 AI 产品的输入框布局。
+
+### Claude 风格
+
+<Canvas of={stories.ClaudeStyle} />
+
+### DeepSeek 风格
+
+<Canvas of={stories.DeepseekStyle} />
+
+### Perplexity 风格
+
+<Canvas of={stories.PerplexityStyle} />
+
+### 豆包/Coze 风格
+
+<Canvas of={stories.DoubaoStyle} />
+
+## 插槽
+
+| 插槽名 | 说明 |
+|--------|------|
+| `header` | 顶部区域，可放置应用导航等 |
+| `attachments` | 附件预览区域 |
+| `prefix` | 工具栏左侧操作按钮 |
+| `suffix` | 工具栏右侧操作按钮（发送按钮之前） |
+| `footer` | 底部区域，可放置快捷标签等 |
+
+## 事件
+
+| 事件名 | 参数 | 说明 |
+|--------|------|------|
+| `update:modelValue` | `value: string` | 输入内容变化 |
+| `submit` | `message: SenderMessage` | 提交消息 |
+| `cancel` | - | 取消发送（loading 状态下点击停止按钮） |
+
+## 子组件
+
+### SenderActionButton
+
+工具栏操作按钮，用于添加附件、语音、模式切换等功能。
+
+```vue
+<SenderActionButton
+  :active="isActive"
+  aria-label="按钮描述"
+  @click="handleClick"
+>
+  <SvgIcon>
+    <Icon icon="mdi:plus" />
+  </SvgIcon>
+</SenderActionButton>
+```
+
+### SenderSubmitButton
+
+发送按钮，内置在 Sender 组件中，通常不需要单独使用。
+
+### SenderFileButton
+
+文件选择按钮，需要在 Sender 组件内部使用（依赖 inject 上下文）。
+
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `accept` | `string` | - | 接受的文件类型，覆盖 Sender 的 accept |
+| `multiple` | `boolean` | `true` | 是否允许多选 |
+| `ariaLabel` | `string` | `'添加文件'` | 无障碍标签 |
+
+```vue
+<Sender v-model="message" accept="image/*,.pdf">
+  <template #prefix>
+    <SenderFileButton />
+  </template>
+</Sender>
+```
+
+### SenderAttachments
+
+附件预览列表组件，展示已选择的文件。
+
+| 属性 | 类型 | 说明 |
+|------|------|------|
+| `attachments` | `SenderAttachment[]` | 附件列表 |
+
+| 事件 | 参数 | 说明 |
+|------|------|------|
+| `remove` | `id: string` | 移除附件时触发 |
+
+```vue
+<Sender v-model="message" v-model:attachments="attachments">
+  <template #attachments>
+    <SenderAttachments
+      :attachments="attachments"
+      @remove="handleRemove"
+    />
+  </template>
+</Sender>
+```
+
+#### SenderAttachment 类型
+
+```typescript
+interface SenderAttachment {
+  id: string;       // 唯一标识
+  name: string;     // 文件名
+  size?: number;    // 文件大小（字节）
+  type?: string;    // MIME 类型
+  url?: string;     // 预览 URL（图片需要）
+  file?: File;      // 原始文件对象
+}
+```
+
+## 键盘快捷键
+
+| 快捷键 | 行为 |
+|--------|------|
+| `Enter` | 提交（submitType="enter" 时） |
+| `Shift + Enter` | 换行（submitType="enter" 时）或提交（submitType="shiftEnter" 时） |
+| `Cmd/Ctrl + Enter` | 总是提交 |

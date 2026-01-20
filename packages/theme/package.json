@@ -11,7 +11,9 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./styles.css": "./dist/styles.css"
+    "./styles.css": "./dist/incremark.css",
+    "./incremark.css": "./dist/incremark.css",
+    "./chat.css": "./dist/chat.css"
   },
   "files": [
     "dist"

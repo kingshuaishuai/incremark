@@ -1,0 +1,80 @@
+import { Meta, Canvas, Controls } from '@storybook/addon-docs/blocks';
+import * as stories from './error-message.stories';
+
+<Meta of={stories} />
+
+# ErrorMessage
+
+错误消息组件，用于展示各种错误状态，支持不同错误类型的样式和可选的重试按钮。
+
+## 基础用法
+
+最简单的用法，只需要传入错误消息。
+
+<Canvas of={stories.Basic} />
+
+### Props
+
+<Controls of={stories.Basic} />
+
+## 错误类型
+
+### 网络错误
+
+网络连接问题时显示橙色样式。
+
+<Canvas of={stories.NetworkError} />
+
+### 限流错误
+
+请求过于频繁时显示黄色样式。
+
+<Canvas of={stories.RateLimitError} />
+
+### 服务器错误
+
+服务器内部错误显示红色样式。
+
+<Canvas of={stories.ServerError} />
+
+### 认证错误
+
+登录过期或权限问题显示紫色样式。
+
+<Canvas of={stories.AuthError} />
+
+## 自定义标题
+
+可以自定义错误标题和重试按钮文本。
+
+<Canvas of={stories.CustomTitle} />
+
+## 带重试按钮
+
+设置 `retryable` 显示重试按钮，点击触发 `retry` 事件。
+
+<Canvas of={stories.WithRetry} />
+
+## API
+
+### Props
+
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| title | `string` | - | 错误标题（可选，根据类型自动生成） |
+| message | `string` | - | 错误消息（必填） |
+| type | `'network' \| 'rate-limit' \| 'server' \| 'auth' \| 'unknown'` | `'unknown'` | 错误类型 |
+| retryable | `boolean` | `false` | 是否显示重试按钮 |
+| retryText | `string` | `'重试'` | 重试按钮文本 |
+
+### Events
+
+| 事件 | 参数 | 说明 |
+|------|------|------|
+| retry | - | 点击重试按钮时触发 |
+
+### Slots
+
+| 插槽 | 说明 |
+|------|------|
+| icon | 自定义图标 |

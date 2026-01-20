@@ -3,9 +3,27 @@
  */
 
 /**
- * 基础色系统 - 包含各种颜色的完整色阶
+ * 交互状态颜色
  */
-export interface BaseColorPalette {
+export interface ColorStates {
+  /** 主色（通常使用色阶 6） */
+  primary: string
+  /** hover 状态（通常使用色阶 7） */
+  hover: string
+  /** active/pressed 状态（通常使用色阶 8） */
+  active: string
+  /** 浅色背景（通常使用色阶 2） */
+  light: string
+  /** 更浅的背景（通常使用色阶 1） */
+  lighter: string
+  /** 深色背景（通常使用色阶 9） */
+  dark: string
+}
+
+/**
+ * 基础色系统 - 包含各种颜色的完整色阶和交互状态
+ */
+export interface BaseColorPalette extends ColorStates {
   /** 10 级色阶 */
   1: string
   2: string
@@ -32,6 +50,8 @@ export interface BaseColors {
   orange: BaseColorPalette
   /** 青色系 */
   cyan: BaseColorPalette
+  /** 靛蓝 */
+  indigo: BaseColorPalette
 }
 
 export interface ColorTokens {

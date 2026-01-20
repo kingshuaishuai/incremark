@@ -1,11 +1,10 @@
 /**
  * 构建样式脚本
- * 
- * 构建流程：
- * 1. 读取已生成的 CSS Variables Less 文件（由 generate-css-variables.ts 生成）
- * 2. 编译 Less 到 CSS
- * 3. 输出最终 CSS 文件
- * 
+ *
+ * 构建多个独立的 CSS 文件：
+ * - incremark.css: Incremark Markdown 渲染相关样式
+ * - chat.css: Chat UI 组件样式
+ *
  * 注意：在运行此脚本前，必须先运行 generate-css-variables.ts
  */
 
@@ -23,6 +22,32 @@ const distDir = resolve(rootDir, 'dist')
 // 环境变量：是否为生产环境
 const isProd = process.env.NODE_ENV === 'production'
 
+async function buildLessFile(entryFile: string, outputFile: string, name: string) {
+  // 1. 读取 Less 文件
+  console.log(`  Building ${name}...`)
+  const lessContent = readFileSync(resolve(srcDir, entryFile), 'utf-8')
+
+  // 2. 编译 Less
+  const result = await less.render(lessContent, {
+    paths: [resolve(srcDir, 'styles')],
+    compress: isProd,
+    sourceMap: !isProd ? {
+      outputSourceFiles: true
+    } : undefined
+  })
+
+  // 3. 输出 CSS
+  writeFileSync(resolve(distDir, outputFile), result.css, 'utf-8')
+
+  // 4. 如果有 source map，也输出
+  if (result.map && !isProd) {
+    writeFileSync(resolve(distDir, `${outputFile}.map`), result.map, 'utf-8')
+  }
+
+  const sizeKB = (result.css.length / 1024).toFixed(2)
+  console.log(`  ✓ ${name} built successfully! (${sizeKB} KB)`)
+}
+
 async function buildStyles() {
   console.log(`Building styles... (${isProd ? 'production' : 'development'})`)
 
@@ -34,33 +59,13 @@ async function buildStyles() {
     process.exit(1)
   }
 
-  // 2. 读取 Less 主文件
-  console.log('  Reading Less files...')
-  const lessContent = readFileSync(resolve(srcDir, 'styles/index.less'), 'utf-8')
+  // 2. 构建 incremark.css (Incremark Markdown 渲染样式)
+  await buildLessFile('styles/incremark.less', 'incremark.css', 'incremark.css')
 
-  // 3. 编译 Less
-  console.log('  Compiling Less to CSS...')
-  const result = await less.render(lessContent, {
-    paths: [resolve(srcDir, 'styles')],
-    compress: isProd, // 生产环境压缩
-    sourceMap: !isProd ? {
-      outputSourceFiles: true
-    } : undefined
-  })
+  // 3. 构建 chat.css (Chat UI 组件样式)
+  await buildLessFile('styles/chat.less', 'chat.css', 'chat.css')
 
-  // 4. 输出到 dist/styles.css
-  console.log('  Writing dist/styles.css...')
-  writeFileSync(resolve(distDir, 'styles.css'), result.css, 'utf-8')
-
-  // 5. 如果有 source map，也输出
-  if (result.map && !isProd) {
-    writeFileSync(resolve(distDir, 'styles.css.map'), result.map, 'utf-8')
-    console.log('  Writing dist/styles.css.map...')
-  }
-
-  // 6. 输出文件大小信息
-  const sizeKB = (result.css.length / 1024).toFixed(2)
-  console.log(`✓ Styles built successfully! (${sizeKB} KB)`)
+  console.log('✓ All styles built successfully!')
 }
 
 // 运行构建
@@ -68,4 +73,3 @@ buildStyles().catch((error) => {
   console.error('Build failed:', error)
   process.exit(1)
 })
-
