@@ -406,6 +406,9 @@ export function transformInlineMath(token: InlineMathToken): InlineMath {
 
 /**
  * 转换乐观引用
+ *
+ * 对于 linkReference，需要递归解析内层内容（如嵌套的 imageReference）
+ * 使用 parseNestedReference 来正确处理 [![alt][img]][link] 这样的嵌套引用
  */
 export function transformOptimisticReference(
   token: OptimisticRefToken,
@@ -420,6 +423,32 @@ export function transformOptimisticReference(
       alt: token.text
     }
   }
+
+  // 对于 linkReference，需要解析内层内容
+  // 检查内层是否是引用式图片 ![...][...]
+  const imageRefMatch = token.text.match(/^!\[((?:\[[^\]]*\]|[^\[\]])*)\]\[([^\]]*)\]$/)
+  if (imageRefMatch) {
+    // 内层是引用式图片，直接构造 imageReference
+    const altText = imageRefMatch[1]
+    const imageIdentifier = imageRefMatch[2] || altText
+    const imageRefType = imageRefMatch[2] === '' ? 'collapsed' : (imageRefMatch[2] ? 'full' : 'shortcut')
+
+    return {
+      type: 'linkReference',
+      identifier: token.identifier,
+      label: token.label,
+      referenceType: token.referenceType,
+      children: [{
+        type: 'imageReference',
+        identifier: imageIdentifier.toLowerCase(),
+        label: imageIdentifier,
+        referenceType: imageRefType as 'shortcut' | 'collapsed' | 'full',
+        alt: altText
+      }]
+    }
+  }
+
+  // 其他情况：用普通 Lexer 解析（处理粗体、斜体等）
   const labelChildren = ctx.transformInline(new Lexer().inlineTokens(token.text))
   return {
     type: 'linkReference',

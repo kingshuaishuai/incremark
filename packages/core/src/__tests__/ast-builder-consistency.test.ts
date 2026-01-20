@@ -91,6 +91,35 @@ const testCases = [
     name: '图片 - 带标题',
     md: '![alt](image.png "image title")'
   },
+  {
+    name: '引用式图片',
+    md: `![alt][ref]
+
+[ref]: image.png`
+  },
+  {
+    name: '引用式链接',
+    md: `[text][ref]
+
+[ref]: https://example.com`
+  },
+  {
+    name: '引用式图片链接 - badge 样式',
+    md: `[![NPM Version][npm-version-image]][npm-url]
+
+[npm-version-image]: https://img.shields.io/npm/v/express
+[npm-url]: https://npmjs.org/package/express`
+  },
+  {
+    name: '引用式图片链接 - 多个 badges',
+    md: `[![NPM Version][npm-version-image]][npm-url]
+[![NPM Downloads][npm-downloads-image]][npm-downloads-url]
+
+[npm-version-image]: https://img.shields.io/npm/v/express
+[npm-url]: https://npmjs.org/package/express
+[npm-downloads-image]: https://img.shields.io/npm/dm/express
+[npm-downloads-url]: https://npmcharts.com/compare/express`
+  },
 
   // GFM 扩展
   {
@@ -327,6 +356,122 @@ describe('特定字段对齐验证', () => {
     const para = ast.children[0] as any
     const image = para.children[0]
     expect(image.title).toBe('img title')
+  })
+})
+
+describe('引用式图片链接解析验证', () => {
+  it('MarkedAstBuilder 正确解析引用式图片链接（badge 样式）- 输出 linkReference > imageReference', () => {
+    const markedBuilder = new MarkedAstBuilder(fullOptions)
+
+    const md = `[![NPM Version][npm-version-image]][npm-url]
+
+[npm-version-image]: https://img.shields.io/npm/v/express
+[npm-url]: https://npmjs.org/package/express`
+
+    const ast = markedBuilder.parse(md)
+
+    // 段落应包含一个 linkReference
+    const paragraph = ast.children[0] as any
+    expect(paragraph.type).toBe('paragraph')
+
+    // 外层应该是 linkReference（与 micromark 一致）
+    const linkRef = paragraph.children[0]
+    expect(linkRef.type).toBe('linkReference')
+    expect(linkRef.identifier).toBe('npm-url')
+    expect(linkRef.referenceType).toBe('full')
+
+    // 内层应该是 imageReference（而不是纯文本）
+    const imageRef = linkRef.children[0]
+    expect(imageRef.type).toBe('imageReference')
+    expect(imageRef.identifier).toBe('npm-version-image')
+    expect(imageRef.alt).toBe('NPM Version')
+    expect(imageRef.referenceType).toBe('full')
+  })
+
+  it('MarkedAstBuilder 正确解析多个引用式图片链接', () => {
+    const markedBuilder = new MarkedAstBuilder(fullOptions)
+
+    const md = `[![NPM Version][npm-version-image]][npm-url]
+[![NPM Downloads][npm-downloads-image]][npm-downloads-url]
+
+[npm-version-image]: https://img.shields.io/npm/v/express
+[npm-url]: https://npmjs.org/package/express
+[npm-downloads-image]: https://img.shields.io/npm/dm/express
+[npm-downloads-url]: https://npmcharts.com/compare/express`
+
+    const ast = markedBuilder.parse(md)
+
+    const paragraph = ast.children[0] as any
+    expect(paragraph.type).toBe('paragraph')
+
+    // 第一个 badge：NPM Version
+    const linkRef1 = paragraph.children[0]
+    expect(linkRef1.type).toBe('linkReference')
+    expect(linkRef1.identifier).toBe('npm-url')
+    expect(linkRef1.children[0].type).toBe('imageReference')
+    expect(linkRef1.children[0].alt).toBe('NPM Version')
+
+    // 第二个 badge：NPM Downloads
+    const linkRef2 = paragraph.children[2] // children[1] 是换行文本
+    expect(linkRef2.type).toBe('linkReference')
+    expect(linkRef2.identifier).toBe('npm-downloads-url')
+    expect(linkRef2.children[0].type).toBe('imageReference')
+    expect(linkRef2.children[0].alt).toBe('NPM Downloads')
+  })
+
+  it('optimisticReferenceExtension 应该匹配引用式链接', async () => {
+    const { Lexer } = await import('marked')
+    const { createOptimisticReferenceExtension } = await import('../extensions/marked-extensions')
+
+    const md = `[![NPM Version][npm-version-image]][npm-url]
+
+[npm-version-image]: https://img.shields.io/npm/v/express
+[npm-url]: https://npmjs.org/package/express`
+
+    // 使用带 optimisticReference 扩展的 lexer
+    const optimisticRefExt = createOptimisticReferenceExtension()
+    const lexer = new Lexer({
+      gfm: true,
+      extensions: {
+        inline: [optimisticRefExt.tokenizer],
+        startInline: [optimisticRefExt.start]
+      }
+    } as any)
+
+    const tokens = lexer.lex(md)
+    const paragraph = tokens.find((t: any) => t.type === 'paragraph')
+
+    // optimisticReferenceExtension 应该匹配，输出 optimisticReference
+    const firstToken = (paragraph as any).tokens[0]
+    expect(firstToken.type).toBe('optimisticReference')
+    expect(firstToken.identifier).toBe('npm-url')
+    // text 应该包含内层图片引用
+    expect(firstToken.text).toBe('![NPM Version][npm-version-image]')
+  })
+
+  it('optimisticReferenceExtension 应该处理未定义的引用', async () => {
+    // 当 definition 不存在时，optimisticReferenceExtension 应该生成 optimisticReference
+    const { Lexer } = await import('marked')
+    const { createOptimisticReferenceExtension } = await import('../extensions/marked-extensions')
+
+    const md = `[undefined-ref]` // 没有对应的 definition
+
+    const optimisticRefExt = createOptimisticReferenceExtension()
+    const lexer = new Lexer({
+      gfm: true,
+      extensions: {
+        inline: [optimisticRefExt.tokenizer],
+        startInline: [optimisticRefExt.start]
+      }
+    } as any)
+
+    const tokens = lexer.lex(md)
+    const paragraph = tokens.find((t: any) => t.type === 'paragraph')
+
+    // 未定义的引用应该被 optimisticReferenceExtension 处理
+    const firstToken = (paragraph as any).tokens[0]
+    expect(firstToken.type).toBe('optimisticReference')
+    expect(firstToken.identifier).toBe('undefined-ref')
   })
 })
 
