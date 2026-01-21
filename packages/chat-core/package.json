@@ -1,6 +1,6 @@
 {
   "name": "@incremark/chat-core",
-  "version": "0.1.0",
+  "version": "0.4.0-alpha.1",
   "description": "Framework-agnostic core library for building AI chat interfaces with incremental rendering support.",
   "type": "module",
   "main": "./dist/index.js",

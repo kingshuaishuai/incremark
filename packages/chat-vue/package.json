@@ -1,6 +1,6 @@
 {
   "name": "@incremark/chat-vue",
-  "version": "0.1.0",
+  "version": "0.4.0-alpha.1",
   "description": "Vue 3 implementation of Incremark Chat-UI with incremental rendering support.",
   "type": "module",
   "main": "./dist/index.js",

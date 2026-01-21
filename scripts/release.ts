@@ -197,6 +197,19 @@ function topoSortWorkspacePackages(packages: WorkspacePackage[]): WorkspacePacka
   return ordered.map((n) => byName.get(n)!)
 }
 
+type ReleaseType = 'stable' | 'alpha' | 'beta' | 'rc'
+
+/**
+ * 从版本号中检测发布类型
+ * 例如: 0.4.0-alpha.1 -> alpha, 0.4.0-beta.1 -> beta, 0.4.0 -> stable
+ */
+function detectReleaseTypeFromVersion(version: string): ReleaseType {
+  if (version.includes('-alpha')) return 'alpha'
+  if (version.includes('-beta')) return 'beta'
+  if (version.includes('-rc')) return 'rc'
+  return 'stable'
+}
+
 function main() {
   // Check for dry-run mode
   const isDryRun = process.argv.includes('--dry') || process.argv.includes('--dry-run')
@@ -219,10 +232,14 @@ function main() {
   }
   exec('pnpm exec bumpp package.json packages/*/package.json --no-commit --no-push --no-tag')
 
-  // Step 3: Get new version
+  // Step 3: Get new version and detect release type
   const newVersion = getPackageVersion()
   const newTag = `v${newVersion}`
+  const releaseType = detectReleaseTypeFromVersion(newVersion)
   console.log(`New version: ${newVersion}`)
+  if (releaseType !== 'stable') {
+    console.log(`Release type: ${releaseType} (will publish to '${releaseType}' npm tag)`)
+  }
 
   // Step 4: Generate changelog from previous tag to new version
   // In dry-run mode, we still generate to see what changelog would look like
@@ -282,22 +299,30 @@ function main() {
   exec("pnpm --filter './packages/*' build")
 
   // Step 10: Publish packages
+  // 预发布版本使用对应的 npm tag，避免影响 latest
+  const npmTag = releaseType === 'stable' ? 'latest' : releaseType
+  const tagFlag = `--tag ${npmTag}`
+
   if (isDryRun) {
-    console.log('\n📦 [DRY-RUN] Would publish with: pnpm --filter "./packages/*" publish --access public --registry https://registry.npmjs.org')
-    console.log('[DRY-RUN] To test publish, run: pnpm --filter "./packages/*" publish --access public --dry-run --registry https://registry.npmjs.org')
+    console.log(`\n📦 [DRY-RUN] Would publish with npm tag: ${npmTag}`)
+    console.log(`[DRY-RUN] Command: pnpm --filter "./packages/*" publish --access public ${tagFlag} --registry https://registry.npmjs.org`)
+    console.log(`[DRY-RUN] To test publish, run: pnpm --filter "./packages/*" publish --access public ${tagFlag} --dry-run --registry https://registry.npmjs.org`)
   } else {
     console.log('\n📦 Publishing packages...')
+    if (releaseType !== 'stable') {
+      console.log(`📌 Using npm tag: ${npmTag}`)
+    }
     // Publish each package individually to handle partial failures gracefully
     const allPkgs = getWorkspacePackages().filter((p) => !p.private)
     const packages = topoSortWorkspacePackages(allPkgs)
     let successCount = 0
     let failCount = 0
-    
+
     for (const pkg of packages) {
       try {
         console.log(`\n📦 Publishing ${pkg.name}...`)
         exec(
-          `pnpm --filter ${pkg.name} publish --access public --registry https://registry.npmjs.org`,
+          `pnpm --filter ${pkg.name} publish --access public ${tagFlag} --registry https://registry.npmjs.org`,
           { throwOnError: false }
         )
         successCount++
@@ -313,10 +338,10 @@ function main() {
         }
       }
     }
-    
+
     const skipCount = failCount
     console.log(`\n📊 Publish summary: ${successCount} succeeded, ${skipCount} skipped/failed`)
-    
+
     if (failCount > 0 && successCount === 0) {
       console.error(`\n❌ All packages failed to publish. Please check the errors above.`)
       process.exit(1)

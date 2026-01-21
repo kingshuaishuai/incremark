@@ -1,6 +1,6 @@
 {
   "name": "@incremark/colors",
-  "version": "0.3.9",
+  "version": "0.4.0-alpha.1",
   "description": "Incremark color utilities - Automatic color palette and theme color generation.",
   "type": "module",
   "main": "./dist/index.js",
