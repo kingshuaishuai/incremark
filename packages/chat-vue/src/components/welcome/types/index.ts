@@ -2,7 +2,7 @@
  * Welcome 组件类型定义
  */
 
-import type { SuggestionItem } from '../suggestion/types';
+import type { SuggestionItem } from '../../suggestion/types';
 
 /**
  * Welcome 组件 Props

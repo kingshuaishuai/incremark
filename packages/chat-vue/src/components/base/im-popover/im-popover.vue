@@ -5,7 +5,7 @@
  * 支持 hover/click/focus/manual 触发方式
  */
 
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, CSSProperties } from 'vue';
 import { useFloating, offset as offsetMiddleware, flip, shift, arrow as arrowMiddleware, autoUpdate } from '@floating-ui/vue';
 import { onClickOutside } from '@vueuse/core';
 import { createImBem } from '@incremark/shared';
@@ -47,7 +47,7 @@ const { floatingStyles, middlewareData, placement: finalPlacement, isPositioned 
 });
 
 // 合并 floatingStyles 和 visibility 控制
-const popoverStyles = computed(() => ({
+const popoverStyles = computed<CSSProperties>(() => ({
   ...floatingStyles.value,
   // 在位置计算完成前隐藏，避免从角落飘入
   visibility: isPositioned.value ? 'visible' : 'hidden'

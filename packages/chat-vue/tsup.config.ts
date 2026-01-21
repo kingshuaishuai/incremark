@@ -7,7 +7,7 @@ export default defineConfig({
     components: 'src/components/index.ts'
   },
   format: ['esm'],
-  dts: false,
+  dts: false, // Vue SFC 不支持直接生成 dts，使用 vue-tsc 单独生成
   clean: true,
   treeshake: true,
   sourcemap: true,

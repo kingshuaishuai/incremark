@@ -66,7 +66,6 @@ export type { ImButtonProps, ImTooltipProps } from './base';
 // Sender
 export {
   Sender,
-  SenderInput,
   SenderActionButton,
   SenderSubmitButton,
   useSender
@@ -76,13 +75,18 @@ export type {
   SenderEmits,
   SenderMessage,
   SenderAttachment,
-  SenderSubmitType,
   SenderContext,
-  SenderInputProps,
-  SenderInputEmits,
   SenderSubmitButtonProps,
   SenderActionButtonProps
 } from './sender';
+
+// Sender Input
+export { SenderInput } from './sender-input';
+export type {
+  SenderInputProps,
+  SenderInputEmits,
+  SenderSubmitType
+} from './sender-input/types';
 
 // Suggestion
 export { Suggestion, SuggestionItem } from './suggestion';
