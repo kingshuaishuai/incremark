@@ -409,11 +409,14 @@ export function transformInlineMath(token: InlineMathToken): InlineMath {
  *
  * 对于 linkReference，需要递归解析内层内容（如嵌套的 imageReference）
  * 使用 parseNestedReference 来正确处理 [![alt][img]][link] 这样的嵌套引用
+ *
+ * 特殊情况：当外层是 shortcut 引用但内层是内联链接时（如 [[text](url)]），
+ * 应该拆解为 text '[' + link + text ']'，与 micromark 行为一致
  */
 export function transformOptimisticReference(
   token: OptimisticRefToken,
   ctx: TransformContext
-): ImageReference | LinkReference {
+): ImageReference | LinkReference | PhrasingContent[] {
   if (token.isImage) {
     return {
       type: 'imageReference',
@@ -445,6 +448,24 @@ export function transformOptimisticReference(
         referenceType: imageRefType as 'shortcut' | 'collapsed' | 'full',
         alt: altText
       }]
+    }
+  }
+
+  // 检查内层是否是内联链接 [text](url) 或内联图片 ![alt](url)
+  // 对于 shortcut 引用（没有 [ref] 部分），如果内层是完整的内联链接/图片，
+  // 说明这不是真正的引用，应该拆解为 '[' + link/image + ']'
+  if (token.referenceType === 'shortcut') {
+    const inlineLinkMatch = token.text.match(/^\[((?:\[[^\]]*\]|[^\[\]])*)\]\(([^)]*)\)$/)
+    const inlineImageMatch = token.text.match(/^!\[((?:\[[^\]]*\]|[^\[\]])*)\]\(([^)]*)\)$/)
+
+    if (inlineLinkMatch || inlineImageMatch) {
+      // 内层是内联链接或图片，拆解为 '[' + 解析后的内容 + ']'
+      const innerChildren = ctx.transformInline(new Lexer().inlineTokens(token.text))
+      return [
+        { type: 'text', value: '[' },
+        ...innerChildren,
+        { type: 'text', value: ']' }
+      ]
     }
   }
 

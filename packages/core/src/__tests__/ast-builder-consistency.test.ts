@@ -473,6 +473,64 @@ describe('引用式图片链接解析验证', () => {
     expect(firstToken.type).toBe('optimisticReference')
     expect(firstToken.identifier).toBe('undefined-ref')
   })
+
+  it('MarkedAstBuilder 正确解析嵌套内联链接 [[text](url)]', () => {
+    const markedBuilder = new MarkedAstBuilder(fullOptions)
+    const micromarkBuilder = new MicromarkAstBuilder(fullOptions)
+
+    const md = '[Website and Documentation](https://expressjs.com/) - [[website repo](https://github.com/expressjs/expressjs.com)]'
+
+    const markedAst = markedBuilder.parse(md)
+    const micromarkAst = micromarkBuilder.parse(md)
+
+    const markedPara = markedAst.children[0] as any
+    const micromarkPara = micromarkAst.children[0] as any
+
+    expect(markedPara.type).toBe('paragraph')
+    expect(micromarkPara.type).toBe('paragraph')
+
+    // 两者都应该包含：link + text + '[' + link + ']'
+    // 找到 'website repo' 链接
+    const markedWebsiteLink = markedPara.children.find(
+      (c: any) => c.type === 'link' && c.url === 'https://github.com/expressjs/expressjs.com'
+    )
+    const micromarkWebsiteLink = micromarkPara.children.find(
+      (c: any) => c.type === 'link' && c.url === 'https://github.com/expressjs/expressjs.com'
+    )
+
+    // 两者都应该正确解析为 link 节点（而不是 linkReference）
+    expect(markedWebsiteLink).toBeDefined()
+    expect(markedWebsiteLink.type).toBe('link')
+    expect(micromarkWebsiteLink).toBeDefined()
+    expect(micromarkWebsiteLink.type).toBe('link')
+
+    // 链接内容应该一致
+    expect(markedWebsiteLink.children[0].value).toBe('website repo')
+    expect(micromarkWebsiteLink.children[0].value).toBe('website repo')
+  })
+
+  it('MarkedAstBuilder 正确解析嵌套内联图片 [![alt](url)]', () => {
+    const markedBuilder = new MarkedAstBuilder(fullOptions)
+
+    const md = '[![badge](https://img.shields.io/badge)]'
+
+    const ast = markedBuilder.parse(md)
+    const paragraph = ast.children[0] as any
+
+    expect(paragraph.type).toBe('paragraph')
+
+    // 应该拆解为 '[' + image + ']'
+    // 找到 image 节点
+    const imageNode = paragraph.children.find((c: any) => c.type === 'image')
+    expect(imageNode).toBeDefined()
+    expect(imageNode.url).toBe('https://img.shields.io/badge')
+    expect(imageNode.alt).toBe('badge')
+
+    // 前后应该有 '[' 和 ']' 文本
+    const texts = paragraph.children.filter((c: any) => c.type === 'text')
+    const brackets = texts.filter((t: any) => t.value === '[' || t.value === ']')
+    expect(brackets.length).toBe(2)
+  })
 })
 
 describe('HTML 解析行为验证', () => {
