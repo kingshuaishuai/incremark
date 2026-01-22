@@ -522,6 +522,7 @@ export class IncremarkParser {
     Object.assign(this.options, options)
 
     if (options.astBuilder) {
+      // 显式指定了 astBuilder，切换到指定引擎
       const BuilderClass = options.astBuilder
       if (!(this.astBuilder instanceof BuilderClass)) {
         this.astBuilder = new BuilderClass(this.options)
@@ -529,7 +530,12 @@ export class IncremarkParser {
         this.astBuilder.updateOptions(options)
       }
     } else {
-      this.astBuilder.updateOptions(options)
+      // astBuilder 被显式设置为 undefined，切换回默认引擎 (MarkedAstBuilder)
+      if (!(this.astBuilder instanceof MarkedAstBuilder)) {
+        this.astBuilder = new MarkedAstBuilder(this.options)
+      } else {
+        this.astBuilder.updateOptions(options)
+      }
     }
   }
 }
