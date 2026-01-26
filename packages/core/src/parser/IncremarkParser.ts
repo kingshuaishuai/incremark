@@ -103,11 +103,13 @@ export class IncremarkParser {
   }
 
   /**
-   * 生成 block 的 id（直接使用 offset）
+   * 生成 block 的 id（使用 offset 和 index 确保唯一性）
    * @param startOffset - block 的起始偏移量
+   * @param index - block 在当前批次中的索引，用于确保唯一性
    */
-  private generateBlockId(startOffset: number): string {
-    return String(startOffset)
+  private generateBlockId(startOffset: number, index: number): string {
+    // 如果 offset 相同（如多个节点都没有 position 信息），使用 index 确保唯一性
+    return index > 0 ? `${startOffset}-${index}` : String(startOffset)
   }
 
   /**
@@ -214,7 +216,7 @@ export class IncremarkParser {
 
       const ast = this.astBuilder.parse(stableText)
       // 使用绝对偏移量，确保 Block 的位置信息正确
-      const newBlocks = this.astBuilder.nodesToBlocks(ast.children, stableOffset, stableText, 'completed', (offset) => this.generateBlockId(offset))
+      const newBlocks = this.astBuilder.nodesToBlocks(ast.children, stableOffset, stableText, 'completed', (offset, index) => this.generateBlockId(offset, index))
 
       // 检查是否有重叠的旧 blocks 需要移除
       // 这主要处理容器增量解析的情况：容器内部的内容先被添加为独立 blocks，
@@ -355,7 +357,7 @@ export class IncremarkParser {
           remainingOffset,
           remainingText,
           'completed',
-          (offset) => this.generateBlockId(offset)
+          (offset, index) => this.generateBlockId(offset, index)
         )
 
         this.completedBlocks.push(...finalBlocks)

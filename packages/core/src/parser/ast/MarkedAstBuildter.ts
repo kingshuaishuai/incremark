@@ -402,11 +402,12 @@ export class MarkedAstBuilder implements IAstBuilder {
     startOffset: number,
     rawText: string,
     status: BlockStatus,
-    generateBlockId: (startOffset: number) => string
+    generateBlockId: (startOffset: number, index: number) => string
   ): ParsedBlock[] {
     const blocks: ParsedBlock[] = []
 
-    for (const node of nodes) {
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i]
       const relativeStart = node.position?.start?.offset ?? 0
       const relativeEnd = node.position?.end?.offset ?? rawText.length
       const nodeText = rawText.substring(relativeStart, relativeEnd)
@@ -414,7 +415,7 @@ export class MarkedAstBuilder implements IAstBuilder {
       const absoluteEnd = startOffset + relativeEnd
 
       blocks.push({
-        id: generateBlockId(absoluteStart),
+        id: generateBlockId(absoluteStart, i),
         status,
         node,
         startOffset: absoluteStart,

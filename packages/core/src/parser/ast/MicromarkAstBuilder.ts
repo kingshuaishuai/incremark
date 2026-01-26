@@ -268,7 +268,7 @@ export class MicromarkAstBuilder implements IAstBuilder {
    * @param startOffset 起始偏移量
    * @param rawText 原始文本
    * @param status 块状态
-   * @param generateBlockId 生成块 ID 的函数（接收 startOffset 参数）
+   * @param generateBlockId 生成块 ID 的函数（接收 startOffset 和 index 参数）
    * @returns ParsedBlock 列表
    */
   nodesToBlocks(
@@ -276,11 +276,12 @@ export class MicromarkAstBuilder implements IAstBuilder {
     startOffset: number,
     rawText: string,
     status: BlockStatus,
-    generateBlockId: (startOffset: number) => string
+    generateBlockId: (startOffset: number, index: number) => string
   ): ParsedBlock[] {
     const blocks: ParsedBlock[] = []
 
-    for (const node of nodes) {
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i]
       // micromark 的 position.offset 是相对于传入文本的（从 0 开始）
       const relativeStart = node.position?.start?.offset ?? 0
       const relativeEnd = node.position?.end?.offset ?? 1
@@ -293,7 +294,7 @@ export class MicromarkAstBuilder implements IAstBuilder {
       const absoluteEnd = startOffset + relativeEnd
 
       blocks.push({
-        id: generateBlockId(absoluteStart),
+        id: generateBlockId(absoluteStart, i),
         status,
         node,
         startOffset: absoluteStart,
