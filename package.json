@@ -25,7 +25,8 @@
     "bump:dry": "bumpp package.json packages/*/package.json --dry",
     "release": "npx tsx scripts/release.ts",
     "release:dry": "npx tsx scripts/release.ts --dry",
-    "sb:vue": "pnpm --filter @incremark/chat-vue sb"
+    "sb:vue": "pnpm --filter @incremark/chat-vue sb",
+    "pack": "bash scripts/pack-packages.sh"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
