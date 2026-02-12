@@ -92,9 +92,9 @@ export const defaultTheme: DesignTokens = {
     code: {
       inlineBackground: neutralSeries[3],   // neutral-3 - 行内代码浅色背景
       inlineText: neutralSeries[8],         // neutral-8 - 行内代码深色文本
-      blockBackground: neutralSeries[9],    // neutral-9 - 代码块深色背景
-      blockText: neutralSeries[2],          // neutral-2 - 代码块浅色文本
-      headerBackground: neutralSeries[10]   // neutral-10 - 代码块头部更深背景
+      blockBackground: neutralSeries[2],    // neutral-2 - 代码块浅色背景（配合 github-light Shiki 主题）
+      blockText: neutralSeries[9],          // neutral-9 - 代码块深色文本
+      headerBackground: neutralSeries[3]    // neutral-3 - 代码块头部稍深背景
       // border 使用通用的 border.strong，不单独定义
     },
     status: {

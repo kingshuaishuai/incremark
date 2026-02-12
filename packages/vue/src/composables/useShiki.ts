@@ -2,9 +2,11 @@
  * Shiki Highlighter 单例管理器
  *
  * 避免重复创建 Shiki 实例，所有组件共享同一个 highlighter
+ * 支持多主题：按主题名缓存 highlighter，运行时可切换
  */
 
-import { shallowRef } from 'vue'
+import { shallowRef, toValue, watch } from 'vue'
+import type { MaybeRefOrGetter } from 'vue'
 import type { HighlighterGeneric, BundledLanguage, BundledTheme } from 'shiki'
 
 // ============ 类型定义 ============
@@ -155,10 +157,10 @@ export { getShikiManager, ShikiManager }
 /**
  * 使用 Shiki Highlighter（组合式函数）
  *
- * @param theme 主题名称
+ * @param theme 主题名称，支持响应式（ref / getter / 静态值）
  * @returns Shiki 相关的响应式状态和方法
  */
-export function useShiki(theme: string) {
+export function useShiki(theme: MaybeRefOrGetter<string>) {
   const highlighterInfo = shallowRef<HighlighterInfo | null>(null)
   const isHighlighting = shallowRef(false)
   const isReady = shallowRef(false)
@@ -167,10 +169,9 @@ export function useShiki(theme: string) {
    * 初始化 highlighter（预加载）
    */
   async function initHighlighter(): Promise<void> {
-    if (isReady.value) return
-
+    const currentTheme = toValue(theme)
     try {
-      const info = await getShikiManager().getHighlighter(theme as BundledTheme)
+      const info = await getShikiManager().getHighlighter(currentTheme as BundledTheme)
       highlighterInfo.value = info
       isReady.value = true
     } catch (e) {
@@ -179,12 +180,25 @@ export function useShiki(theme: string) {
     }
   }
 
+  // 当 theme 变化时，自动切换到对应主题的 highlighter
+  watch(() => toValue(theme), async (newTheme) => {
+    if (!newTheme) return
+    try {
+      const info = await getShikiManager().getHighlighter(newTheme as BundledTheme)
+      highlighterInfo.value = info
+      isReady.value = true
+    } catch (e) {
+      console.warn('Failed to switch Shiki theme:', e)
+    }
+  })
+
   /**
    * 获取 highlighter
    */
   async function getHighlighter(): Promise<HighlighterInfo> {
+    const currentTheme = toValue(theme)
     if (!highlighterInfo.value) {
-      highlighterInfo.value = await getShikiManager().getHighlighter(theme as BundledTheme)
+      highlighterInfo.value = await getShikiManager().getHighlighter(currentTheme as BundledTheme)
       isReady.value = true
     }
     return highlighterInfo.value!
@@ -194,6 +208,7 @@ export function useShiki(theme: string) {
    * 高亮代码
    */
   async function highlight(code: string, lang: string, fallbackTheme: string): Promise<string> {
+    const currentTheme = toValue(theme)
     isHighlighting.value = true
 
     try {
@@ -203,15 +218,15 @@ export function useShiki(theme: string) {
 
       // 按需加载语言
       if (!info.loadedLanguages.has(lang as BundledLanguage) && lang !== 'text') {
-        await manager.loadLanguage(theme as BundledTheme, lang as BundledLanguage)
+        await manager.loadLanguage(currentTheme as BundledTheme, lang as BundledLanguage)
       }
 
       // 按需加载主题
-      if (!info.loadedThemes.has(theme as BundledTheme)) {
-        await manager.loadTheme(theme as BundledTheme)
+      if (!info.loadedThemes.has(currentTheme as BundledTheme)) {
+        await manager.loadTheme(currentTheme as BundledTheme)
       }
 
-      return await manager.codeToHtml(theme as BundledTheme, code, lang as BundledLanguage, fallbackTheme as BundledTheme)
+      return await manager.codeToHtml(currentTheme as BundledTheme, code, lang as BundledLanguage, fallbackTheme as BundledTheme)
     } catch (e) {
       throw e
     } finally {
@@ -227,4 +242,3 @@ export function useShiki(theme: string) {
     highlight
   }
 }
-

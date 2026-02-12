@@ -4,7 +4,7 @@
 
 import type { Component } from 'vue';
 import type { TextPart } from '@incremark/chat-core';
-import type { UseIncremarkOptions } from '@incremark/vue';
+import type { UseIncremarkOptions, ComponentMap } from '@incremark/vue';
 
 /**
  * 代码块配置
@@ -24,6 +24,8 @@ export interface TextMessageProps {
   streaming?: boolean;
   /** Incremark 渲染选项 */
   incremarkOptions?: UseIncremarkOptions;
+  /** 覆盖 Incremark 默认的节点类型渲染组件 */
+  components?: ComponentMap;
   /** 自定义容器组件映射 */
   customContainers?: Record<string, Component>;
   /** 自定义代码块组件映射 */

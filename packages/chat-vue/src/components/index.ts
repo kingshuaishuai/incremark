@@ -105,3 +105,7 @@ export type { WelcomeProps } from './welcome';
 // MessageList
 export { MessageList } from './message-list';
 export type { MessageListProps, MessageListExposed } from './message-list';
+
+// Re-export from @incremark/vue（方便消费方直接从 chat-vue 导入）
+export { IncremarkCode, IncremarkContent } from '@incremark/vue';
+export type { ComponentMap, IncremarkContentProps } from '@incremark/vue';

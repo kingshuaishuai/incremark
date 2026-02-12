@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Code } from 'mdast'
 import type { Component } from 'vue'
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 
 import type { CodeBlockConfig } from './Incremark.vue'
 import IncremarkCodeMermaid from './IncremarkCodeMermaid.vue'
@@ -9,7 +9,14 @@ import IncremarkCodeDefault from './IncremarkCodeDefault.vue'
 
 interface Props {
   node: Code
-  /** Shiki 主题，默认 github-dark */
+  /** Shiki 亮色主题，默认 github-light */
+  lightTheme?: string
+  /** Shiki 暗色主题，默认 github-dark */
+  darkTheme?: string
+  /**
+   * Shiki 主题（手动指定，优先于 lightTheme/darkTheme 的自动选择）
+   * @deprecated 推荐使用 lightTheme/darkTheme 配合 ThemeProvider 自动切换
+   */
   theme?: string
   /** 默认回退主题（当指定主题加载失败时使用），默认 github-dark */
   fallbackTheme?: string
@@ -28,7 +35,8 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  theme: 'github-dark',
+  lightTheme: 'github-light',
+  darkTheme: 'github-dark',
   fallbackTheme: 'github-dark',
   disableHighlight: false,
   mermaidDelay: 500,
@@ -88,6 +96,8 @@ const isMermaid = computed(() => language.value === 'mermaid')
     v-else
     :is="defaultCodeComponent"
     :node="node"
+    :light-theme="lightTheme"
+    :dark-theme="darkTheme"
     :theme="theme"
     :fallback-theme="fallbackTheme"
     :disable-highlight="disableHighlight"

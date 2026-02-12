@@ -35,6 +35,7 @@ const isMarkdown = computed(() => props.part.format !== 'plain');
     :content="part.content"
     :is-finished="!streaming"
     :incremark-options="incremarkOptions"
+    :components="components"
     :custom-containers="customContainers"
     :custom-code-blocks="customCodeBlocks"
     :code-block-configs="codeBlockConfigs"

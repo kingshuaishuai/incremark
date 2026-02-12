@@ -1,16 +1,24 @@
 <script setup lang="ts">
 import type { Code } from 'mdast'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { LucideCopy, LucideCopyCheck } from '@incremark/icons'
 import { isClipboardAvailable } from '@incremark/shared'
 import SvgIcon from './SvgIcon.vue'
 import { useShiki } from '../composables/useShiki'
 import { useLocale } from '../composables/useLocale'
+import { useThemeContext } from '../composables/useThemeContext'
 import CachedCodeRenderer from './CachedCodeRenderer.vue'
 
 interface Props {
   node: Code
-  /** Shiki 主题，默认 github-dark */
+  /** Shiki 亮色主题，默认 github-light */
+  lightTheme?: string
+  /** Shiki 暗色主题，默认 github-dark */
+  darkTheme?: string
+  /**
+   * Shiki 主题（手动指定，优先于 lightTheme/darkTheme 的自动选择）
+   * @deprecated 推荐使用 lightTheme/darkTheme 配合 ThemeProvider 自动切换
+   */
   theme?: string
   /** 默认回退主题（当指定主题加载失败时使用），默认 github-dark */
   fallbackTheme?: string
@@ -21,7 +29,8 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  theme: 'github-dark',
+  lightTheme: 'github-light',
+  darkTheme: 'github-dark',
   fallbackTheme: 'github-dark',
   disableHighlight: false,
   blockStatus: 'pending'
@@ -35,8 +44,17 @@ const code = computed(() => props.node.value)
 // 使用 i18n
 const { t } = useLocale()
 
-// 使用 Shiki 单例管理器
-const { highlighterInfo, initHighlighter } = useShiki(props.theme)
+// 通过 ThemeProvider 上下文感知深浅色模式
+const { isDark } = useThemeContext()
+
+// 最终使用的 Shiki 主题：优先使用手动指定的 theme，否则根据深浅色自动选择
+const actualTheme = computed(() => {
+  if (props.theme) return props.theme
+  return isDark.value ? props.darkTheme : props.lightTheme
+})
+
+// 使用 Shiki 单例管理器（传入响应式主题）
+const { highlighterInfo, initHighlighter } = useShiki(() => actualTheme.value)
 
 // 语言是否已加载完成
 const isLanguageLoaded = ref(false)
@@ -124,12 +142,13 @@ async function copyCode() {
     </div>
     <div class="code-content">
       <div class="shiki-wrapper">
-        <!-- Stream 高亮（只有当存在代码内容且语言加载完成后才渲染） -->
+        <!-- Stream 高亮：key 绑定 actualTheme，主题切换时自动重建 -->
         <CachedCodeRenderer
           v-if="shouldEnableHighlight && highlighterInfo && isLanguageLoaded"
+          :key="actualTheme"
           :code="code"
           :lang="language"
-          :theme="theme"
+          :theme="actualTheme"
           :highlighter="highlighterInfo.highlighter"
         />
         <!-- 无高亮模式（禁用高亮、无代码内容、或语言未加载完成时显示） -->

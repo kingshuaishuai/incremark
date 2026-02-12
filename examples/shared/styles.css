@@ -269,6 +269,9 @@ button.secondary:hover:not(:disabled),
 }
 .incremark {
   padding: 2rem;
+  background: var(--incremark-color-background-base, #fff);
+  color: var(--incremark-color-text-primary, #333);
+  transition: background 0.2s, color 0.2s;
 }
 
 /* ============ 自定义输入面板 ============ */
