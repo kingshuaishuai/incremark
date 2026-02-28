@@ -1,6 +1,6 @@
 {
   "name": "@incremark/shared",
-  "version": "0.4.0-alpha.2",
+  "version": "1.0.0",
   "description": "Incremark shared utilities - Common logic and i18n support for Vue, React, and Svelte.",
   "type": "module",
   "main": "./dist/index.js",
