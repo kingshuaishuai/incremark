@@ -8,3 +8,5 @@
 export * from './protocol/index.js';
 export * from './engine/index.js';
 export * from './transport/index.js';
+export * from './processors/index.js';
+export * from './utils/index.js';

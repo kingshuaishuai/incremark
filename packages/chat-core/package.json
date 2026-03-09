@@ -14,6 +14,18 @@
     "./protocol": {
       "types": "./dist/protocol/index.d.ts",
       "import": "./dist/protocol/index.js"
+    },
+    "./transport": {
+      "types": "./dist/transport/index.d.ts",
+      "import": "./dist/transport/index.js"
+    },
+    "./processors": {
+      "types": "./dist/processors/index.d.ts",
+      "import": "./dist/processors/index.js"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "import": "./dist/utils/index.js"
     }
   },
   "files": [

@@ -15,21 +15,22 @@ export function toolResultProcessor(): StreamProcessor {
   return {
     name: 'tool-result',
     process(event, actions) {
-      if (isToolResultEvent(event)) {
+      if (isToolResultEvent(event as unknown)) {
+        const toolEvent = event as unknown as ToolResultEvent;
         const messages = actions.getMessages();
         for (const msg of messages) {
           const tc = msg.parts.find(
-            p => p.type === 'tool-call' && (p as any).toolCallId === event.toolCallId && (p as any).state === 'executing'
+            p => p.type === 'tool-call' && (p as any).toolCallId === toolEvent.toolCallId && (p as any).state === 'executing'
           );
           if (tc) {
             actions.updateMessage(msg.id, m => {
               const part = m.parts.find(
-                p => p.type === 'tool-call' && (p as any).toolCallId === event.toolCallId
+                p => p.type === 'tool-call' && (p as any).toolCallId === toolEvent.toolCallId
               );
               if (part && part.type === 'tool-call') {
                 (part as any).state = 'output-available';
-                if (event.output !== undefined) {
-                  (part as any).output = event.output;
+                if (toolEvent.output !== undefined) {
+                  (part as any).output = toolEvent.output;
                 }
               }
             });

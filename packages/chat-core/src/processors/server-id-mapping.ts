@@ -19,8 +19,9 @@ export function serverIdMapping(): StreamProcessor {
   return {
     name: 'server-id-mapping',
     process(event, actions) {
-      if (isServerIdEvent(event)) {
-        actions.replaceMessageId(event.tempId, event.messageId);
+      if (isServerIdEvent(event as unknown)) {
+        const serverEvent = event as unknown as ServerIdEvent;
+        actions.replaceMessageId(serverEvent.tempId, serverEvent.messageId);
         return null;
       }
       return event;
