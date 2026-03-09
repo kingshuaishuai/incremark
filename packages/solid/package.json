@@ -1,6 +1,6 @@
 {
   "name": "@incremark/solid",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "High-performance streaming markdown renderer for SolidJS ecosystem.",
   "type": "module",
   "main": "./dist/index.js",

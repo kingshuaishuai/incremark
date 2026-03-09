@@ -1,6 +1,6 @@
 {
   "name": "@incremark/react",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "description": "High-performance streaming markdown renderer for React ecosystem.",
   "type": "module",
