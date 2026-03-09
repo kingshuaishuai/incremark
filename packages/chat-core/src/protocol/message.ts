@@ -249,6 +249,7 @@ export function isReasoningPart(part: MessagePart): part is ReasoningPart {
  */
 export interface ChatMessage {
   id: string;
+  parentId?: string | null;  // support branching
   role: MessageRole;
   parts: MessagePart[];
   status: MessageStatus;

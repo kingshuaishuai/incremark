@@ -68,6 +68,14 @@ export interface ErrorStreamPart {
 }
 
 /**
+ * Options for transport send method
+ */
+export interface TransportOptions {
+  signal?: AbortSignal;
+  metadata?: Record<string, unknown>;
+}
+
+/**
  * Transport interface for sending messages and receiving stream
  * This is the key abstraction that allows different implementations:
  * - HTTP streaming
@@ -77,12 +85,16 @@ export interface ErrorStreamPart {
  */
 export interface ChatTransport {
   /**
-   * Send messages and return async generator of stream parts
+   * Send messages and return async iterable of stream parts
    *
    * @param messages - Full conversation history (or context window)
-   * @returns Async generator yielding stream parts
+   * @param options - Optional transport options (abort signal, metadata)
+   * @returns Async iterable yielding stream parts
    */
-  send(messages: ChatMessage[]): AsyncGenerator<StreamPart>;
+  send(
+    messages: readonly ChatMessage[],
+    options?: TransportOptions
+  ): AsyncIterable<StreamPart>;
 
   /**
    * Abort the current stream (optional)
@@ -96,7 +108,10 @@ export interface ChatTransport {
 export class MockTransport implements ChatTransport {
   private aborted = false;
 
-  async *send(messages: ChatMessage[]): AsyncGenerator<StreamPart> {
+  async *send(
+    messages: readonly ChatMessage[],
+    _options?: TransportOptions
+  ): AsyncGenerator<StreamPart> {
     const lastMessage = messages[messages.length - 1];
 
     // Simulate streaming response

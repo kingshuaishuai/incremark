@@ -5,7 +5,8 @@ import {
   isTextPart,
   isToolCallPart,
   isUIPart,
-  isReasoningPart
+  isReasoningPart,
+  type ChatMessage
 } from '../protocol/message.js';
 
 describe('Message Protocol', () => {
@@ -18,6 +19,30 @@ describe('Message Protocol', () => {
       expect(message.parts[0].type).toBe('text');
       expect(isTextPart(message.parts[0]) && message.parts[0].content).toBe('Hello world');
       expect(message.status).toBe('success');
+    });
+
+    it('should create message with parentId', () => {
+      const msg: ChatMessage = {
+        id: 'msg-1',
+        parentId: 'msg-0',
+        role: 'assistant',
+        parts: [],
+        status: 'success',
+        createdAt: Date.now(),
+      };
+      expect(msg.parentId).toBe('msg-0');
+    });
+
+    it('should allow null parentId', () => {
+      const msg: ChatMessage = {
+        id: 'msg-1',
+        parentId: null,
+        role: 'user',
+        parts: [],
+        status: 'success',
+        createdAt: Date.now(),
+      };
+      expect(msg.parentId).toBeNull();
     });
 
     it('should create a streaming message', () => {
