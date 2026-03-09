@@ -49,12 +49,12 @@ export interface StreamProcessor {
 export type EngineEventMap = {
   stateChange: ChatEngineState;
   error: EngineError;
-  done: void;
+  done: undefined;
   'unknown-event': StreamPart;
 };
 
 export type EngineEventHandler<K extends keyof EngineEventMap> =
-  EngineEventMap[K] extends void ? () => void : (payload: EngineEventMap[K]) => void;
+  EngineEventMap[K] extends undefined ? () => void : (payload: EngineEventMap[K]) => void;
 
 // ============================================================================
 // Engine Config
