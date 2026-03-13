@@ -114,12 +114,9 @@ export function createChatEngine(config: ChatEngineConfig): ChatEngine {
   function applyStandardEvent(msg: ChatMessage, event: StreamPart) {
     switch (event.type) {
       case 'text': {
-        let lastText: typeof msg.parts[number] | undefined;
-        for (let i = msg.parts.length - 1; i >= 0; i--) {
-          if (msg.parts[i].type === 'text') { lastText = msg.parts[i]; break; }
-        }
-        if (lastText && lastText.type === 'text') {
-          lastText.content += event.content;
+        const lastPart = msg.parts[msg.parts.length - 1];
+        if (lastPart && lastPart.type === 'text') {
+          lastPart.content += event.content;
         } else {
           msg.parts.push({
             type: 'text',
@@ -130,12 +127,9 @@ export function createChatEngine(config: ChatEngineConfig): ChatEngine {
         break;
       }
       case 'reasoning': {
-        let lastReasoning: typeof msg.parts[number] | undefined;
-        for (let i = msg.parts.length - 1; i >= 0; i--) {
-          if (msg.parts[i].type === 'reasoning') { lastReasoning = msg.parts[i]; break; }
-        }
-        if (lastReasoning && lastReasoning.type === 'reasoning') {
-          lastReasoning.content += event.content;
+        const lastPart = msg.parts[msg.parts.length - 1];
+        if (lastPart && lastPart.type === 'reasoning') {
+          lastPart.content += event.content;
         } else {
           msg.parts.push({ type: 'reasoning', content: event.content });
         }
