@@ -7,7 +7,7 @@
   import type { DesignTokens } from '@incremark/theme'
   import { applyTheme } from '@incremark/theme'
   import { isBrowser } from '@incremark/shared'
-  import { setThemeContext } from './context/themeContext.svelte.ts'
+  import { setThemeContext } from './context/themeContext.svelte.js'
 
   /**
    * 组件 Props

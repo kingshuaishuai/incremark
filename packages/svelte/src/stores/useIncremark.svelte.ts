@@ -12,8 +12,8 @@ import {
   type TransformerPlugin,
   type AnimationEffect
 } from '@incremark/core'
-import { setDefinitionsContext } from '../context/definitionsContext.svelte.ts'
-import { useTypewriter } from './useTypewriter.svelte.ts'
+import { setDefinitionsContext } from '../context/definitionsContext.svelte.js'
+import { useTypewriter } from './useTypewriter.svelte.js'
 
 /**
  * 打字机效果配置

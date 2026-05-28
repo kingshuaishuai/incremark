@@ -7,8 +7,8 @@
   import type { Component } from 'svelte'
   import type { RootContent } from '@incremark/core'
 
-  import { getDefinitionsContext } from '../context/definitionsContext.svelte.ts'
-  import type { UseIncremarkReturn } from '../stores/useIncremark.svelte.ts'
+  import { getDefinitionsContext } from '../context/definitionsContext.svelte.js'
+  import type { UseIncremarkReturn } from '../stores/useIncremark.svelte.js'
   import type { ComponentMap, RenderableBlock } from './types'
 
   // 导入组件

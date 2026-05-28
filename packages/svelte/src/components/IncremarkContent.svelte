@@ -4,7 +4,7 @@
 -->
 
 <script lang="ts">
-  import { useIncremark } from '../stores/useIncremark.svelte.ts'
+  import { useIncremark } from '../stores/useIncremark.svelte.js'
   import type { IncremarkContentProps } from './types'
   import Incremark from './Incremark.svelte'
   import { untrack, onDestroy } from 'svelte'
