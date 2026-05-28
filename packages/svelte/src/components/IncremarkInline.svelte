@@ -12,7 +12,7 @@
     getStableText,
     isHtmlNode
   } from '@incremark/shared'
-  import { getDefinitionsContext } from '../context/definitionsContext.svelte.ts'
+  import { getDefinitionsContext } from '../context/definitionsContext.svelte.js'
   import IncremarkMath from './IncremarkMath.svelte'
   import IncremarkHtmlElement from './IncremarkHtmlElement.svelte'
   import IncremarkInline from './IncremarkInline.svelte'

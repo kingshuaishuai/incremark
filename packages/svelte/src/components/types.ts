@@ -5,7 +5,7 @@
 
 import type { Component } from 'svelte'
 import type { ParsedBlock } from '@incremark/core'
-import type { UseIncremarkOptions } from '../stores/useIncremark.svelte.ts'
+import type { UseIncremarkOptions } from '../stores/useIncremark.svelte.js'
 import type { IncremarkDevTools } from '@incremark/devtools'
 
 /**

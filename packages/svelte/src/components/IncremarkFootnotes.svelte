@@ -5,7 +5,7 @@
 
 <script lang="ts">
   import type { RootContent } from 'mdast'
-  import { getDefinitionsContext } from '../context/definitionsContext.svelte.ts'
+  import { getDefinitionsContext } from '../context/definitionsContext.svelte.js'
   import IncremarkRenderer from './IncremarkRenderer.svelte'
 
   const context = getDefinitionsContext()

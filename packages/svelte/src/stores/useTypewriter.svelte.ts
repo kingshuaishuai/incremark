@@ -14,7 +14,7 @@ import {
   type AnimationEffect,
   type BlockTransformer
 } from '@incremark/core'
-import type { TypewriterOptions, TypewriterControls } from './useIncremark.svelte.ts'
+import type { TypewriterOptions, TypewriterControls } from './useIncremark.svelte.js'
 import { addCursorToNode } from '../utils/cursor'
 
 /**
