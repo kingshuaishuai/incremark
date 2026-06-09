@@ -23,7 +23,8 @@
     showBlockStatus = false,
     devtools,
     devtoolsId,
-    devtoolsLabel
+    devtoolsLabel,
+    oncomplete
   }: IncremarkContentProps = $props()
 
   // 创建 incremark 实例（只创建一次）
@@ -147,6 +148,16 @@
     if (isFinished && content === incremark.markdown) {
       incremark.finalize()
     }
+  })
+
+  // 监听内容显示完成（打字机动画结束或解析完成），仅在 false→true 跳变时触发
+  let prevDisplayComplete = untrack(() => incremark.isDisplayComplete)
+  $effect(() => {
+    const complete = incremark.isDisplayComplete
+    if (complete && !prevDisplayComplete) {
+      oncomplete?.(untrack(() => incremark.markdown))
+    }
+    prevDisplayComplete = complete
   })
 </script>
 

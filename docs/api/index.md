@@ -26,6 +26,17 @@ The main component for rendering Markdown content.
 | `devtoolsId` | `string` | *Auto-generated* | Unique identifier for this parser in DevTools. |
 | `devtoolsLabel` | `string` | `devtoolsId` | Display label for this parser in DevTools. |
 
+**Events / Callbacks**:
+
+Fired when the content is fully displayed (the typewriter animation has finished, or parsing has completed when the typewriter is disabled). The callback receives the full markdown string. Naming follows each framework's convention:
+
+| Framework | Usage |
+|-----------|-------|
+| React | `onComplete={(markdown) => {}}` |
+| Vue | `@complete="(markdown) => {}"` |
+| Solid | `onComplete={(markdown) => {}}` |
+| Svelte | `oncomplete={(markdown) => {}}` |
+
 ### `<AutoScrollContainer />`
 
 A container that automatically scrolls to the bottom when content updates.

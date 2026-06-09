@@ -50,5 +50,7 @@ export interface IncremarkContentProps {
   devtoolsId?: string
   /** DevTools 中显示的 parser 标签，默认使用 ID */
   devtoolsLabel?: string
+  /** 内容完全显示完成时触发（打字机动画播放结束或解析完成），参数为完整 markdown */
+  oncomplete?: (markdown: string) => void
 }
 

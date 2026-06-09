@@ -1,4 +1,4 @@
-export type { IncremarkContentProps } from '../types'
+export type { IncremarkContentProps, IncremarkContentEmits } from '../types'
 // 主组件
 export { default as Incremark } from './Incremark.vue'
 export { default as IncremarkContent } from '../components/IncremarkContent.vue'
