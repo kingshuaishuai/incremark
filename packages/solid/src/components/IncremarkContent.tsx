@@ -1,6 +1,6 @@
 /* @jsxImportSource solid-js */
 
-import { Component, createEffect, createMemo, onMount, onCleanup } from 'solid-js'
+import { Component, createEffect, createMemo, onMount, onCleanup, untrack } from 'solid-js'
 import type { JSX } from 'solid-js'
 import { useIncremark } from '../composables/useIncremark'
 import type { IncremarkContentProps } from '../types'
@@ -94,6 +94,16 @@ export const IncremarkContent: Component<IncremarkContentProps> = (props) => {
     if (newIsFinished && props.content === markdown()) {
       finalize()
     }
+  })
+
+  // 监听内容显示完成（打字机动画结束或解析完成），仅在 false→true 跳变时触发
+  let prevDisplayComplete = isDisplayComplete()
+  createEffect(() => {
+    const complete = isDisplayComplete()
+    if (complete && !prevDisplayComplete) {
+      untrack(() => props.onComplete?.(markdown()))
+    }
+    prevDisplayComplete = complete
   })
 
   return (

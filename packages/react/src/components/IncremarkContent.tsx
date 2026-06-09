@@ -41,7 +41,8 @@ export const IncremarkContent: React.FC<IncremarkContentProps> = (props) => {
     pendingClass,
     devtools,
     devtoolsId,
-    devtoolsLabel
+    devtoolsLabel,
+    onComplete
   } = props
 
   // 初始化时使用的选项（使用 ref 保存，只用于首次创建 parser）
@@ -167,6 +168,15 @@ export const IncremarkContent: React.FC<IncremarkContentProps> = (props) => {
       finalize()
     }
   }, [isFinished, content, markdown, finalize])
+
+  // 监听内容显示完成（打字机动画结束或解析完成），仅在 false→true 跳变时触发
+  const prevDisplayCompleteRef = useRef(isDisplayComplete)
+  useEffect(() => {
+    if (isDisplayComplete && !prevDisplayCompleteRef.current) {
+      onComplete?.(markdown)
+    }
+    prevDisplayCompleteRef.current = isDisplayComplete
+  }, [isDisplayComplete, markdown, onComplete])
 
   return (
     <IncremarkContainerProvider definitions={_definitionsContextValue}>

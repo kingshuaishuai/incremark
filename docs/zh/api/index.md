@@ -26,6 +26,17 @@ Incremark 所有类型和组件的集中参考。
 | `devtoolsId` | `string` | *自动生成* | 在 DevTools 中此解析器的唯一标识符。 |
 | `devtoolsLabel` | `string` | `devtoolsId` | 在 DevTools 中此解析器的显示标签。 |
 
+**事件 / 回调**：
+
+内容完全显示完成时触发（打字机动画播放结束；未启用打字机时则为解析完成）。回调参数为完整的 markdown 字符串。命名遵循各框架的惯例：
+
+| 框架 | 用法 |
+|------|------|
+| React | `onComplete={(markdown) => {}}` |
+| Vue | `@complete="(markdown) => {}"` |
+| Solid | `onComplete={(markdown) => {}}` |
+| Svelte | `oncomplete={(markdown) => {}}` |
+
 ### `<AutoScrollContainer />`
 
 当内容更新时自动滚动到底部的容器组件。

@@ -7,6 +7,11 @@
 
   const props = defineProps<IncremarkContentProps>()
 
+  const emit = defineEmits<{
+    /** 内容完全显示完成时触发（打字机动画播放结束或解析完成），参数为完整 markdown */
+    complete: [markdown: string]
+  }>()
+
   const incremarkOptions = computed(() => ({
     gfm: true,
     htmlTree: true,
@@ -87,6 +92,13 @@
       finalize();
     }
   }, { immediate: true })
+
+  // 监听内容显示完成（打字机动画结束或解析完成），仅在 false→true 跳变时触发
+  watch(isDisplayComplete, (newVal, oldVal) => {
+    if (newVal && !oldVal) {
+      emit('complete', markdown.value);
+    }
+  })
 </script>
 
 <template>
