@@ -224,6 +224,11 @@ export class MarkedAstBuilder implements IAstBuilder {
           const name = containerStartMatch[2]
           const attrs = containerStartMatch[3].trim()
           let rawAccumulator = ''
+          // Lines whose content comes from a 'code' or 'html' token's raw text
+          // must not be scanned for ::: markers — marked has already decided
+          // that content is opaque, so a bare ::: inside a fenced code block
+          // (or an HTML block) is literal text, not a container boundary.
+          const opaqueLines = new Set<number>()
           let j = i
           let depth = 0
           let foundEnd = false
@@ -231,13 +236,21 @@ export class MarkedAstBuilder implements IAstBuilder {
 
           while (j < tokens.length) {
             const currentToken = tokens[j]
+            const startLine = rawAccumulator.split('\n').length - 1
             rawAccumulator += currentToken.raw
+            if (currentToken.type === 'code' || currentToken.type === 'html') {
+              const tokenLineCount = currentToken.raw.split('\n').length - 1
+              for (let li = startLine; li < startLine + tokenLineCount; li++) {
+                opaqueLines.add(li)
+              }
+            }
             const lines = rawAccumulator.split('\n')
             depth = 0
             let startLineIndex = -1
             let endLineIndex = -1
 
             for (let k = 0; k < lines.length; k++) {
+              if (opaqueLines.has(k)) continue
               const line = lines[k]
               if (line.match(/^:::(\s*)([a-zA-Z0-9_-]+)/)) {
                 if (depth === 0 && startLineIndex === -1) startLineIndex = k
