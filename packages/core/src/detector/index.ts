@@ -8,7 +8,7 @@ import type { BlockContext, ContainerConfig, ContainerMatch } from '../types'
 
 // ============ 预编译正则表达式（性能优化） ============
 
-const RE_FENCE_START = /^(\s*)((`{3,})|(~{3,}))/
+const RE_FENCE_START = /^(\s{0,3})((`{3,})|(~{3,}))/
 const RE_EMPTY_LINE = /^\s*$/
 const RE_HEADING = /^#{1,6}\s/
 const RE_THEMATIC_BREAK = /^(\*{3,}|-{3,}|_{3,})\s*$/
@@ -32,8 +32,22 @@ const containerPatternCache = new Map<string, RegExp>()
 
 /**
  * 检测行是否是代码块 fence 开始
+ *
+ * CommonMark 规定 fence 的起始缩进不能超过 3 个空格——超过 3 个空格属于缩进代码块的
+ * 内容，不再是新 fence 的开始。这个判定只适用于文档顶层；列表项内部的缩进基线由列表
+ * 自身的 `listIndent` 决定（一个 fence 只要不超过列表内容缩进 + 3 个空格就仍然合法），
+ * 调用方在列表上下文里应传入 `baseIndent = listIndent`。
  */
-export function detectFenceStart(line: string): { char: string; length: number } | null {
+export function detectFenceStart(
+  line: string,
+  baseIndent = 0
+): { char: string; length: number } | null {
+  const indentMatch = line.match(/^(\s*)/)
+  const indent = indentMatch?.[1].length ?? 0
+  if (indent > baseIndent + 3) {
+    return null
+  }
+
   const match = line.match(RE_FENCE_START)
   if (match) {
     const fence = match[2]
@@ -45,17 +59,21 @@ export function detectFenceStart(line: string): { char: string; length: number }
 
 /**
  * 检测行是否是代码块 fence 结束
+ *
+ * 结束标记同样遵循 CommonMark 的缩进上限：不超过开启时的基线缩进 + 3 个空格。
+ * 列表上下文中应传入与开启时相同的 `baseIndent`（即 `listIndent`），否则列表内
+ * 缩进 4+ 空格开启的 fence 将永远匹配不到收尾标记。
  */
-export function detectFenceEnd(line: string, context: BlockContext): boolean {
+export function detectFenceEnd(line: string, context: BlockContext, baseIndent = 0): boolean {
   if (!context.inFencedCode || !context.fenceChar || !context.fenceLength) {
     return false
   }
 
   // 使用缓存的正则表达式
-  const cacheKey = `${context.fenceChar}-${context.fenceLength}`
+  const cacheKey = `${context.fenceChar}-${context.fenceLength}-${baseIndent}`
   let pattern = fenceEndPatternCache.get(cacheKey)
   if (!pattern) {
-    pattern = new RegExp(`^\\s{0,3}${context.fenceChar}{${context.fenceLength},}\\s*$`)
+    pattern = new RegExp(`^\\s{0,${baseIndent + 3}}${context.fenceChar}{${context.fenceLength},}\\s*$`)
     fenceEndPatternCache.set(cacheKey, pattern)
   }
   return pattern.test(line)
@@ -359,9 +377,10 @@ interface ContextUpdater {
 class CodeContextUpdater implements ContextUpdater {
   update(line: string, context: BlockContext): BlockContext | null {
     const newContext = { ...context }
+    const baseIndent = context.inList ? (context.listIndent ?? 0) : 0
 
     if (context.inFencedCode) {
-      if (detectFenceEnd(line, context)) {
+      if (detectFenceEnd(line, context, baseIndent)) {
         newContext.inFencedCode = false
         newContext.fenceChar = undefined
         newContext.fenceLength = undefined
@@ -370,7 +389,7 @@ class CodeContextUpdater implements ContextUpdater {
       return null // 在代码块内，不处理其他逻辑
     }
 
-    const fence = detectFenceStart(line)
+    const fence = detectFenceStart(line, baseIndent)
     if (fence) {
       newContext.inFencedCode = true
       newContext.fenceChar = fence.char
