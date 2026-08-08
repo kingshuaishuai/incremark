@@ -83,8 +83,14 @@ export class MarkedAstBuilder implements IAstBuilder {
   }
 
   parse(text: string): Root {
-    // 1. 文本清洗：这是解决 URL 截断的第一道防线
-    const normalizedText = text.replace(/[\u00A0\u200b\u202f]/g, ' ')
+    // 1. 文本清洗：这是解决 URL 截断的第一道防线。
+    // 只替换 ZWSP（\u200b）——它不匹配 JS 的 \s，marked 自身的 URL/自动链接
+    // 匹配不会在它这里断开，所以需要手动替换成空格才能截断。
+    // NBSP（\u00A0）和 NNBSP（\u202f）本身就匹配 \s，marked 已经会在它们
+    // 那里正确截断 URL；把它们也替换成 ASCII 空格没有换来任何截断收益，
+    // 只会把代码块 / 行内代码里字面出现的这两种空格静默改写成普通空格，
+    // 与 marked 自身对同一段文本的解析结果产生分歧。
+    const normalizedText = text.replace(/[\u200b]/g, ' ')
 
     // 2. 构造 Extensions
     const optimisticRefExt = createOptimisticReferenceExtension()
