@@ -11,6 +11,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
+import type { RootContent } from 'mdast'
 import { IncremarkParser } from '../parser/IncremarkParser'
 import { normalizeAst } from './helpers/test-utils'
 
@@ -441,6 +442,68 @@ const x = 1;
     const incrementalParser = new IncremarkParser()
     for (let i = 0; i < markdown.length; i++) {
       incrementalParser.append(markdown[i])
+    }
+    const incremental = normalizeAst(incrementalParser.getAst())
+
+    expect(incremental).toEqual(onePass)
+  })
+
+  it('缩进代码块 - 4 空格缩进的 fence 行属于缩进代码内容，不是新 fence 的开始', () => {
+    // CommonMark: fence 的起始缩进上限是 3 个空格。这里的 "```js" 缩进了 4 个
+    // 空格，marked 把它当作缩进代码块的内容行；紧随其后的顶格 "```" 才是一个
+    // 真正的 fence 开始（未闭合，直到文档结束）。
+    const markdown = '    ```js\n    code\n```\nmore text'
+
+    const onePassParser = new IncremarkParser()
+    onePassParser.append(markdown)
+    const onePass = normalizeAst(onePassParser.getAst())
+
+    const incrementalParser = new IncremarkParser()
+    const lines = markdown.split('\n')
+    for (const line of lines) {
+      incrementalParser.append(line + '\n')
+    }
+    const incremental = normalizeAst(incrementalParser.getAst())
+
+    expect(incremental).toEqual(onePass)
+    expect(onePass.children.map((c: RootContent) => c.type)).toEqual(['code', 'code'])
+  })
+
+  it('缩进代码块 - 4 空格缩进的 fence 不会永久锁死增量解析（曾导致后续内容永远 pending）', () => {
+    // 回归测试：修复前，一个 4 空格缩进的 fence 行会把 inFencedCode 锁定为
+    // true，此后任何内容都无法再形成稳定边界，逐行追加会退化为每次全量重解析。
+    const markdown = '    ```js\n    code\n    ```\nmore text\n\nfinal paragraph'
+
+    const onePassParser = new IncremarkParser()
+    onePassParser.append(markdown)
+    const onePass = normalizeAst(onePassParser.getAst())
+
+    const incrementalParser = new IncremarkParser()
+    const lines = markdown.split('\n')
+    for (const line of lines) {
+      incrementalParser.append(line + '\n')
+    }
+    const incremental = normalizeAst(incrementalParser.getAst())
+
+    expect(incremental).toEqual(onePass)
+    // marked 把整段 4 空格缩进的内容视为一个缩进代码块，后面是两个独立段落——
+    // 不是"未闭合 fence 吞掉剩余全文"。
+    expect(onePass.children.map((c: RootContent) => c.type)).toEqual(['code', 'paragraph', 'paragraph'])
+  })
+
+  it('列表内容缩进的 fence（缩进 2）仍然按列表内代码块正确开闭', () => {
+    // 保证本次修复没有破坏列表内 fence 的既有行为：列表项内容缩进为 2 时，
+    // 一个缩进 2 的 fence 仍然合法（未超过 listIndent(0) + 3）。
+    const markdown = '- item\n\n  ```js\n  code\n  ```\nafter'
+
+    const onePassParser = new IncremarkParser()
+    onePassParser.append(markdown)
+    const onePass = normalizeAst(onePassParser.getAst())
+
+    const incrementalParser = new IncremarkParser()
+    const lines = markdown.split('\n')
+    for (const line of lines) {
+      incrementalParser.append(line + '\n')
     }
     const incremental = normalizeAst(incrementalParser.getAst())
 
